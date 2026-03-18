@@ -19,32 +19,32 @@ export class ServiceController {
             total, 
             page, 
             limit, 
-            "Daftar service berhasil diambil"
+            "Service list retrieved successfully"
         )
     }
 
     async show(c: Context) {
-        const id = Number(c.req.param('id'))
+        const id = c.req.param('id') as string
         const service = await this.service.getById(id)
-        return ApiResponse.success(c, ServiceResource.single(service), "Service berhasil diambil")
+        return ApiResponse.success(c, ServiceResource.single(service), "Service retrieved successfully")
     }
 
     async store(c: Context) {
         const body = await c.req.json() as CreateServiceRequest
         const service = await this.service.create(body)
-        return ApiResponse.success(c, ServiceResource.single(service), "Service berhasil dibuat", 201)
+        return ApiResponse.success(c, ServiceResource.single(service), "Service created successfully", 201)
     }
 
     async update(c: Context) {
-        const id = Number(c.req.param('id'))
+        const id = c.req.param('id') as string
         const body = await c.req.json() as UpdateServiceRequest
         const service = await this.service.update(id, body)
-        return ApiResponse.success(c, ServiceResource.single(service), "Service berhasil diperbarui")
+        return ApiResponse.success(c, ServiceResource.single(service), "Service updated successfully")
     }
 
     async destroy(c: Context) {
-        const id = Number(c.req.param('id'))
+        const id = c.req.param('id') as string
         await this.service.delete(id)
-        return ApiResponse.success(c, null, "Service berhasil dihapus")
+        return ApiResponse.success(c, null, "Service deleted successfully")
     }
 }

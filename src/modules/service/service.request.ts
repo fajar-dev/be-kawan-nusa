@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 export const CreateServiceSchema = z.object({
+  id: z.string().min(1, "ID is required"),
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   type: z.enum(["Internet", "Email", "Domain", "Web Hosting", "Data Cloud", "Server", "Jasa", "Business"], {

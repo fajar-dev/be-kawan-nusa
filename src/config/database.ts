@@ -1,24 +1,25 @@
 import "reflect-metadata"
 import { DataSource } from "typeorm"
-import dotenv from "dotenv"
+import { Customer } from "../modules/customer/customer.entity"
+import { CustomerPhone } from "../modules/customer/customer-phone.entity"
+import { CustomerEmail } from "../modules/customer/customer-email.entity"
 import { Service } from "../modules/service/service.entity"
-
-dotenv.config()
+import { config } from "./config"
 
 /**
  * TypeORM Database Configuration
- * Best practice: Use centralized config with environment variables fallback
+ * Uses centralized config from config.ts
  */
 export const AppDataSource = new DataSource({
     type: "mysql",
-    host: process.env.DB_HOST || "127.0.0.1",
-    port: Number(process.env.DB_PORT) || 3306,
-    username: process.env.DB_USER || "root",
-    password: process.env.DB_PASS || "",
-    database: process.env.DB_NAME || "kawan_nusa",
-    synchronize: process.env.NODE_ENV !== "production", // Auto-sync ONLY in development
-    logging: process.env.NODE_ENV !== "production",
-    entities: [Service],
+    host: config.database.host,
+    port: config.database.port,
+    username: config.database.user,
+    password: config.database.pass,
+    database: config.database.name,
+    synchronize: config.app.env !== "production",
+    logging: config.app.env !== "production",
+    entities: [Customer, CustomerPhone, CustomerEmail, Service],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

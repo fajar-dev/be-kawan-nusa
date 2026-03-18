@@ -1,9 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
 
 @Entity("services")
 export class Service {
-    @PrimaryGeneratedColumn()
-    id!: number
+    @PrimaryColumn()
+    id!: string
 
     @Column()
     name!: string

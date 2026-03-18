@@ -16,7 +16,7 @@ export class ServiceService {
         return { data, total }
     }
 
-    async getById(id: number) {
+    async getById(id: string) {
         const service = await this.repository.findOneBy({ id })
         if (!service) {
             throw new NotFoundException(`Service with ID ${id} not found`)
@@ -25,25 +25,17 @@ export class ServiceService {
     }
 
     async create(data: CreateServiceRequest) {
-        const { is_active, ...rest } = data
-        const service = this.repository.create({
-            ...rest,
-            isActive: is_active
-        })
+        const service = this.repository.create(data)
         return await this.repository.save(service)
     }
 
-    async update(id: number, data: UpdateServiceRequest) {
+    async update(id: string, data: UpdateServiceRequest) {
         const service = await this.getById(id)
-        const { is_active, ...rest } = data
-        this.repository.merge(service, {
-            ...rest,
-            ...(is_active !== undefined && { isActive: is_active })
-        })
+        this.repository.merge(service, data)
         return await this.repository.save(service)
     }
 
-    async delete(id: number) {
+    async delete(id: string) {
         const service = await this.getById(id)
         await this.repository.remove(service)
         return true
