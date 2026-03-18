@@ -2,8 +2,9 @@ import { Hono } from 'hono'
 import { ZodError } from 'zod'
 import { AppDataSource } from './config/database'
 import api from './routes/api'
-import { ApiResponse } from './core/helpers/response'
+import { ApiResponse } from './core/helpers/apiResponse'
 import { BaseException } from './core/exceptions/base'
+import { config } from './config/config'
 
 const app = new Hono()
 
@@ -30,4 +31,7 @@ app.onError((err, c) => {
     return ApiResponse.error(c, "Internal Server Error", 500)
 })
 
-export default app
+export default {
+  port: config.app.port,
+  fetch: app.fetch,
+};

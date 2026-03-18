@@ -1,6 +1,6 @@
 import { Context } from 'hono'
 import { UserService } from './user.service'
-import { ApiResponse } from '../../core/helpers/response'
+import { ApiResponse } from '../../core/helpers/apiResponse'
 import { CreateUserRequest, UpdateUserRequest } from './user.request'
 import { UserResource } from './user.resource'
 
@@ -24,7 +24,7 @@ export class UserController {
     }
 
     async show(c: Context) {
-        const id = c.req.param('id') as string
+        const id = Number(c.req.param('id'))
         const user = await this.service.getById(id)
         return ApiResponse.success(c, UserResource.single(user), "User retrieved successfully")
     }
@@ -36,14 +36,14 @@ export class UserController {
     }
 
     async update(c: Context) {
-        const id = c.req.param('id') as string
+        const id = Number(c.req.param('id'))
         const body = await c.req.json() as UpdateUserRequest
         const user = await this.service.update(id, body)
         return ApiResponse.success(c, UserResource.single(user), "User updated successfully")
     }
 
     async destroy(c: Context) {
-        const id = c.req.param('id') as string
+        const id = Number(c.req.param('id'))
         await this.service.delete(id)
         return ApiResponse.success(c, null, "User deleted successfully")
     }

@@ -19,7 +19,6 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.app.env !== "production",
-    logging: config.app.env !== "production",
     entities: [Customer, CustomerPhone, CustomerEmail, Service, User],
     migrations: [],
     subscribers: [],

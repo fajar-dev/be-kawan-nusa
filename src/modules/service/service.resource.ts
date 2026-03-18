@@ -4,6 +4,7 @@ export class ServiceResource {
     static single(service: Service) {
         return {
             id: service.id,
+            code: service.code,
             name: service.name,
             description: service.description || "N/A",
             type: service.type,

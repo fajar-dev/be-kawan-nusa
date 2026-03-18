@@ -1,8 +1,9 @@
 import { Context } from 'hono'
 import { AuthService } from './auth.service'
-import { ApiResponse } from '../../core/helpers/response'
+import { ApiResponse } from '../../core/helpers/apiResponse'
 import { RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest } from './auth.request'
 import { UserResource } from '../user/user.resource'
+import { BadRequestException } from '../../core/exceptions/base'
 
 export class AuthController {
     private service = new AuthService()
@@ -36,15 +37,31 @@ export class AuthController {
         return ApiResponse.success(c, UserResource.single(user), "User profile retrieved successfully")
     }
 
+    async logout(c: Context) {
+        const user = c.get('user')
+        await this.service.logout(user)
+        return ApiResponse.success(c, null, "Logged out successfully")
+    }
+
     async forgotPassword(c: Context) {
         const body = await c.req.json() as ForgotPasswordRequest
-        const result = await this.service.forgotPassword(body)
-        
+        await this.service.forgotPassword(body)
         return ApiResponse.success(
             c, 
-            result, 
+            null,
             "Password reset instructions have been sent to your email"
         )
+    }
+
+    async validateResetToken(c: Context) {
+        const token = c.req.query('token')
+        if (!token) {
+            throw new BadRequestException("Reset token is required")
+        }
+        
+        await this.service.validateResetToken(token)
+        
+        return ApiResponse.success(c, null, "Token is valid")
     }
 
     async resetPassword(c: Context) {

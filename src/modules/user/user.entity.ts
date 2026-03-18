@@ -2,8 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 
 @Entity("users")
 export class User {
-    @PrimaryGeneratedColumn("uuid")
-    id!: string
+    @PrimaryGeneratedColumn()
+    id!: number
 
     @Column({ name: "first_name" })
     firstName!: string
@@ -17,14 +17,11 @@ export class User {
     @Column({ name: "job_position", nullable: true })
     jobPosition?: string
 
-    @Column({ name: "account_name" })
-    accountName!: string
-
     @Column({ unique: true })
     email!: string
 
-    @Column({ nullable: true })
-    phone?: string
+    @Column()
+    phone!: string
 
     @Column({ select: false })
     password!: string

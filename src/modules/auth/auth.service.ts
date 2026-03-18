@@ -1,12 +1,13 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/user.entity"
-import { RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest } from "./auth.request"
+import { RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest, } from "./auth.request"
 import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { sign, verify } from "hono/jwt"
 import { config } from "../../config/config"
 import crypto from "crypto"
 import { UserService } from "../user/user.service"
+import { mail } from "../../core/helpers/mailSender"
 
 export class AuthService {
     private repository = AppDataSource.getRepository(User)
@@ -68,7 +69,7 @@ export class AuthService {
 
     async refreshToken(data: RefreshTokenRequest) {
         try {
-            const decoded = await verify(data.refreshToken, config.app.jwtRefreshSecret, "HS256") as { sub: string }
+            const decoded = await verify(data.refreshToken, config.app.jwtRefreshSecret, "HS256") as { sub: number }
             
             const user = await this.repository.createQueryBuilder("user")
                 .where("user.id = :id", { id: decoded.sub })
@@ -120,11 +121,18 @@ export class AuthService {
 
         await this.repository.save(user)
 
-        // Mock send email
+        // Send actual email
+        // await mail.sendHtml(
+        //     user.email,
+        //     "Password Reset Request",
+        //     `<h1>Password Reset</h1>
+        //      <p>You requested a password reset. Use the token below to reset your password:</p>
+        //      <p><strong>${resetToken}</strong></p>
+        //      <p>This token will expire in 1 hour.</p>`
+        // )
         console.log(`[Email Mock] Password reset requested for ${user.email}. Token: ${resetToken}`)
         
-        // Return token so user can actually copy it during development without checking console if they want
-        return { message: "Password reset instructions sent", token: resetToken }
+        return true
     }
 
     async resetPassword(data: ResetPasswordRequest) {
@@ -142,6 +150,25 @@ export class AuthService {
         user.resetPasswordToken = null as any
         user.resetPasswordExpires = null as any
 
+        await this.repository.save(user)
+        return true
+    }
+
+    async validateResetToken(token:string) {
+        const user = await this.repository.createQueryBuilder("user")
+            .where("user.reset_password_token = :token", { token })
+            .andWhere("user.reset_password_expires > :now", { now: new Date() })
+            .getOne()
+        
+        if (!user) {
+            throw new BadRequestException("Invalid or expired reset token")
+        }
+
+        return true
+    }
+
+    async logout(user: User) {
+        user.refreshToken = null as any
         await this.repository.save(user)
         return true
     }

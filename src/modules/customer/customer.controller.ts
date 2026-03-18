@@ -1,6 +1,6 @@
 import { Context } from 'hono'
 import { CustomerService } from './customer.service'
-import { ApiResponse } from '../../core/helpers/response'
+import { ApiResponse } from '../../core/helpers/apiResponse'
 import { CreateCustomerRequest, UpdateCustomerRequest } from './customer.request'
 import { CustomerResource } from './customer.resource'
 

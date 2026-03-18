@@ -16,7 +16,7 @@ export class UserService {
         return { data, total }
     }
 
-    async getById(id: string) {
+    async getById(id: number) {
         const user = await this.repository.findOneBy({ id })
         if (!user) {
             throw new NotFoundException(`User with ID ${id} not found`)
@@ -33,7 +33,7 @@ export class UserService {
         return await this.repository.save(user)
     }
 
-    async update(id: string, data: UpdateUserRequest) {
+    async update(id: number, data: UpdateUserRequest) {
         const user = await this.getById(id)
         
         if (data.password) {
@@ -44,7 +44,7 @@ export class UserService {
         return await this.repository.save(user)
     }
 
-    async delete(id: string) {
+    async delete(id: number) {
         const user = await this.getById(id)
         await this.repository.remove(user)
         return true

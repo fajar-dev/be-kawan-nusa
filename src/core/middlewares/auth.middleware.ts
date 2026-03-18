@@ -14,7 +14,7 @@ export const authMiddleware = async (c: Context, next: Next) => {
     const token = authHeader.split(' ')[1]
     
     try {
-        const decoded = await verify(token, config.app.jwtSecret, "HS256") as { sub: string }
+        const decoded = await verify(token, config.app.jwtSecret, "HS256") as { sub: number }
         const userRepository = AppDataSource.getRepository(User)
         const user = await userRepository.findOneBy({ id: decoded.sub })
 

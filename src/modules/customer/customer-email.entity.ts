@@ -1,4 +1,5 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryGeneratedColumn } from "typeorm"
+import type { Relation } from "typeorm"
 import { Customer } from "./customer.entity"
 
 @Entity("customer_emails")
@@ -17,7 +18,7 @@ export class CustomerEmail {
 
     @ManyToOne(() => Customer, (customer) => customer.emails, { onDelete: 'CASCADE' })
     @JoinColumn({ name: "customer_id" })
-    customer!: Customer
+    customer!: Relation<Customer>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

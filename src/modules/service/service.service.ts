@@ -16,7 +16,7 @@ export class ServiceService {
         return { data, total }
     }
 
-    async getById(id: string) {
+    async getById(id: number) {
         const service = await this.repository.findOneBy({ id })
         if (!service) {
             throw new NotFoundException(`Service with ID ${id} not found`)
@@ -29,13 +29,13 @@ export class ServiceService {
         return await this.repository.save(service)
     }
 
-    async update(id: string, data: UpdateServiceRequest) {
+    async update(id: number, data: UpdateServiceRequest) {
         const service = await this.getById(id)
         this.repository.merge(service, data)
         return await this.repository.save(service)
     }
 
-    async delete(id: string) {
+    async delete(id: number) {
         const service = await this.getById(id)
         await this.repository.remove(service)
         return true

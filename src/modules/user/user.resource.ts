@@ -10,7 +10,6 @@ export class UserResource {
             phone: user.phone,
             company: user.company,
             jobPosition: user.jobPosition,
-            accountName: user.accountName,
             bankDetails: {
                 holderName: user.accountHolderName,
                 name: user.bankName,
@@ -19,9 +18,7 @@ export class UserResource {
             settings: {
                 isSubscribe: user.isSubscribe,
                 isAutoWithdraw: user.isAutoWithdraw
-            },
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+            }
         }
     }
 
