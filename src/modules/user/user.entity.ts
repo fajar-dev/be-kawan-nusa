@@ -1,0 +1,61 @@
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
+
+@Entity("users")
+export class User {
+    @PrimaryGeneratedColumn("uuid")
+    id!: string
+
+    @Column({ name: "first_name" })
+    firstName!: string
+
+    @Column({ name: "last_name" })
+    lastName!: string
+
+    @Column({ nullable: true })
+    company?: string
+
+    @Column({ name: "job_position", nullable: true })
+    jobPosition?: string
+
+    @Column({ name: "account_name" })
+    accountName!: string
+
+    @Column({ unique: true })
+    email!: string
+
+    @Column({ nullable: true })
+    phone?: string
+
+    @Column({ select: false })
+    password!: string
+
+    @Column({ name: "account_holder_name", nullable: true })
+    accountHolderName?: string
+
+    @Column({ name: "bank_name", nullable: true })
+    bankName?: string
+
+    @Column({ name: "account_number", nullable: true })
+    accountNumber?: string
+
+    @Column({ name: "is_subscribe", default: false })
+    isSubscribe!: boolean
+
+    @Column({ name: "is_auto_withdraw", default: false })
+    isAutoWithdraw!: boolean
+
+    @Column({ name: "reset_password_token", nullable: true })
+    resetPasswordToken?: string
+
+    @Column({ name: "reset_password_expires", type: "timestamp", nullable: true })
+    resetPasswordExpires?: Date
+
+    @Column({ name: "refresh_token", type: "text", nullable: true })
+    refreshToken?: string
+
+    @CreateDateColumn({ name: "created_at" })
+    createdAt!: Date
+
+    @UpdateDateColumn({ name: "updated_at" })
+    updatedAt!: Date
+}
