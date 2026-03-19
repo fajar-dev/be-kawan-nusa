@@ -26,7 +26,7 @@ export class AuthService {
 
     async login(data: LoginRequest) {
         const user = await this.repository.createQueryBuilder("user")
-            .where("user.email = :email", { email: data.email })
+            .where("user.email = :identifier OR user.phone = :identifier", { identifier: data.identifier })
             .addSelect("user.password")
             .getOne()
 
@@ -39,7 +39,7 @@ export class AuthService {
             throw new UnauthorizedException("Invalid credentials")
         }
 
-        const token = await sign(
+        const accessToken = await sign(
             { 
                 sub: user.id, 
                 email: user.email, 
@@ -64,7 +64,7 @@ export class AuthService {
         // Remove passwords and tokens before returning
         const { password, resetPasswordToken, resetPasswordExpires, refreshToken: rfToken, ...userWithoutSensitiveData } = user
 
-        return { user: userWithoutSensitiveData, token, refreshToken }
+        return { user: userWithoutSensitiveData, accessToken, refreshToken }
     }
 
     async refreshToken(data: RefreshTokenRequest) {
@@ -102,7 +102,7 @@ export class AuthService {
             user.refreshToken = newRefreshToken
             await this.repository.save(user)
 
-            return { token: newToken, refreshToken: newRefreshToken }
+            return { accessToken: newToken, refreshToken: newRefreshToken }
         } catch (error) {
             throw new UnauthorizedException("Invalid or expired refresh token")
         }
@@ -130,7 +130,7 @@ export class AuthService {
         //      <p><strong>${resetToken}</strong></p>
         //      <p>This token will expire in 1 hour.</p>`
         // )
-        console.log(`[Email Mock] Password reset requested for ${user.email}. Token: ${resetToken}`)
+        console.log(`http://127.0.0.1:3000/auth/reset-password?email=${user.email}&token=${resetToken}`)
         
         return true
     }
@@ -154,9 +154,10 @@ export class AuthService {
         return true
     }
 
-    async validateResetToken(token:string) {
+    async validateResetToken(email:string, token:string) {
         const user = await this.repository.createQueryBuilder("user")
-            .where("user.reset_password_token = :token", { token })
+            .where("user.email = :email", { email })
+            .andWhere("user.reset_password_token = :token", { token })
             .andWhere("user.reset_password_expires > :now", { now: new Date() })
             .getOne()
         

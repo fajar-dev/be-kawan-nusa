@@ -6,7 +6,7 @@ export const RegisterSchema = CreateUserSchema
 export type RegisterRequest = z.infer<typeof RegisterSchema>
 
 export const LoginSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  identifier: z.string().min(1, "Email or phone is required"),
   password: z.string().min(1, "Password is required"),
 })
 

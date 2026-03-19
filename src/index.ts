@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { ZodError } from 'zod'
 import { AppDataSource } from './config/database'
 import api from './routes/api'
@@ -7,6 +8,12 @@ import { BaseException } from './core/exceptions/base'
 import { config } from './config/config'
 
 const app = new Hono()
+
+// CORS
+app.use('*', cors({
+    origin: '*',
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+}))
 
 // Database Connection
 AppDataSource.initialize()

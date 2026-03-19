@@ -20,7 +20,7 @@ export class AuthController {
         
         return ApiResponse.success(c, {
             user: UserResource.single(data.user as any),
-            token: data.token,
+            accessToken: data.accessToken,
             refreshToken: data.refreshToken
         }, "Logged in successfully")
     }
@@ -54,12 +54,16 @@ export class AuthController {
     }
 
     async validateResetToken(c: Context) {
+        const email = c.req.query('email')
         const token = c.req.query('token')
         if (!token) {
             throw new BadRequestException("Reset token is required")
         }
+        if (!email) {
+            throw new BadRequestException("Email is required")
+        }
         
-        await this.service.validateResetToken(token)
+        await this.service.validateResetToken(email, token)
         
         return ApiResponse.success(c, null, "Token is valid")
     }
