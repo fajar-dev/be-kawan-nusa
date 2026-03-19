@@ -12,6 +12,9 @@ export class User {
     lastName!: string
 
     @Column({ nullable: true })
+    photo?: string
+
+    @Column({ nullable: true })
     company?: string
 
     @Column({ name: "job_position", nullable: true })
