@@ -1,8 +1,8 @@
 import { Context } from 'hono'
 import { AuthService } from './auth.service'
 import { ApiResponse } from '../../core/helpers/apiResponse'
-import { RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest } from './auth.request'
-import { UserResource } from '../user/dto/user.response'
+import { RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest } from './dto/auth.request'
+import { UserResource } from '../user/dto/user.resource'
 import { BadRequestException } from '../../core/exceptions/base'
 
 export class AuthController {

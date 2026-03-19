@@ -1,17 +1,15 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
-import { RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest, } from "./auth.request"
+import { RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest, } from "./dto/auth.request"
 import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { sign, verify } from "hono/jwt"
 import { config } from "../../config/config"
 import crypto from "crypto"
-import { UserService } from "../user/user.service"
 import { mail } from "../../core/helpers/mailSender"
 
 export class AuthService {
     private repository = AppDataSource.getRepository(User)
-    private userService = new UserService()
 
     async register(data: RegisterRequest) {
         // Check if email already exists
@@ -20,8 +18,12 @@ export class AuthService {
             throw new BadRequestException("Email already in use")
         }
         
-        const user = await this.userService.create(data)
-        return user
+        const hashedPassword = await hashPassword(data.password)
+        const user = this.repository.create({
+            ...data,
+            password: hashedPassword
+        })
+        return await this.repository.save(user)
     }
 
     async login(data: LoginRequest) {
@@ -130,7 +132,7 @@ export class AuthService {
         //      <p><strong>${resetToken}</strong></p>
         //      <p>This token will expire in 1 hour.</p>`
         // )
-        console.log(`http://127.0.0.1:3000/auth/reset-password?email=${user.email}&token=${resetToken}`)
+        console.log(`http://localhost:3000/auth/reset-password?email=${user.email}&token=${resetToken}`)
         
         return true
     }

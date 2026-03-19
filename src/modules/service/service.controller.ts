@@ -2,7 +2,7 @@ import { Context } from 'hono'
 import { ServiceService } from './service.service'
 import { ApiResponse } from '../../core/helpers/apiResponse'
 import { CreateServiceRequest, UpdateServiceRequest } from './dto/service.request'
-import { ServiceResource } from './dto/service.response'
+import { ServiceResource } from './dto/service.resource'
 
 export class ServiceController {
     private service = new ServiceService()

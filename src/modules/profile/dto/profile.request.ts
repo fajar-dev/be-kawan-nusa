@@ -1,0 +1,27 @@
+import { email, z } from "zod"
+
+export const UpdateAccountSchema = z.object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    phone: z.string().min(1, "Phone is required"),
+    email: z.string().email("Invalid email format"),
+    company: z.string().optional(),
+    jobPosition: z.string().optional(),
+})
+
+export type UpdateAccountRequest = z.infer<typeof UpdateAccountSchema>
+
+export const UpdateBankSchema = z.object({
+    accountHolderName: z.string().min(1, "Account holder name is required"),
+    bankName: z.string().min(1, "Bank name is required"),
+    accountNumber: z.string().min(1, "Account number is required"),
+})
+
+export type UpdateBankRequest = z.infer<typeof UpdateBankSchema>
+
+export const UpdatePasswordSchema = z.object({
+    oldPassword: z.string().min(1, "Old password is required"),
+    newPassword: z.string().min(6, "New password must be at least 6 characters"),
+})
+
+export type UpdatePasswordRequest = z.infer<typeof UpdatePasswordSchema>

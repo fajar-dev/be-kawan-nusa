@@ -5,17 +5,17 @@ import { CustomerController } from '../modules/customer/customer.controller'
 import { CreateCustomerSchema, UpdateCustomerSchema } from '../modules/customer/dto/customer.request'
 import { ServiceController } from '../modules/service/service.controller'
 import { CreateServiceSchema, UpdateServiceSchema } from '../modules/service/dto/service.request'
-import { UserController } from '../modules/user/user.controller'
-import { CreateUserSchema, UpdateUserSchema } from '../modules/user/dto/user.request'
 import { AuthController } from '../modules/auth/auth.controller'
-import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema, RefreshTokenSchema } from '../modules/auth/auth.request'
+import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema, RefreshTokenSchema } from '../modules/auth/dto/auth.request'
 import { authMiddleware } from '../core/middlewares/auth.middleware'
+import { ProfileController } from '../modules/profile/profile.controller'
+import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema } from '../modules/profile/dto/profile.request'
 
 const routes = new Hono()
 const customerController = new CustomerController()
 const serviceController = new ServiceController()
-const userController = new UserController()
 const authController = new AuthController()
+const profileController = new ProfileController()
 
 const validationHook = (result: any, c: any) => {
     if (!result.success) {
@@ -33,6 +33,12 @@ routes.post('/auth/refresh', zValidator('json', RefreshTokenSchema, validationHo
 routes.get('/auth/me', authMiddleware, (c) => authController.me(c))
 routes.post('/auth/logout', authMiddleware, (c) => authController.logout(c))
 
+// Profile Routes
+routes.get('/profile', authMiddleware, (c) => profileController.show(c))
+routes.put('/profile/account', authMiddleware, zValidator('json', UpdateAccountSchema, validationHook), (c) => profileController.updateAccount(c))
+routes.put('/profile/bank', authMiddleware, zValidator('json', UpdateBankSchema, validationHook), (c) => profileController.updateBank(c))
+routes.put('/profile/password', authMiddleware, zValidator('json', UpdatePasswordSchema, validationHook), (c) => profileController.updatePassword(c))
+
 // Customer Routes
 routes.get('/customer', (c) => customerController.index(c))
 routes.get('/customer/:id', (c) => customerController.show(c))
@@ -46,13 +52,5 @@ routes.get('/service/:id', (c) => serviceController.show(c))
 routes.post('/service', zValidator('json', CreateServiceSchema, validationHook), (c) => serviceController.store(c))
 routes.patch('/service/:id', zValidator('json', UpdateServiceSchema, validationHook), (c) => serviceController.update(c))
 routes.delete('/service/:id', (c) => serviceController.destroy(c))
-
-// User Routes
-routes.get('/user', (c) => userController.index(c))
-routes.get('/user/:id', (c) => userController.show(c))
-routes.post('/user', zValidator('json', CreateUserSchema, validationHook), (c) => userController.store(c))
-routes.patch('/user/:id', zValidator('json', UpdateUserSchema, validationHook), (c) => userController.update(c))
-
-
 
 export default routes
