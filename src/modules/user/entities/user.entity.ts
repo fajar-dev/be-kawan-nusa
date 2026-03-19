@@ -53,6 +53,9 @@ export class User {
     @Column({ name: "refresh_token", type: "text", nullable: true })
     refreshToken?: string
 
+    @CreateDateColumn({ name: "password_updated_at" })
+    passwordUpdatedAt?: Date
+
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
 

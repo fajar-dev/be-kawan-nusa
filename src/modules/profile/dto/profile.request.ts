@@ -25,3 +25,10 @@ export const UpdatePasswordSchema = z.object({
 })
 
 export type UpdatePasswordRequest = z.infer<typeof UpdatePasswordSchema>
+
+export const UpdatePreferenceSchema = z.object({
+    isSubscribe: z.boolean().optional(),
+    isAutoWithdraw: z.boolean().optional(),
+})
+
+export type UpdatePreferenceRequest = z.infer<typeof UpdatePreferenceSchema>

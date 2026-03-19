@@ -19,7 +19,9 @@ export class UserResource {
             settings: {
                 isSubscribe: user.isSubscribe,
                 isAutoWithdraw: user.isAutoWithdraw
-            }
+            },
+            passwordUpdatedAt: user.passwordUpdatedAt,
+            createdAt: user.createdAt
         }
     }
 

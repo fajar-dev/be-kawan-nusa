@@ -1,6 +1,6 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
-import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest } from "./dto/profile.request"
+import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest, UpdatePreferenceRequest } from "./dto/profile.request"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 
@@ -22,6 +22,12 @@ export class ProfileService {
     }
 
     async updateBank(userId: number, data: UpdateBankRequest) {
+        const user = await this.getProfile(userId)
+        this.repository.merge(user, data)
+        return await this.repository.save(user)
+    }
+
+    async updatePreference(userId: number, data: UpdatePreferenceRequest) {
         const user = await this.getProfile(userId)
         this.repository.merge(user, data)
         return await this.repository.save(user)

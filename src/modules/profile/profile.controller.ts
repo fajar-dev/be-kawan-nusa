@@ -1,7 +1,7 @@
 import { Context } from "hono"
 import { ProfileService } from "./profile.service"
 import { ApiResponse } from "../../core/helpers/apiResponse"
-import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest } from "./dto/profile.request"
+import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest, UpdatePreferenceRequest } from "./dto/profile.request"
 import { UserResource } from "../user/dto/user.resource"
 
 export class ProfileController {
@@ -24,6 +24,13 @@ export class ProfileController {
         const body = await c.req.json() as UpdateBankRequest
         const updated = await this.service.updateBank(user.id, body)
         return ApiResponse.success(c, UserResource.single(updated), "Bank details updated successfully")
+    }
+
+    async updatePreference(c: Context) {
+        const user = c.get('user')
+        const body = await c.req.json() as UpdatePreferenceRequest
+        const updated = await this.service.updatePreference(user.id, body)
+        return ApiResponse.success(c, UserResource.single(updated), "Preference updated successfully")
     }
 
     async updatePassword(c: Context) {

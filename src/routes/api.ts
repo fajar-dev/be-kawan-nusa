@@ -9,7 +9,7 @@ import { AuthController } from '../modules/auth/auth.controller'
 import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema, RefreshTokenSchema } from '../modules/auth/dto/auth.request'
 import { authMiddleware } from '../core/middlewares/auth.middleware'
 import { ProfileController } from '../modules/profile/profile.controller'
-import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema } from '../modules/profile/dto/profile.request'
+import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePreferenceSchema } from '../modules/profile/dto/profile.request'
 
 const routes = new Hono()
 const customerController = new CustomerController()
@@ -37,6 +37,7 @@ routes.post('/auth/logout', authMiddleware, (c) => authController.logout(c))
 routes.get('/profile', authMiddleware, (c) => profileController.show(c))
 routes.put('/profile/account', authMiddleware, zValidator('json', UpdateAccountSchema, validationHook), (c) => profileController.updateAccount(c))
 routes.put('/profile/bank', authMiddleware, zValidator('json', UpdateBankSchema, validationHook), (c) => profileController.updateBank(c))
+routes.put('/profile/preference', authMiddleware, zValidator('json', UpdatePreferenceSchema, validationHook), (c) => profileController.updatePreference(c))
 routes.put('/profile/password', authMiddleware, zValidator('json', UpdatePasswordSchema, validationHook), (c) => profileController.updatePassword(c))
 
 // Customer Routes
