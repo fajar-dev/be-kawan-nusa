@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CreateUserSchema } from '../user/user.request'
+import { CreateUserSchema } from '../user/dto/user.request'
 
 export const RegisterSchema = CreateUserSchema
 

@@ -1,6 +1,6 @@
 import { AppDataSource } from "../../config/database"
-import { Service } from "./service.entity"
-import { CreateServiceRequest, UpdateServiceRequest } from "./service.request"
+import { Service } from "./entities/service.entity"
+import { CreateServiceRequest, UpdateServiceRequest } from "./dto/service.request"
 import { NotFoundException } from "../../core/exceptions/base"
 
 export class ServiceService {

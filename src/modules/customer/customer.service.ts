@@ -1,6 +1,6 @@
 import { AppDataSource } from "../../config/database"
-import { Customer } from "./customer.entity"
-import { CreateCustomerRequest, UpdateCustomerRequest } from "./customer.request"
+import { Customer } from "./entities/customer.entity"
+import { CreateCustomerRequest, UpdateCustomerRequest } from "./dto/customer.request"
 import { NotFoundException } from "../../core/exceptions/base"
 
 export class CustomerService {

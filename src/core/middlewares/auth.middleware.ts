@@ -2,7 +2,7 @@ import { Context, Next } from 'hono'
 import { verify } from 'hono/jwt'
 import { config } from '../../config/config'
 import { AppDataSource } from '../../config/database'
-import { User } from '../../modules/user/user.entity'
+import { User } from '../../modules/user/entities/user.entity'
 import { UnauthorizedException } from '../exceptions/base'
 
 export const authMiddleware = async (c: Context, next: Next) => {

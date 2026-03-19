@@ -1,4 +1,4 @@
-import { Service } from "./service.entity"
+import { Service } from "../entities/service.entity"
 
 export class ServiceResource {
     static single(service: Service) {

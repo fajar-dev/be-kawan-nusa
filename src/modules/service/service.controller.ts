@@ -1,8 +1,8 @@
 import { Context } from 'hono'
 import { ServiceService } from './service.service'
 import { ApiResponse } from '../../core/helpers/apiResponse'
-import { CreateServiceRequest, UpdateServiceRequest } from './service.request'
-import { ServiceResource } from './service.resource'
+import { CreateServiceRequest, UpdateServiceRequest } from './dto/service.request'
+import { ServiceResource } from './dto/service.response'
 
 export class ServiceController {
     private service = new ServiceService()

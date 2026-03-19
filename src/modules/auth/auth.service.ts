@@ -1,5 +1,5 @@
 import { AppDataSource } from "../../config/database"
-import { User } from "../user/user.entity"
+import { User } from "../user/entities/user.entity"
 import { RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest, } from "./auth.request"
 import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"

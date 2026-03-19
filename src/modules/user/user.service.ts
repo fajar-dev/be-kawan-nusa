@@ -1,6 +1,6 @@
 import { AppDataSource } from "../../config/database"
-import { User } from "./user.entity"
-import { CreateUserRequest, UpdateUserRequest } from "./user.request"
+import { User } from "./entities/user.entity"
+import { CreateUserRequest, UpdateUserRequest } from "./dto/user.request"
 import { NotFoundException } from "../../core/exceptions/base"
 import { hashPassword } from "../../core/helpers/hash"
 

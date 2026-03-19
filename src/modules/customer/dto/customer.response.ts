@@ -1,4 +1,4 @@
-import { Customer } from "./customer.entity"
+import { Customer } from "../entities/customer.entity"
 
 export class CustomerResource {
     static single(customer: Customer) {

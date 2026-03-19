@@ -1,10 +1,10 @@
 import "reflect-metadata"
 import { DataSource } from "typeorm"
-import { Customer } from "../modules/customer/customer.entity"
-import { CustomerPhone } from "../modules/customer/customer-phone.entity"
-import { CustomerEmail } from "../modules/customer/customer-email.entity"
-import { Service } from "../modules/service/service.entity"
-import { User } from "../modules/user/user.entity"
+import { Customer } from "../modules/customer/entities/customer.entity"
+import { CustomerPhone } from "../modules/customer/entities/customer-phone.entity"
+import { CustomerEmail } from "../modules/customer/entities/customer-email.entity"
+import { Service } from "../modules/service/entities/service.entity"
+import { User } from "../modules/user/entities/user.entity"
 import { config } from "./config"
 
 /**

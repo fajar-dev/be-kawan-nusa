@@ -2,11 +2,11 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { ApiResponse } from '../core/helpers/apiResponse'
 import { CustomerController } from '../modules/customer/customer.controller'
-import { CreateCustomerSchema, UpdateCustomerSchema } from '../modules/customer/customer.request'
+import { CreateCustomerSchema, UpdateCustomerSchema } from '../modules/customer/dto/customer.request'
 import { ServiceController } from '../modules/service/service.controller'
-import { CreateServiceSchema, UpdateServiceSchema } from '../modules/service/service.request'
+import { CreateServiceSchema, UpdateServiceSchema } from '../modules/service/dto/service.request'
 import { UserController } from '../modules/user/user.controller'
-import { CreateUserSchema, UpdateUserSchema } from '../modules/user/user.request'
+import { CreateUserSchema, UpdateUserSchema } from '../modules/user/dto/user.request'
 import { AuthController } from '../modules/auth/auth.controller'
 import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema, RefreshTokenSchema } from '../modules/auth/auth.request'
 import { authMiddleware } from '../core/middlewares/auth.middleware'
@@ -52,7 +52,6 @@ routes.get('/user', (c) => userController.index(c))
 routes.get('/user/:id', (c) => userController.show(c))
 routes.post('/user', zValidator('json', CreateUserSchema, validationHook), (c) => userController.store(c))
 routes.patch('/user/:id', zValidator('json', UpdateUserSchema, validationHook), (c) => userController.update(c))
-routes.delete('/user/:id', (c) => userController.destroy(c))
 
 
 
