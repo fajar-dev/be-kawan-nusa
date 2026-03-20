@@ -9,6 +9,7 @@ import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema,
 import { authMiddleware } from '../core/middlewares/auth.middleware'
 import { ProfileController } from '../modules/profile/profile.controller'
 import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePreferenceSchema } from '../modules/profile/dto/profile.request'
+import { PointController } from '../modules/point/point.controller'
 
 const routes = new Hono()
 const customerController = new CustomerController()
@@ -16,6 +17,7 @@ const customerServiceController = new CustomerServiceController()
 const serviceController = new ServiceController()
 const authController = new AuthController()
 const profileController = new ProfileController()
+const pointController = new PointController()
 
 const validationHook = (result: any, c: any) => {
     if (!result.success) {
@@ -39,6 +41,9 @@ routes.put('/profile/account', authMiddleware, zValidator('json', UpdateAccountS
 routes.put('/profile/bank', authMiddleware, zValidator('json', UpdateBankSchema, validationHook), (c) => profileController.updateBank(c))
 routes.put('/profile/preference', authMiddleware, zValidator('json', UpdatePreferenceSchema, validationHook), (c) => profileController.updatePreference(c))
 routes.put('/profile/password', authMiddleware, zValidator('json', UpdatePasswordSchema, validationHook), (c) => profileController.updatePassword(c))
+
+// Point Routes
+routes.get('/point', authMiddleware, (c) => pointController.show(c))
 
 // Customer Routes
 routes.get('/customer', authMiddleware, (c) => customerController.index(c))

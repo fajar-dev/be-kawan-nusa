@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, OneToOne } from "typeorm"
 import type { Relation } from "typeorm"
 import { Customer } from "../../customer/entities/customer.entity"
+import { Point } from "../../point/entities/point.entity"
 
 @Entity("users")
 export class User {
@@ -60,6 +61,9 @@ export class User {
 
     @OneToMany(() => Customer, (customer) => customer.user)
     customers!: Relation<Customer[]>
+
+    @OneToOne(() => Point, (point) => point.user)
+    point!: Relation<Point>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

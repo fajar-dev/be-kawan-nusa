@@ -7,6 +7,7 @@ import { CustomerAddress } from "../modules/customer/entities/customer-address.e
 import { Service } from "../modules/service/entities/service.entity"
 import { CustomerService } from "../modules/customer-service/entities/customer-service.entity"
 import { User } from "../modules/user/entities/user.entity"
+import { Point } from "../modules/point/entities/point.entity"
 import { config } from "./config"
 
 /**
@@ -21,7 +22,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.app.env !== "production",
-    entities: [Customer, CustomerPhone, CustomerEmail, CustomerAddress, Service, CustomerService, User],
+    entities: [Customer, CustomerPhone, CustomerEmail, CustomerAddress, Service, CustomerService, User, Point],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",
