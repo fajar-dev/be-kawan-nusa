@@ -7,30 +7,34 @@ import { sign, verify } from "hono/jwt"
 import { config } from "../../config/config"
 import crypto from "crypto"
 import { mail } from "../../core/helpers/mailSender"
+import { PointService } from "../point/point.service"
+import { EntityManager } from "typeorm"
+import { UserService } from "../user/user.service"
 
 export class AuthService {
-    private repository = AppDataSource.getRepository(User)
+    private userService = new UserService()
+    private pointService = new PointService()
 
     async register(data: RegisterRequest) {
-        // Check if email already exists
-        const existing = await this.repository.findOneBy({ email: data.email })
-        if (existing) {
+        const user = await this.userService.getByEmail(data.email)
+        if (user) {
             throw new BadRequestException("Email already in use")
         }
-        
-        const hashedPassword = await hashPassword(data.password)
-        const user = this.repository.create({
-            ...data,
-            password: hashedPassword
+
+        return AppDataSource.transaction(async (manager: EntityManager) => {
+            const user = await this.userService.save({
+                ...data,
+                password: await hashPassword(data.password)
+            }, manager)
+
+            await this.pointService.create({ userId: user.id }, manager)
+
+            return user
         })
-        return await this.repository.save(user)
     }
 
     async login(data: LoginRequest) {
-        const user = await this.repository.createQueryBuilder("user")
-            .where("user.email = :identifier OR user.phone = :identifier", { identifier: data.identifier })
-            .addSelect("user.password")
-            .getOne()
+        const user = await this.userService.getByIdentifier(data.identifier)
 
         if (!user) {
             throw new UnauthorizedException("Invalid credentials")
@@ -61,9 +65,8 @@ export class AuthService {
         )
 
         user.refreshToken = refreshToken
-        await this.repository.save(user)
+        await this.userService.save(user)
 
-        // Remove passwords and tokens before returning
         const { password, resetPasswordToken, resetPasswordExpires, refreshToken: rfToken, ...userWithoutSensitiveData } = user
 
         return { user: userWithoutSensitiveData, accessToken, refreshToken }
@@ -73,10 +76,7 @@ export class AuthService {
         try {
             const decoded = await verify(data.refreshToken, config.app.jwtRefreshSecret, "HS256") as { sub: number }
             
-            const user = await this.repository.createQueryBuilder("user")
-                .where("user.id = :id", { id: decoded.sub })
-                .addSelect("user.refreshToken")
-                .getOne()
+            const user = await this.userService.getByIdWithRefreshToken(decoded.sub)
             
             if (!user || user.refreshToken !== data.refreshToken) {
                 throw new UnauthorizedException("Invalid refresh token")
@@ -102,7 +102,7 @@ export class AuthService {
             )
 
             user.refreshToken = newRefreshToken
-            await this.repository.save(user)
+            await this.userService.save(user)
 
             const { password, resetPasswordToken, resetPasswordExpires, refreshToken: rfToken, ...userWithoutSensitiveData } = user
 
@@ -113,9 +113,8 @@ export class AuthService {
     }
 
     async forgotPassword(data: ForgotPasswordRequest) {
-        const user = await this.repository.findOneBy({ email: data.email })
+        const user = await this.userService.getByEmail(data.email)
         if (!user) {
-            // Standard practice: don't reveal if user exists to prevent email enumeration
             return true
         }
 
@@ -123,8 +122,7 @@ export class AuthService {
         user.resetPasswordToken = resetToken
         user.resetPasswordExpires = new Date(Date.now() + 36000000) // 1 hour
 
-        await this.repository.save(user)
-
+        await this.userService.save(user)
         // Send actual email
         // await mail.sendHtml(
         //     user.email,
@@ -140,11 +138,7 @@ export class AuthService {
     }
 
     async resetPassword(data: ResetPasswordRequest) {
-        // Cannot use findOneBy with Date comparison directly, using query builder
-        const user = await this.repository.createQueryBuilder("user")
-            .where("user.reset_password_token = :token", { token: data.token })
-            .andWhere("user.reset_password_expires > :now", { now: new Date() })
-            .getOne()
+        const user = await this.userService.getByResetToken(data.token)
         
         if (!user) {
             throw new BadRequestException("Invalid or expired reset token")
@@ -154,16 +148,12 @@ export class AuthService {
         user.resetPasswordToken = null as any
         user.resetPasswordExpires = null as any
 
-        await this.repository.save(user)
+        await this.userService.save(user)
         return true
     }
 
     async validateResetToken(email:string, token:string) {
-        const user = await this.repository.createQueryBuilder("user")
-            .where("user.email = :email", { email })
-            .andWhere("user.reset_password_token = :token", { token })
-            .andWhere("user.reset_password_expires > :now", { now: new Date() })
-            .getOne()
+        const user = await this.userService.getByEmailAndResetToken(email, token)
         
         if (!user) {
             throw new BadRequestException("Invalid or expired reset token")
@@ -174,7 +164,7 @@ export class AuthService {
 
     async logout(user: User) {
         user.refreshToken = null as any
-        await this.repository.save(user)
+        await this.userService.save(user)
         return true
     }
 }

@@ -17,7 +17,6 @@ export class AuthController {
     async login(c: Context) {
         const body = await c.req.json() as LoginRequest
         const data = await this.service.login(body)
-        
         return ApiResponse.success(c, {
             user: UserResource.single(data.user as any),
             accessToken: data.accessToken,
