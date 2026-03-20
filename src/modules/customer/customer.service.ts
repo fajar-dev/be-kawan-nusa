@@ -1,10 +1,12 @@
 import { AppDataSource } from "../../config/database"
 import { Customer } from "./entities/customer.entity"
+import { CustomerAddress } from "./entities/customer-address.entity"
 import { NotFoundException } from "../../core/exceptions/base"
 import { Like } from "typeorm"
 
 export class CustomerService {
     private repository = AppDataSource.getRepository(Customer)
+    private addressRepository = AppDataSource.getRepository(CustomerAddress)
 
     async getAll(userId: number, page: number = 1, limit: number = 10, q: string = "", sort: string = "createdAt", order: string = "DESC") {
         const skip = (page - 1) * limit
@@ -35,5 +37,21 @@ export class CustomerService {
             throw new NotFoundException(`Customer not found`)
         }
         return customer
+    }
+
+    async getAddresses(customerId: string, userId: number, page: number = 1, limit: number = 10) {
+        const customer = await this.repository.findOne({ where: { id: customerId, userId } })
+        if (!customer) {
+            throw new NotFoundException(`Customer not found`)
+        }
+
+        const skip = (page - 1) * limit
+        const [data, total] = await this.addressRepository.findAndCount({
+            where: { customerId },
+            take: limit,
+            skip: skip,
+            order: { createdAt: "DESC" }
+        })
+        return { data, total }
     }
 }

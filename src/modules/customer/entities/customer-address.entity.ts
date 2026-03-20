@@ -14,15 +14,6 @@ export class CustomerAddress {
     address!: string
 
     @Column({ nullable: true })
-    city?: string
-
-    @Column({ nullable: true })
-    province?: string
-
-    @Column({ name: "postal_code", nullable: true })
-    postalCode?: string
-
-    @Column({ nullable: true })
     label?: string // e.g., "Home", "Office", "Billing"
 
     @ManyToOne(() => Customer, (customer) => customer.addresses, { onDelete: 'CASCADE' })

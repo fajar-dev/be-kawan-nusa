@@ -42,6 +42,7 @@ routes.put('/profile/password', authMiddleware, zValidator('json', UpdatePasswor
 // Customer Routes
 routes.get('/customer', authMiddleware, (c) => customerController.index(c))
 routes.get('/customer/:id', authMiddleware, (c) => customerController.show(c))
+routes.get('/customer/:id/address', authMiddleware, (c) => customerController.addresses(c))
 
 // Service Routes
 routes.get('/service', (c) => serviceController.index(c))
