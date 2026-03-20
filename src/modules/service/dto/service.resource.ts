@@ -1,7 +1,5 @@
-import { Service } from "../entities/service.entity"
-
 export class ServiceResource {
-    static single(service: Service) {
+    static single(service: any) {
         return {
             id: service.id,
             code: service.code,
@@ -9,12 +7,13 @@ export class ServiceResource {
             description: service.description,
             type: service.type,
             isActive: service.isActive,
-            createdAt: service.createdAt,
-            updatedAt: service.updatedAt,
+            lastReferanceDate: service.lastReferanceDate || null,
+            totalCustomerServices: service.totalCustomerServices || 0,
+            totalPoints: 0
         }
     }
 
-    static collection(services: Service[]) {
+    static collection(services: any[]) {
         return services.map(service => this.single(service))
     }
 }

@@ -26,11 +26,4 @@ export class CustomerServiceController {
             "Customer services retrieved successfully"
         )
     }
-
-    async show(c: Context) {
-        const user = c.get('user')
-        const id = Number(c.req.param('serviceId'))
-        const item = await this.service.getById(id, user.id)
-        return ApiResponse.success(c, CustomerServiceResource.single(item), "Customer service retrieved successfully")
-    }
 }

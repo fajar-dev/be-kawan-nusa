@@ -7,13 +7,14 @@ export class ServiceController {
     private service = new ServiceService()
 
     async index(c: Context) {
+        const user = c.get('user')
         const page = Number(c.req.query('page')) || 1
         const limit = Number(c.req.query('limit')) || 10
         const q = c.req.query('q') || ""
-        const sort = c.req.query('sort') || "createdAt"
-        const order = c.req.query('order') || "DESC"
+        const sort = c.req.query('sort') || "name"
+        const order = c.req.query('order') || "ASC"
         
-        const { data, total } = await this.service.getAll(page, limit, q, sort, order)
+        const { data, total } = await this.service.getAll(user.id, page, limit, q, sort, order)
         
         return ApiResponse.paginate(
             c, 
@@ -26,8 +27,9 @@ export class ServiceController {
     }
 
     async show(c: Context) {
-        const id = Number(c.req.param('id'))
-        const service = await this.service.getById(id)
+        const user = c.get('user')
+        const code = c.req.param('code') as string
+        const service = await this.service.getByCode(code, user.id)
         return ApiResponse.success(c, ServiceResource.single(service), "Service retrieved successfully")
     }
 }

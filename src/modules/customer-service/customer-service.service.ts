@@ -8,56 +8,41 @@ export class CustomerServiceService {
     private repository = AppDataSource.getRepository(CustomerService)
     private customerRepository = AppDataSource.getRepository(Customer)
 
-    async getAllByCustomer(customerId: string, userId: number, page: number = 1, limit: number = 10, q: string = "", sort: string = "referenceDate", order: string = "DESC") {
-        // Verify customer ownership
-        const customer = await this.customerRepository.findOne({ where: { id: customerId, userId } })
+    async getAllByCustomer(
+        customerId: string, 
+        userId: number, 
+        page: number, 
+        limit: number, 
+        q: string, 
+        sort: string, 
+        order: string
+    ) {
+        const customer = await this.customerRepository.findOneBy({ id: customerId, userId })
         if (!customer) {
             throw new NotFoundException(`Customer not found`)
         }
 
-        const skip = (page - 1) * limit
-        
-        // Use QueryBuilder for more flexible searching and sorting
         const query = this.repository.createQueryBuilder("cs")
             .leftJoinAndSelect("cs.service", "service")
             .where("cs.customerId = :customerId", { customerId })
 
         if (q) {
-            query.andWhere(
-                new Brackets(qb => {
-                    qb.where("cs.serviceCode LIKE :q", { q: `%${q}%` })
-                      .orWhere("cs.salesName LIKE :q", { q: `%${q}%` })
-                      .orWhere("service.name LIKE :q", { q: `%${q}%` })
-                })
-            )
+            const searchPattern = `%${q}%`
+            query.andWhere(new Brackets(qb => {
+                qb.where("cs.serviceCode LIKE :q")
+                  .orWhere("cs.salesName LIKE :q")
+                  .orWhere("service.name LIKE :q")
+            }), { q: searchPattern })
         }
 
-        // Handle sorting, including mapping for "name"
-        if (sort === "name") {
-            query.orderBy("service.name", order.toUpperCase() as any)
-        } else {
-            // Default to cs alias for other fields
-            query.orderBy(`cs.${sort}`, order.toUpperCase() as any)
-        }
+        const sortAlias = sort.includes(".") ? sort : `cs.${sort}`
+        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
 
         const [data, total] = await query
             .take(limit)
-            .skip(skip)
+            .skip((page - 1) * limit)
             .getManyAndCount()
 
         return { data, total }
-    }
-
-    async getById(id: number, userId: number) {
-        const item = await this.repository.findOne({
-            where: { id },
-            relations: ["service", "customer"]
-        })
-
-        if (!item || item.customer.userId !== userId) {
-            throw new NotFoundException(`Customer service not found`)
-        }
-
-        return item
     }
 }

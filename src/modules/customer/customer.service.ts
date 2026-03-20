@@ -9,7 +9,7 @@ export class CustomerService {
     private repository = AppDataSource.getRepository(Customer)
     private addressRepository = AppDataSource.getRepository(CustomerAddress)
 
-    async getAll(userId: number, page: number = 1, limit: number = 10, q: string = "", sort: string = "createdAt", order: string = "DESC") {
+    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string) {
         const skip = (page - 1) * limit
         const baseWhere = { userId }
         const where = q ? [

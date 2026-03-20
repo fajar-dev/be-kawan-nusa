@@ -45,10 +45,9 @@ routes.get('/customer', authMiddleware, (c) => customerController.index(c))
 routes.get('/customer/:id', authMiddleware, (c) => customerController.show(c))
 routes.get('/customer/:id/address', authMiddleware, (c) => customerController.addresses(c))
 routes.get('/customer/:id/service', authMiddleware, (c) => customerServiceController.index(c))
-routes.get('/customer/:id/service/:serviceId', authMiddleware, (c) => customerServiceController.show(c))
 
 // Service Routes
-routes.get('/service', (c) => serviceController.index(c))
-routes.get('/service/:id', (c) => serviceController.show(c))
+routes.get('/service', authMiddleware, (c) => serviceController.index(c))
+routes.get('/service/:code', authMiddleware, (c) => serviceController.show(c))
 
 export default routes
