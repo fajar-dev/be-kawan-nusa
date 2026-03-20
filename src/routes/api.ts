@@ -2,8 +2,8 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { ApiResponse } from '../core/helpers/apiResponse'
 import { CustomerController } from '../modules/customer/customer.controller'
+import { CustomerServiceController } from '../modules/customer-service/customer-service.controller'
 import { ServiceController } from '../modules/service/service.controller'
-import { CreateServiceSchema, UpdateServiceSchema } from '../modules/service/dto/service.request'
 import { AuthController } from '../modules/auth/auth.controller'
 import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema, RefreshTokenSchema } from '../modules/auth/dto/auth.request'
 import { authMiddleware } from '../core/middlewares/auth.middleware'
@@ -12,6 +12,7 @@ import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePref
 
 const routes = new Hono()
 const customerController = new CustomerController()
+const customerServiceController = new CustomerServiceController()
 const serviceController = new ServiceController()
 const authController = new AuthController()
 const profileController = new ProfileController()
@@ -43,12 +44,11 @@ routes.put('/profile/password', authMiddleware, zValidator('json', UpdatePasswor
 routes.get('/customer', authMiddleware, (c) => customerController.index(c))
 routes.get('/customer/:id', authMiddleware, (c) => customerController.show(c))
 routes.get('/customer/:id/address', authMiddleware, (c) => customerController.addresses(c))
+routes.get('/customer/:id/service', authMiddleware, (c) => customerServiceController.index(c))
+routes.get('/customer/:id/service/:serviceId', authMiddleware, (c) => customerServiceController.show(c))
 
 // Service Routes
 routes.get('/service', (c) => serviceController.index(c))
 routes.get('/service/:id', (c) => serviceController.show(c))
-routes.post('/service', zValidator('json', CreateServiceSchema, validationHook), (c) => serviceController.store(c))
-routes.patch('/service/:id', zValidator('json', UpdateServiceSchema, validationHook), (c) => serviceController.update(c))
-routes.delete('/service/:id', (c) => serviceController.destroy(c))
 
 export default routes

@@ -3,6 +3,7 @@ import { CustomerPhone } from "./customer-phone.entity"
 import { CustomerEmail } from "./customer-email.entity"
 import { CustomerAddress } from "./customer-address.entity"
 import { CustomerType } from "../customer.enum"
+import { CustomerService as CustomerServiceObject } from "../../customer-service/entities/customer-service.entity"
 import { User } from "../../user/entities/user.entity"
 
 @Entity("customers")
@@ -48,6 +49,9 @@ export class Customer {
 
     @OneToMany(() => CustomerAddress, (address) => address.customer, { cascade: true })
     addresses!: CustomerAddress[]
+
+    @OneToMany(() => CustomerServiceObject, (service) => service.customer)
+    services!: CustomerServiceObject[]
 
     @ManyToOne(() => User, (user) => user.customers)
     @JoinColumn({ name: "user_id" })
