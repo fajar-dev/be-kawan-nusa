@@ -4,7 +4,11 @@ import { ApiResponse } from '../../core/helpers/apiResponse'
 import { PointResource } from './dto/point.resource'
 
 export class PointController {
-    private service = new PointService()
+    private service: PointService
+
+    constructor() {
+        this.service = new PointService()
+    }
 
     async show(c: Context) {
         const user = c.get('user')

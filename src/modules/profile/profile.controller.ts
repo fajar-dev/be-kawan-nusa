@@ -5,7 +5,11 @@ import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest, UpdateP
 import { UserResource } from "../user/dto/user.resource"
 
 export class ProfileController {
-    private service = new ProfileService()
+    private service: ProfileService
+
+    constructor() {
+        this.service = new ProfileService()
+    }
 
     async show(c: Context) {
         const user = c.get('user')

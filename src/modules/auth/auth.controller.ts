@@ -6,7 +6,11 @@ import { UserResource } from '../user/dto/user.resource'
 import { BadRequestException } from '../../core/exceptions/base'
 
 export class AuthController {
-    private service = new AuthService()
+    private service: AuthService
+
+    constructor() {
+        this.service = new AuthService()
+    }
 
     async register(c: Context) {
         const body = await c.req.json() as RegisterRequest

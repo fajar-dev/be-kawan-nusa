@@ -6,7 +6,11 @@ import { CustomerDetailResource } from './dto/customer-detail.resource'
 import { CustomerAddressResource } from './dto/customer-address.resource'
 
 export class CustomerController {
-    private service = new CustomerService()
+    private service: CustomerService
+
+    constructor() {
+        this.service = new CustomerService()
+    }
 
     async index(c: Context) {
         const user = c.get('user')

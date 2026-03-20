@@ -4,7 +4,11 @@ import { ApiResponse } from '../../core/helpers/apiResponse'
 import { CustomerServiceResource } from './dto/customer-service.resource'
 
 export class CustomerServiceController {
-    private service = new CustomerServiceService()
+    private service: CustomerServiceService
+
+    constructor() {
+        this.service = new CustomerServiceService()
+    }
 
     async index(c: Context) {
         const user = c.get('user')
