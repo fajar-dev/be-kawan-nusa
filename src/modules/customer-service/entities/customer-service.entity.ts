@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import type { Relation } from "typeorm"
 import { Customer } from "../../customer/entities/customer.entity"
 import { Service } from "../../service/entities/service.entity"
 import { CustomerServiceStatus } from "../customer-service.enum"
@@ -36,11 +37,11 @@ export class CustomerService {
     // Relations
     @ManyToOne(() => Customer, (customer) => customer.services, { onDelete: 'CASCADE' })
     @JoinColumn({ name: "customer_id" })
-    customer!: Customer
+    customer!: Relation<Customer>
 
-    @ManyToOne(() => Service, { onDelete: 'SET NULL' })
+    @ManyToOne(() => Service, { onDelete: 'RESTRICT' })
     @JoinColumn({ name: "service_code", referencedColumnName: "code" })
-    service!: Service
+    service!: Relation<Service>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

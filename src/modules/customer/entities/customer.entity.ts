@@ -1,4 +1,5 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from "typeorm"
+import type { Relation } from "typeorm"
 import { CustomerPhone } from "./customer-phone.entity"
 import { CustomerEmail } from "./customer-email.entity"
 import { CustomerAddress } from "./customer-address.entity"
@@ -42,20 +43,20 @@ export class Customer {
 
     // Relations
     @OneToMany(() => CustomerPhone, (phone) => phone.customer, { cascade: true })
-    phones!: CustomerPhone[]
+    phones!: Relation<CustomerPhone[]>
 
     @OneToMany(() => CustomerEmail, (email) => email.customer, { cascade: true })
-    emails!: CustomerEmail[]
+    emails!: Relation<CustomerEmail[]>
 
     @OneToMany(() => CustomerAddress, (address) => address.customer, { cascade: true })
-    addresses!: CustomerAddress[]
+    addresses!: Relation<CustomerAddress[]>
 
     @OneToMany(() => CustomerServiceObject, (service) => service.customer)
-    services!: CustomerServiceObject[]
+    services!: Relation<CustomerServiceObject[]>
 
     @ManyToOne(() => User, (user) => user.customers)
     @JoinColumn({ name: "user_id" })
-    user!: User
+    user!: Relation<User>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

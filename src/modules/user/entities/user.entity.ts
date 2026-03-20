@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm"
+import type { Relation } from "typeorm"
 import { Customer } from "../../customer/entities/customer.entity"
 
 @Entity("users")
@@ -58,7 +59,7 @@ export class User {
     passwordUpdatedAt?: Date
 
     @OneToMany(() => Customer, (customer) => customer.user)
-    customers!: Customer[]
+    customers!: Relation<Customer[]>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
