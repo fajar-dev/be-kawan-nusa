@@ -2,12 +2,13 @@ import { AppDataSource } from "../../config/database"
 import { CustomerService } from "./entities/customer-service.entity"
 import { Customer } from "../customer/entities/customer.entity"
 import { NotFoundException } from "../../core/exceptions/base"
+import { Brackets } from "typeorm"
 
 export class CustomerServiceService {
     private repository = AppDataSource.getRepository(CustomerService)
     private customerRepository = AppDataSource.getRepository(Customer)
 
-    async getAllByCustomer(customerId: string, userId: number, page: number = 1, limit: number = 10) {
+    async getAllByCustomer(customerId: string, userId: number, page: number = 1, limit: number = 10, q: string = "", sort: string = "referenceDate", order: string = "DESC") {
         // Verify customer ownership
         const customer = await this.customerRepository.findOne({ where: { id: customerId, userId } })
         if (!customer) {
@@ -15,13 +16,35 @@ export class CustomerServiceService {
         }
 
         const skip = (page - 1) * limit
-        const [data, total] = await this.repository.findAndCount({
-            where: { customerId },
-            relations: ["service"],
-            take: limit,
-            skip: skip,
-            order: { createdAt: "DESC" }
-        })
+        
+        // Use QueryBuilder for more flexible searching and sorting
+        const query = this.repository.createQueryBuilder("cs")
+            .leftJoinAndSelect("cs.service", "service")
+            .where("cs.customerId = :customerId", { customerId })
+
+        if (q) {
+            query.andWhere(
+                new Brackets(qb => {
+                    qb.where("cs.serviceCode LIKE :q", { q: `%${q}%` })
+                      .orWhere("cs.salesName LIKE :q", { q: `%${q}%` })
+                      .orWhere("service.name LIKE :q", { q: `%${q}%` })
+                })
+            )
+        }
+
+        // Handle sorting, including mapping for "name"
+        if (sort === "name") {
+            query.orderBy("service.name", order.toUpperCase() as any)
+        } else {
+            // Default to cs alias for other fields
+            query.orderBy(`cs.${sort}`, order.toUpperCase() as any)
+        }
+
+        const [data, total] = await query
+            .take(limit)
+            .skip(skip)
+            .getManyAndCount()
+
         return { data, total }
     }
 

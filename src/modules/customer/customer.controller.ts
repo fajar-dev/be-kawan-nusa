@@ -2,6 +2,7 @@ import { Context } from 'hono'
 import { CustomerService } from './customer.service'
 import { ApiResponse } from '../../core/helpers/apiResponse'
 import { CustomerResource } from './dto/customer.resource'
+import { CustomerDetailResource } from './dto/customer-detail.resource'
 import { CustomerAddressResource } from './dto/customer-address.resource'
 
 export class CustomerController {
@@ -31,7 +32,7 @@ export class CustomerController {
         const user = c.get('user')
         const id = c.req.param('id') as string
         const customer = await this.service.getById(id, user.id)
-        return ApiResponse.success(c, CustomerResource.single(customer), "Customer retrieved successfully")
+        return ApiResponse.success(c, CustomerDetailResource.single(customer), "Customer retrieved successfully")
     }
 
     async addresses(c: Context) {

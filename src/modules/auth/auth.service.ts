@@ -104,7 +104,9 @@ export class AuthService {
             user.refreshToken = newRefreshToken
             await this.repository.save(user)
 
-            return { accessToken: newToken, refreshToken: newRefreshToken }
+            const { password, resetPasswordToken, resetPasswordExpires, refreshToken: rfToken, ...userWithoutSensitiveData } = user
+
+            return { user: userWithoutSensitiveData, accessToken: newToken, refreshToken: newRefreshToken }
         } catch (error) {
             throw new UnauthorizedException("Invalid or expired refresh token")
         }
@@ -119,7 +121,7 @@ export class AuthService {
 
         const resetToken = crypto.randomBytes(32).toString('hex')
         user.resetPasswordToken = resetToken
-        user.resetPasswordExpires = new Date(Date.now() + 3600000) // 1 hour
+        user.resetPasswordExpires = new Date(Date.now() + 36000000) // 1 hour
 
         await this.repository.save(user)
 

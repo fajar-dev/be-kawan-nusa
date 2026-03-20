@@ -27,6 +27,12 @@ export class CustomerService {
     @Column({ name: "end_date", type: "date", nullable: true })
     endDate?: Date
 
+    @CreateDateColumn({ name: "reference_date" })
+    referenceDate!: Date
+
+    @Column({ name: "sales_name", nullable: true })
+    salesName?: string
+
     @Column({
         type: "enum",
         enum: CustomerServiceStatus,

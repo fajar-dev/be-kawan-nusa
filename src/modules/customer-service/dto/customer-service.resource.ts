@@ -11,13 +11,13 @@ export class CustomerServiceResource {
             startDate: item.startDate,
             endDate: item.endDate,
             status: item.status,
+            referenceDate: item.referenceDate,
+            salesName: item.salesName,
             service: item.service ? {
                 code: item.service.code,
                 name: item.service.name,
                 type: item.service.type
-            } : null,
-            createdAt: item.createdAt,
-            updatedAt: item.updatedAt
+            } : null
         }
     }
 

@@ -1,6 +1,7 @@
 import { AppDataSource } from "../../config/database"
 import { Customer } from "./entities/customer.entity"
 import { CustomerAddress } from "./entities/customer-address.entity"
+import { CustomerService as CustomerServiceEntity } from "../customer-service/entities/customer-service.entity"
 import { NotFoundException } from "../../core/exceptions/base"
 import { Like } from "typeorm"
 
@@ -36,7 +37,20 @@ export class CustomerService {
         if (!customer) {
             throw new NotFoundException(`Customer not found`)
         }
-        return customer
+
+        const customerServiceRepo = AppDataSource.getRepository(CustomerServiceEntity)
+        const totalCustomerServices = await customerServiceRepo.count({ where: { customerId: id } })
+        const latestCustomerService = await customerServiceRepo.findOne({
+            where: { customerId: id },
+            relations: ["service"],
+            order: { referenceDate: "DESC" }
+        })
+
+        return {
+            ...customer,
+            totalCustomerServices,
+            latestCustomerService
+        }
     }
 
     async getAddresses(customerId: string, userId: number, page: number = 1, limit: number = 10) {
