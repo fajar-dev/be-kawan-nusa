@@ -15,12 +15,14 @@ export const config = {
         user: process.env.DB_USER || 'root',
         pass: process.env.DB_PASS || '',
         name: process.env.DB_NAME || 'kawan_nusa',
+        sync: Boolean(process.env.DB_SYNC) || false,
     },
     mail: {
         host: process.env.MAIL_HOST || 'smtp.gmail.com',
-        port: Number(process.env.MAIL_PORT) || 587,
+        port: Number(process.env.MAIL_PORT) || 587, 
         user: process.env.MAIL_USER || '',
-        pass: process.env.MAIL_PASS || '',
-        from: process.env.MAIL_FROM || '"Kawan Nusa" <noreply@kawan-nusa.id>',
+        pass: process.env.MAIL_PASS || '',  
+        from: process.env.MAIL_FROM || '"Kawan Nusa" <[EMAIL_ADDRESS]>',
     }
 }
+

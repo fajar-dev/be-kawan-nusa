@@ -1,6 +1,6 @@
 import { Context } from 'hono'
 import { CustomerService } from './customer.service'
-import { ApiResponse } from '../../core/helpers/apiResponse'
+import { ApiResponse } from '../../core/helpers/response'
 import { CustomerResource } from './dto/customer.resource'
 import { CustomerDetailResource } from './dto/customer-detail.resource'
 import { CustomerAddressResource } from './dto/customer-address.resource'

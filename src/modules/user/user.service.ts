@@ -1,15 +1,19 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "./entities/user.entity"
 import { NotFoundException } from "../../core/exceptions/base"
-import { EntityManager } from "typeorm"
+import { EntityManager, Repository } from "typeorm"
 
 export class UserService {
-    private repository = AppDataSource.getRepository(User)
+    private repository: Repository<User>
+
+    constructor() {
+        this.repository = AppDataSource.getRepository(User)
+    }
 
     async getById(id: number) {
         const user = await this.repository.findOneBy({ id })
         if (!user) {
-            throw new NotFoundException(`User with ID ${id} not found`)
+            throw new NotFoundException("User not found")
         }
         return user
     }

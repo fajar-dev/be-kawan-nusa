@@ -1,6 +1,6 @@
 import { Context } from "hono"
 import { ProfileService } from "./profile.service"
-import { ApiResponse } from "../../core/helpers/apiResponse"
+import { ApiResponse } from "../../core/helpers/response"
 import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest, UpdatePreferenceRequest } from "./dto/profile.request"
 import { UserResource } from "../user/dto/user.resource"
 

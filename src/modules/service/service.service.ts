@@ -2,11 +2,16 @@ import { AppDataSource } from "../../config/database"
 import { Service } from "./entities/service.entity"
 import { CustomerService as CustomerServiceEntity } from "../customer-service/entities/customer-service.entity"
 import { NotFoundException } from "../../core/exceptions/base"
-import { Like, In, Brackets } from "typeorm"
+import { In, Brackets, Repository } from "typeorm"
 
 export class ServiceService {
-    private repository = AppDataSource.getRepository(Service)
-    private customerServiceRepo = AppDataSource.getRepository(CustomerServiceEntity)
+    private repository: Repository<Service>
+    private customerServiceRepo: Repository<CustomerServiceEntity>
+
+    constructor() {
+        this.repository = AppDataSource.getRepository(Service)
+        this.customerServiceRepo = AppDataSource.getRepository(CustomerServiceEntity)
+    }
 
     private async attachCustomerServiceData(services: Service[], userId: number) {
         if (!services.length) return
@@ -83,7 +88,7 @@ export class ServiceService {
     async getByCode(code: string, userId: number) {
         const service = await this.repository.findOneBy({ code })
         if (!service) {
-            throw new NotFoundException(`Service not found`)
+            throw new NotFoundException("Service not found")
         }
 
         await this.attachCustomerServiceData([service], userId)

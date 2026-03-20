@@ -5,7 +5,7 @@ export const RegisterSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   company: z.string().optional(),
   jobPosition: z.string().optional(),
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
   phone: z.string().min(1, "Phone is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   accountHolderName: z.string().optional(),
@@ -25,7 +25,7 @@ export const LoginSchema = z.object({
 export type LoginRequest = z.infer<typeof LoginSchema>
 
 export const ForgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
 })
 
 export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordSchema>

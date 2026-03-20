@@ -1,6 +1,6 @@
 import { Context } from 'hono'
 import { PointService } from './point.service'
-import { ApiResponse } from '../../core/helpers/apiResponse'
+import { ApiResponse } from '../../core/helpers/response'
 import { PointResource } from './dto/point.resource'
 
 export class PointController {

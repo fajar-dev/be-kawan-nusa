@@ -1,5 +1,6 @@
 import { HTTPException } from 'hono/http-exception'
 import { ContentfulStatusCode } from 'hono/utils/http-status'
+import { ZodError } from 'zod'
 
 /**
  * Base Application Exception Class
@@ -39,8 +40,29 @@ export class NotFoundException extends BaseException {
     }
 }
 
+export class ForbiddenException extends BaseException {
+    constructor(message: string = "Forbidden") {
+        super(message, 403)
+    }
+}
+
+export class ConflictException extends BaseException {
+    constructor(message: string = "Conflict") {
+        super(message, 409)
+    }
+}
+
+export class TooManyRequestsException extends BaseException {
+    constructor(message: string = "Too Many Requests") {
+        super(message, 429)
+    }
+}
+
 export class ValidationException extends BaseException {
-    constructor(errors: any) {
-        super("Validation failed", 422, errors)
+    constructor(errors: ZodError) {
+        super("Validation failed", 422, errors.issues.map(i => ({
+            field: i.path.join("."),
+            message: i.message
+        })))
     }
 }

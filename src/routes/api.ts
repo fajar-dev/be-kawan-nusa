@@ -1,6 +1,5 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
-import { ApiResponse } from '../core/helpers/apiResponse'
 import { CustomerController } from '../modules/customer/customer.controller'
 import { CustomerServiceController } from '../modules/customer-service/customer-service.controller'
 import { ServiceController } from '../modules/service/service.controller'
@@ -10,6 +9,7 @@ import { authMiddleware } from '../core/middlewares/auth.middleware'
 import { ProfileController } from '../modules/profile/profile.controller'
 import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePreferenceSchema } from '../modules/profile/dto/profile.request'
 import { PointController } from '../modules/point/point.controller'
+import { validationHook } from '../core/helpers/validator'
 
 const routes = new Hono()
 const customerController = new CustomerController()
@@ -19,11 +19,6 @@ const authController = new AuthController()
 const profileController = new ProfileController()
 const pointController = new PointController()
 
-const validationHook = (result: any, c: any) => {
-    if (!result.success) {
-        return ApiResponse.error(c, "Validation failed", 422, result.error.format())
-    }
-}
 
 // Auth Routes
 routes.post('/auth/register', zValidator('json', RegisterSchema, validationHook), (c) => authController.register(c))

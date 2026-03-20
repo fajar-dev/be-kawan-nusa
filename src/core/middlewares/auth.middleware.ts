@@ -8,7 +8,7 @@ import { UnauthorizedException } from '../exceptions/base'
 export const authMiddleware = async (c: Context, next: Next) => {
     const authHeader = c.req.header('Authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new UnauthorizedException('Missing or invalid authorization header')
+        throw new UnauthorizedException("Missing or invalid authorization header")
     }
 
     const token = authHeader.split(' ')[1]
@@ -19,12 +19,12 @@ export const authMiddleware = async (c: Context, next: Next) => {
         const user = await userRepository.findOneBy({ id: decoded.sub })
 
         if (!user) {
-            throw new UnauthorizedException('Unauthorized access')
+            throw new UnauthorizedException("Unauthorized access")
         }
 
         c.set('user', user)
         await next()
     } catch (error) {
-        throw new UnauthorizedException('Invalid or expired token')
+        throw new UnauthorizedException("Invalid or expired token")
     }
 }

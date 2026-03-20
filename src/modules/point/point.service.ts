@@ -1,9 +1,13 @@
 import { AppDataSource } from "../../config/database"
 import { Point } from "./entities/point.entity"
-import { EntityManager } from "typeorm"
+import { EntityManager, Repository } from "typeorm"
 
 export class PointService {
-    private repository = AppDataSource.getRepository(Point)
+    private repository: Repository<Point>
+
+    constructor() {
+        this.repository = AppDataSource.getRepository(Point)
+    }
 
     async getByUserId(userId: number) {
         return await this.repository.findOne({

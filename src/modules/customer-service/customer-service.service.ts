@@ -2,11 +2,16 @@ import { AppDataSource } from "../../config/database"
 import { CustomerService } from "./entities/customer-service.entity"
 import { Customer } from "../customer/entities/customer.entity"
 import { NotFoundException } from "../../core/exceptions/base"
-import { Brackets } from "typeorm"
+import { Brackets, Repository } from "typeorm"
 
 export class CustomerServiceService {
-    private repository = AppDataSource.getRepository(CustomerService)
-    private customerRepository = AppDataSource.getRepository(Customer)
+    private repository: Repository<CustomerService>
+    private customerRepository: Repository<Customer>
+
+    constructor() {
+        this.repository = AppDataSource.getRepository(CustomerService)
+        this.customerRepository = AppDataSource.getRepository(Customer)
+    }
 
     async getAllByCustomer(
         customerId: string, 
@@ -19,7 +24,7 @@ export class CustomerServiceService {
     ) {
         const customer = await this.customerRepository.findOneBy({ id: customerId, userId })
         if (!customer) {
-            throw new NotFoundException(`Customer not found`)
+            throw new NotFoundException("Customer not found")
         }
 
         const query = this.repository.createQueryBuilder("cs")

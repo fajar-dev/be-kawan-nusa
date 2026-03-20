@@ -6,14 +6,19 @@ import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { sign, verify } from "hono/jwt"
 import { config } from "../../config/config"
 import crypto from "crypto"
-import { mail } from "../../core/helpers/mailSender"
+import { mail } from "../../core/helpers/mail"
 import { PointService } from "../point/point.service"
 import { EntityManager } from "typeorm"
 import { UserService } from "../user/user.service"
 
 export class AuthService {
-    private userService = new UserService()
-    private pointService = new PointService()
+    private userService: UserService
+    private pointService: PointService
+
+    constructor() {
+        this.userService = new UserService()
+        this.pointService = new PointService()
+    }
 
     async register(data: RegisterRequest) {
         const user = await this.userService.getByEmail(data.email)

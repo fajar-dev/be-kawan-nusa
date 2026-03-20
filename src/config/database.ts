@@ -21,7 +21,7 @@ export const AppDataSource = new DataSource({
     username: config.database.user,
     password: config.database.pass,
     database: config.database.name,
-    synchronize: config.app.env !== "production",
+    synchronize: config.database.sync,
     entities: [Customer, CustomerPhone, CustomerEmail, CustomerAddress, Service, CustomerService, User, Point],
     migrations: [],
     subscribers: [],

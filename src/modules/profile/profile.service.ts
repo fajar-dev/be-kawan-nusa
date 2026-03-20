@@ -3,9 +3,14 @@ import { User } from "../user/entities/user.entity"
 import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest, UpdatePreferenceRequest } from "./dto/profile.request"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
+import { Repository } from "typeorm"
 
 export class ProfileService {
-    private repository = AppDataSource.getRepository(User)
+    private repository: Repository<User>
+
+    constructor() {
+        this.repository = AppDataSource.getRepository(User)
+    }
 
     async getProfile(userId: number) {
         const user = await this.repository.findOneBy({ id: userId })

@@ -1,9 +1,8 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { ZodError } from 'zod'
 import { AppDataSource } from './config/database'
 import api from './routes/api'
-import { ApiResponse } from './core/helpers/apiResponse'
+import { ApiResponse } from './core/helpers/response'
 import { BaseException } from './core/exceptions/base'
 import { config } from './config/config'
 
@@ -25,17 +24,19 @@ app.route('/api', api)
 
 // Global Error Handler
 app.onError((err, c) => {
-    console.error(`[Error] ${err.message}`)
-    
-    if (err instanceof ZodError) {
-        return ApiResponse.error(c, "Validation failed", 422, err.format())
-    }
-
     if (err instanceof BaseException) {
+        console.error(`[Exception] ${err.status} - ${err.message}`)
         return ApiResponse.error(c, err.message, err.status, err.context)
     }
 
-    return ApiResponse.error(c, "Internal Server Error", 500)
+    console.error("error: ", err.message)
+
+    const errors = config.app.env !== "production" ? { 
+        message: err.message, 
+        stack: err.stack 
+    } : null
+
+    return ApiResponse.error(c, "Internal Server Error", 500, errors)
 })
 
 export default {

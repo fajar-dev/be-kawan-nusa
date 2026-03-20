@@ -1,6 +1,6 @@
 import { Context } from 'hono'
 import { CustomerServiceService } from './customer-service.service'
-import { ApiResponse } from '../../core/helpers/apiResponse'
+import { ApiResponse } from '../../core/helpers/response'
 import { CustomerServiceResource } from './dto/customer-service.resource'
 
 export class CustomerServiceController {

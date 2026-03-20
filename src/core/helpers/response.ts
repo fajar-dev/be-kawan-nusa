@@ -1,5 +1,6 @@
 import { Context } from "hono"
 import { ContentfulStatusCode } from "hono/utils/http-status"
+import { ZodError } from "zod"
 
 /**
  * Standard API Response Formatter (Best Practice)
@@ -50,8 +51,8 @@ export class ApiResponse {
 
     static error(
         c: Context, 
-        message: string = "Operation failed", 
-        status: number = 400, 
+        message: string = "Internal Server Error", 
+        status: number = 500, 
         errors: any = null
     ) {
         return c.json({

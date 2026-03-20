@@ -1,5 +1,4 @@
 import { CustomerAddress } from "../entities/customer-address.entity"
-import { Customer } from "../entities/customer.entity"
 
 export class CustomerAddressResource {
     static single(customerAddress: CustomerAddress) {

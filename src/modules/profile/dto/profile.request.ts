@@ -1,10 +1,10 @@
-import { email, z } from "zod"
+import { z } from "zod"
 
 export const UpdateAccountSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
     phone: z.string().min(1, "Phone is required"),
-    email: z.string().email("Invalid email format"),
+    email: z.email("Invalid email format"),
     company: z.string().optional(),
     jobPosition: z.string().optional(),
 })

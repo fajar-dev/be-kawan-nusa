@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn, UpdateDateColumn } from "typeorm"
 import type { Relation } from "typeorm"
 import { User } from "../../user/entities/user.entity"
 

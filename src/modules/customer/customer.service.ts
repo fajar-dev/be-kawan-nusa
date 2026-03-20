@@ -3,11 +3,18 @@ import { Customer } from "./entities/customer.entity"
 import { CustomerAddress } from "./entities/customer-address.entity"
 import { CustomerService as CustomerServiceEntity } from "../customer-service/entities/customer-service.entity"
 import { NotFoundException } from "../../core/exceptions/base"
-import { Like } from "typeorm"
+import { Like, Repository } from "typeorm"
 
 export class CustomerService {
-    private repository = AppDataSource.getRepository(Customer)
-    private addressRepository = AppDataSource.getRepository(CustomerAddress)
+    private repository: Repository<Customer>
+    private addressRepository: Repository<CustomerAddress>
+    private customerServiceRepo: Repository<CustomerServiceEntity>
+
+    constructor() {
+        this.repository = AppDataSource.getRepository(Customer)
+        this.addressRepository = AppDataSource.getRepository(CustomerAddress)
+        this.customerServiceRepo = AppDataSource.getRepository(CustomerServiceEntity)
+    }
 
     async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string) {
         const skip = (page - 1) * limit
@@ -34,17 +41,19 @@ export class CustomerService {
             where: { id, userId },
             relations: ["phones", "emails"]
         })
+
         if (!customer) {
-            throw new NotFoundException(`Customer not found`)
+            throw new NotFoundException("Customer not found")
         }
 
-        const customerServiceRepo = AppDataSource.getRepository(CustomerServiceEntity)
-        const totalCustomerServices = await customerServiceRepo.count({ where: { customerId: id } })
-        const latestCustomerService = await customerServiceRepo.findOne({
-            where: { customerId: id },
-            relations: ["service"],
-            order: { referenceDate: "DESC" }
-        })
+        const [totalCustomerServices, latestCustomerService] = await Promise.all([
+            this.customerServiceRepo.count({ where: { customerId: id } }),
+            this.customerServiceRepo.findOne({
+                where: { customerId: id },
+                relations: ["service"],
+                order: { referenceDate: "DESC" }
+            })
+        ])
 
         return {
             ...customer,
@@ -56,7 +65,7 @@ export class CustomerService {
     async getAddresses(customerId: string, userId: number, page: number = 1, limit: number = 10) {
         const customer = await this.repository.findOne({ where: { id: customerId, userId } })
         if (!customer) {
-            throw new NotFoundException(`Customer not found`)
+            throw new NotFoundException("Customer not found")
         }
 
         const skip = (page - 1) * limit
