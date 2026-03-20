@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm"
+import { Customer } from "../../customer/entities/customer.entity"
 
 @Entity("users")
 export class User {
@@ -55,6 +56,9 @@ export class User {
 
     @CreateDateColumn({ name: "password_updated_at" })
     passwordUpdatedAt?: Date
+
+    @OneToMany(() => Customer, (customer) => customer.user)
+    customers!: Customer[]
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

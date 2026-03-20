@@ -2,7 +2,6 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { ApiResponse } from '../core/helpers/apiResponse'
 import { CustomerController } from '../modules/customer/customer.controller'
-import { CreateCustomerSchema, UpdateCustomerSchema } from '../modules/customer/dto/customer.request'
 import { ServiceController } from '../modules/service/service.controller'
 import { CreateServiceSchema, UpdateServiceSchema } from '../modules/service/dto/service.request'
 import { AuthController } from '../modules/auth/auth.controller'
@@ -41,11 +40,8 @@ routes.put('/profile/preference', authMiddleware, zValidator('json', UpdatePrefe
 routes.put('/profile/password', authMiddleware, zValidator('json', UpdatePasswordSchema, validationHook), (c) => profileController.updatePassword(c))
 
 // Customer Routes
-routes.get('/customer', (c) => customerController.index(c))
-routes.get('/customer/:id', (c) => customerController.show(c))
-routes.post('/customer', zValidator('json', CreateCustomerSchema, validationHook), (c) => customerController.store(c))
-routes.patch('/customer/:id', zValidator('json', UpdateCustomerSchema, validationHook), (c) => customerController.update(c))
-routes.delete('/customer/:id', (c) => customerController.destroy(c))
+routes.get('/customer', authMiddleware, (c) => customerController.index(c))
+routes.get('/customer/:id', authMiddleware, (c) => customerController.show(c))
 
 // Service Routes
 routes.get('/service', (c) => serviceController.index(c))

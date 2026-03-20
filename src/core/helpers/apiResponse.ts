@@ -15,7 +15,7 @@ export class ApiResponse {
     ) {
         return c.json({
             success: true,
-            status_code: status,
+            statusCode: status,
             message: message,
             data: data,
             ...(meta && { meta })
@@ -34,14 +34,14 @@ export class ApiResponse {
         
         return c.json({
             success: true,
-            status_code: 200,
+            statusCode: 200,
             message: message,
             data: data,
             meta: {
                 total,
-                per_page: limit,
-                current_page: page,
-                last_page: lastPage,
+                perPage: limit,
+                currentPage: page,
+                lastPage: lastPage,
                 from: (page - 1) * limit + 1,
                 to: Math.min(page * limit, total)
             }
@@ -56,7 +56,7 @@ export class ApiResponse {
     ) {
         return c.json({
             success: false,
-            status_code: status,
+            statusCode: status,
             message: message,
             errors: errors
         }, status as ContentfulStatusCode)

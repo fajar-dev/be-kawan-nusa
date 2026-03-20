@@ -6,11 +6,11 @@ export class ServiceResource {
             id: service.id,
             code: service.code,
             name: service.name,
-            description: service.description || "N/A",
+            description: service.description,
             type: service.type,
-            is_active: service.isActive,
-            created_at: service.createdAt.toISOString(),
-            updated_at: service.updatedAt.toISOString(),
+            isActive: service.isActive,
+            createdAt: service.createdAt,
+            updatedAt: service.updatedAt,
         }
     }
 

@@ -1,17 +1,20 @@
 import { Context } from 'hono'
 import { CustomerService } from './customer.service'
 import { ApiResponse } from '../../core/helpers/apiResponse'
-import { CreateCustomerRequest, UpdateCustomerRequest } from './dto/customer.request'
 import { CustomerResource } from './dto/customer.resource'
 
 export class CustomerController {
     private service = new CustomerService()
 
     async index(c: Context) {
+        const user = c.get('user')
         const page = Number(c.req.query('page')) || 1
         const limit = Number(c.req.query('limit')) || 10
+        const q = c.req.query('q') || ""
+        const sort = c.req.query('sort') || "activationDate"
+        const order = c.req.query('order') || "DESC"
         
-        const { data, total } = await this.service.getAll(page, limit)
+        const { data, total } = await this.service.getAll(user.id, page, limit, q, sort, order)
         
         return ApiResponse.paginate(
             c, 
@@ -24,27 +27,9 @@ export class CustomerController {
     }
 
     async show(c: Context) {
+        const user = c.get('user')
         const id = c.req.param('id') as string
-        const customer = await this.service.getById(id)
+        const customer = await this.service.getById(id, user.id)
         return ApiResponse.success(c, CustomerResource.single(customer), "Customer retrieved successfully")
-    }
-
-    async store(c: Context) {
-        const body = await c.req.json() as CreateCustomerRequest
-        const customer = await this.service.create(body)
-        return ApiResponse.success(c, CustomerResource.single(customer), "Customer created successfully", 201)
-    }
-
-    async update(c: Context) {
-        const id = c.req.param('id') as string
-        const body = await c.req.json() as UpdateCustomerRequest
-        const customer = await this.service.update(id, body)
-        return ApiResponse.success(c, CustomerResource.single(customer), "Customer updated successfully")
-    }
-
-    async destroy(c: Context) {
-        const id = c.req.param('id') as string
-        await this.service.delete(id)
-        return ApiResponse.success(c, null, "Customer deleted successfully")
     }
 }
