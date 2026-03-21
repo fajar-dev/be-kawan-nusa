@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
 import type { Relation } from "typeorm"
 import { Customer } from "../../customer/entities/customer.entity"
 import { Service } from "../../service/entities/service.entity"
 import { CustomerServiceStatus } from "../customer-service.enum"
+import { Reward } from "../../reward/entities/reward.entity"
 
 @Entity("customer_services")
 export class CustomerService {
@@ -48,6 +49,9 @@ export class CustomerService {
     @ManyToOne(() => Service, { onDelete: 'RESTRICT' })
     @JoinColumn({ name: "service_code", referencedColumnName: "code" })
     service!: Relation<Service>
+
+    @OneToMany(() => Reward, (reward) => reward.customerService)
+    rewards!: Relation<Reward[]>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

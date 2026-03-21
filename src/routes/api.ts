@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator'
 import { CustomerController } from '../modules/customer/customer.controller'
 import { CustomerServiceController } from '../modules/customer-service/customer-service.controller'
 import { ServiceController } from '../modules/service/service.controller'
+import { RewardController } from '../modules/reward/reward.controller'
 import { AuthController } from '../modules/auth/auth.controller'
 import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema, RefreshTokenSchema } from '../modules/auth/dto/auth.request'
 import { authMiddleware } from '../core/middlewares/auth.middleware'
@@ -15,6 +16,7 @@ const routes = new Hono()
 const customerController = new CustomerController()
 const customerServiceController = new CustomerServiceController()
 const serviceController = new ServiceController()
+const rewardController = new RewardController()
 const authController = new AuthController()
 const profileController = new ProfileController()
 const pointController = new PointController()
@@ -44,10 +46,14 @@ routes.get('/point', authMiddleware, (c) => pointController.show(c))
 routes.get('/customer', authMiddleware, (c) => customerController.index(c))
 routes.get('/customer/:id', authMiddleware, (c) => customerController.show(c))
 routes.get('/customer/:id/address', authMiddleware, (c) => customerController.addresses(c))
-routes.get('/customer/:id/service', authMiddleware, (c) => customerServiceController.index(c))
+routes.get('/customer/:id/service', authMiddleware, (c) => customerServiceController.byCustomer(c))
+routes.get('/customer/:id/reward', authMiddleware, (c) => rewardController.byCustomer(c))
 
 // Service Routes
 routes.get('/service', authMiddleware, (c) => serviceController.index(c))
 routes.get('/service/:code', authMiddleware, (c) => serviceController.show(c))
+
+// Reward Routes
+routes.get('/reward', authMiddleware, (c) => rewardController.index(c))
 
 export default routes

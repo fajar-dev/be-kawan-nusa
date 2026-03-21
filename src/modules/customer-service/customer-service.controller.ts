@@ -10,7 +10,7 @@ export class CustomerServiceController {
         this.service = new CustomerServiceService()
     }
 
-    async index(c: Context) {
+    async byCustomer(c: Context) {
         const user = c.get('user')
         const customerId = c.req.param('id') as string
         const page = Number(c.req.query('page')) || 1

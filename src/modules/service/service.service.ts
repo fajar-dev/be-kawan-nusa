@@ -22,7 +22,7 @@ export class ServiceService {
                 serviceCode: In(serviceCodes),
                 customer: { userId }
             },
-            relations: ["customer"],
+            relations: ["customer", "rewards"],
             order: { referenceDate: "DESC" }
         })
 
@@ -30,6 +30,9 @@ export class ServiceService {
             const relatedCs = customerServices.filter(cs => cs.serviceCode === service.code)
             ;(service as any).totalCustomerServices = relatedCs.length
             ;(service as any).lastReferanceDate = relatedCs[0]?.referenceDate ?? null
+            ;(service as any).totalPoint = relatedCs.reduce((sum, cs) => {
+                return sum + (cs.rewards?.reduce((rSum, r) => rSum + Number(r.point), 0) ?? 0)
+            }, 0)
         })
     }
 
@@ -39,9 +42,11 @@ export class ServiceService {
         const query = this.repository.createQueryBuilder("service")
             .leftJoin("customer_services", "cs", "cs.service_code = service.code")
             .leftJoin("customers", "c", "c.id = cs.customer_id AND c.user_id = :userId", { userId })
+            .leftJoin("rewards", "r", "r.customer_service_id = cs.id")
             .select("service")
             .addSelect("COUNT(DISTINCT CASE WHEN c.user_id = :userId THEN cs.id ELSE NULL END)", "totalCustomerServices")
             .addSelect("MAX(CASE WHEN c.user_id = :userId THEN cs.reference_date ELSE NULL END)", "lastReferanceDate")
+            .addSelect("SUM(CASE WHEN c.user_id = :userId THEN r.point ELSE 0 END)", "totalPoint")
             .groupBy("service.id")
 
         if (q) {
@@ -52,7 +57,7 @@ export class ServiceService {
             }), { q: `%${q}%` })
         }
 
-        if (sort === "totalCustomerServices" || sort === "lastReferanceDate") {
+        if (sort === "totalCustomerServices" || sort === "lastReferanceDate" || sort === "totalPoint") {
             query.orderBy(sort, order.toUpperCase() as any)
         } else {
             query.orderBy(`service.${sort}`, order.toUpperCase() as any)
@@ -78,7 +83,8 @@ export class ServiceService {
             return {
                 ...entity,
                 totalCustomerServices: Number(rawData?.totalCustomerServices || 0),
-                lastReferanceDate: rawData?.lastReferanceDate || null
+                lastReferanceDate: rawData?.lastReferanceDate || null,
+                totalPoint: Number(rawData?.totalPoint || 0)
             }
         })
 

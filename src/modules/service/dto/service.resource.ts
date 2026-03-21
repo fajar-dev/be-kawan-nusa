@@ -9,7 +9,7 @@ export class ServiceResource {
             isActive: service.isActive,
             lastReferanceDate: service.lastReferanceDate || null,
             totalCustomerServices: service.totalCustomerServices || 0,
-            totalPoints: 0
+            totalPoint: service.totalPoint || 0
         }
     }
 
