@@ -30,4 +30,25 @@ export class CustomerServiceController {
             "Customer services retrieved successfully"
         )
     }
+
+    async byService(c: Context) {
+        const user = c.get('user')
+        const serviceCode = c.req.param('code') as string
+        const page = Number(c.req.query('page')) || 1
+        const limit = Number(c.req.query('limit')) || 10
+        const q = c.req.query('q') || ""
+        const sort = c.req.query('sort') || "referenceDate"
+        const order = c.req.query('order') || "DESC"
+        
+        const { data, total } = await this.service.getAllByService(serviceCode, user.id, page, limit, q, sort, order)
+        
+        return ApiResponse.paginate(
+            c, 
+            CustomerServiceResource.collection(data), 
+            total, 
+            page, 
+            limit, 
+            "Customer services retrieved successfully"
+        )
+    }
 }

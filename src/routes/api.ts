@@ -52,6 +52,7 @@ routes.get('/customer/:id/reward', authMiddleware, (c) => rewardController.byCus
 // Service Routes
 routes.get('/service', authMiddleware, (c) => serviceController.index(c))
 routes.get('/service/:code', authMiddleware, (c) => serviceController.show(c))
+routes.get('/service/:code/customer', authMiddleware, (c) => customerServiceController.byService(c))
 
 // Reward Routes
 routes.get('/reward', authMiddleware, (c) => rewardController.index(c))

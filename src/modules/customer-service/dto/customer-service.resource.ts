@@ -17,6 +17,12 @@ export class CustomerServiceResource {
                 code: item.service.code,
                 name: item.service.name,
                 type: item.service.type
+            } : null,
+            totalPoint: (item as any).totalPoint ?? 0,
+            latestReward: (item as any).latestReward ? {
+                point: Number((item as any).latestReward.point),
+                type: (item as any).latestReward.type,
+                createdAt: (item as any).latestReward.createdAt
             } : null
         }
     }
