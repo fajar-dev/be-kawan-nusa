@@ -21,6 +21,7 @@ export class CustomerServiceResource {
             totalPoint: (item as any).totalPoint ?? 0,
             latestReward: (item as any).latestReward ? {
                 point: Number((item as any).latestReward.point),
+                paymentDate: (item as any).latestReward.paymentDate,
                 type: (item as any).latestReward.type,
                 createdAt: (item as any).latestReward.createdAt
             } : null

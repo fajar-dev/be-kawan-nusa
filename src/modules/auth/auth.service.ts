@@ -120,7 +120,7 @@ export class AuthService {
     async forgotPassword(data: ForgotPasswordRequest) {
         const user = await this.userService.getByEmail(data.email)
         if (!user) {
-            return true
+            throw new BadRequestException("Email not found")
         }
 
         const resetToken = crypto.randomBytes(32).toString('hex')

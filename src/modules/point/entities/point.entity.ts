@@ -10,9 +10,6 @@ export class Point {
     @Column({ type: "int", default: 0 })
     value!: number
 
-    @Column({ name: "expired_date", type: "date", nullable: true })
-    expiredDate!: Date | null
-
     @OneToOne(() => User, (user) => user.point)
     @JoinColumn({ name: "user_id" })
     user!: Relation<User>

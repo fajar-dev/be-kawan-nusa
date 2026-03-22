@@ -7,11 +7,14 @@ export class RewardResource {
             customerServiceId: reward.customerServiceId,
             price: Number(reward.price),
             point: Number(reward.point),
+            paymentDate: reward.paymentDate,
             type: reward.type,
             customerService: reward.customerService ? {
                 id: reward.customerService.id,
                 serviceCode: reward.customerService.serviceCode,
                 activationDate: reward.customerService.activationDate,
+                startDate: reward.customerService.startDate,
+                endDate: reward.customerService.endDate,
             } : null,
             service: reward.customerService?.service ? {
                 code: reward.customerService.service.code,

@@ -17,6 +17,9 @@ export class Reward {
     @Column({ type: "decimal", precision: 15, scale: 2, default: 0 })
     point!: number
 
+    @Column({ name: "payment_date", type: "date"})
+    paymentDate!: Date
+
     @Column({
         type: "enum",
         enum: RewardPointType,
