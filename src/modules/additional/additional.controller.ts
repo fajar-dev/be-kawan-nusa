@@ -1,20 +1,20 @@
 import { Context } from 'hono'
 import { AdditionalService } from './additional.service'
+import { ServiceService } from '../service/service.service'
 import { ApiResponse } from '../../core/helpers/response'
 import { AdditionalResource } from './dto/additional.resource'
 
 export class AdditionalController {
-    private service: AdditionalService
+    private additionalService: AdditionalService
+    private serviceService: ServiceService
 
     constructor() {
-        this.service = new AdditionalService()
+        this.additionalService = new AdditionalService()
+        this.serviceService = new ServiceService()
     }
 
-    /**
-     * Get all services with code and name
-     */
     async getServices(c: Context) {
-        const data = await this.service.getServices()
+        const data = await this.serviceService.getServices()
         return ApiResponse.success(
             c, 
             AdditionalResource.collection(data), 
@@ -22,11 +22,8 @@ export class AdditionalController {
         )
     }
 
-    /**
-     * Get all customer types
-     */
     async getCustomerTypes(c: Context) {
-        const data = await this.service.getCustomerTypes()
+        const data = await this.additionalService.getCustomerTypes()
         return ApiResponse.success(
             c, 
             AdditionalResource.collection(data), 
@@ -34,11 +31,8 @@ export class AdditionalController {
         )
     }
 
-    /**
-     * Get all customer service statuses
-     */
     async getCustomerServiceStatus(c: Context) {
-        const data = await this.service.getCustomerServiceStatus()
+        const data = await this.additionalService.getCustomerServiceStatus()
         return ApiResponse.success(
             c, 
             AdditionalResource.collection(data), 

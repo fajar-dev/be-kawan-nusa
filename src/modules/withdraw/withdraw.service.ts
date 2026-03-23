@@ -2,16 +2,17 @@ import { AppDataSource } from "../../config/database"
 import { Withdraw } from "./entities/withdraw.entity"
 import { Repository, Brackets } from "typeorm"
 import { Point } from "../point/entities/point.entity"
+import { PointService } from "../point/point.service"
 import { BadRequestException } from "../../core/exceptions/base"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 
 export class WithdrawService {
     private repository: Repository<Withdraw>
-    private pointRepository: Repository<Point>
+    private pointService: PointService
 
     constructor() {
         this.repository = AppDataSource.getRepository(Withdraw)
-        this.pointRepository = AppDataSource.getRepository(Point)
+        this.pointService = new PointService()
     }
 
     async getAll(userId: number, page: number, limit: number, q: string = "", sort: string = "createdAt", order: string = "DESC") {
@@ -43,10 +44,8 @@ export class WithdrawService {
             const userId = data.userId as number
             const point = Number(data.point || 0)
 
-            const userPoint = await manager.findOneBy(Point, { userId })
-            if (!userPoint || userPoint.value < point) {
-                throw new BadRequestException("Insufficient point balance")
-            }
+            // Deduct points from user's balance
+            await this.pointService.subtractPoints(userId, point, manager)
 
             const { tax, payout } = calculateWithdrawal(point)
 
@@ -56,9 +55,6 @@ export class WithdrawService {
                 payout
             })
             const savedWithdraw = await manager.save(withdraw)
-
-            userPoint.value -= point
-            await manager.save(userPoint)
 
             return savedWithdraw
         })

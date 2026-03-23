@@ -8,6 +8,7 @@ export const config = {
         env: process.env.NODE_ENV || 'development',
         jwtSecret: process.env.JWT_SECRET || 'supersecretkey',
         jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'superrefreshsecretkey',
+        apiKey: process.env.API_KEY || 'secretapikey',
     },
     database: {
         host: process.env.DB_HOST || '127.0.0.1',

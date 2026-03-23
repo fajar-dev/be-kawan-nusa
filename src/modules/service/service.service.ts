@@ -98,7 +98,12 @@ export class ServiceService {
         }
 
         await this.attachCustomerServiceData([service], userId)
-
         return service
+    }
+
+    async getServices() {
+        return await this.repository.find({
+            order: { name: "ASC" }
+        })
     }
 }

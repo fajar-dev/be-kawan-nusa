@@ -4,9 +4,11 @@ import { CustomerController } from '../modules/customer/customer.controller'
 import { CustomerServiceController } from '../modules/customer-service/customer-service.controller'
 import { ServiceController } from '../modules/service/service.controller'
 import { RewardController } from '../modules/reward/reward.controller'
+import { CreateRewardSchema } from '../modules/reward/dto/reward.request'
 import { AuthController } from '../modules/auth/auth.controller'
 import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema, RefreshTokenSchema } from '../modules/auth/dto/auth.request'
 import { authMiddleware } from '../core/middlewares/auth.middleware'
+import { apiKeyMiddleware } from '../core/middlewares/api-key.middleware'
 import { ProfileController } from '../modules/profile/profile.controller'
 import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePreferenceSchema } from '../modules/profile/dto/profile.request'
 import { PointController } from '../modules/point/point.controller'
@@ -66,6 +68,7 @@ routes.get('/customer-service', authMiddleware, (c) => customerServiceController
 
 // Reward Routes
 routes.get('/reward', authMiddleware, (c) => rewardController.index(c))
+routes.post('/reward', apiKeyMiddleware, zValidator('json', CreateRewardSchema, validationHook), (c) => rewardController.store(c))
 
 // Withdraw Routes
 routes.get('/withdraw', authMiddleware, (c) => withdrawController.index(c))

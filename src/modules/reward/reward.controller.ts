@@ -50,4 +50,10 @@ export class RewardController {
             "Customer rewards retrieved successfully"
         )
     }
+
+    async store(c: Context) {
+        const body = await c.req.json()
+        const data = await this.service.create(body)
+        return ApiResponse.success(c, RewardResource.single(data), "Reward created successfully")
+    }
 }
