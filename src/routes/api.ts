@@ -11,6 +11,7 @@ import { ProfileController } from '../modules/profile/profile.controller'
 import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePreferenceSchema } from '../modules/profile/dto/profile.request'
 import { PointController } from '../modules/point/point.controller'
 import { StatisticController } from '../modules/statistic/statistic.controller'
+import { AdditionalController } from '../modules/additional/additional.controller'
 import { validationHook } from '../core/helpers/validator'
 
 const routes = new Hono()
@@ -22,6 +23,7 @@ const authController = new AuthController()
 const profileController = new ProfileController()
 const pointController = new PointController()
 const statisticController = new StatisticController()
+const additionalController = new AdditionalController()
 
 
 // Auth Routes
@@ -64,5 +66,10 @@ routes.get('/reward', authMiddleware, (c) => rewardController.index(c))
 
 // Statistic Routes
 routes.get('/statistic/count', authMiddleware, (c) => statisticController.count(c))
+
+// Additional Routes
+routes.get('/additional/service', authMiddleware, (c) => additionalController.getServices(c))
+routes.get('/additional/customer-type', authMiddleware, (c) => additionalController.getCustomerTypes(c))
+routes.get('/additional/customer-service-status', authMiddleware, (c) => additionalController.getCustomerServiceStatus(c))
 
 export default routes
