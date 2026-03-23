@@ -3,7 +3,7 @@ import { Withdraw } from "./entities/withdraw.entity"
 import { Repository, Brackets } from "typeorm"
 import { Point } from "../point/entities/point.entity"
 import { PointService } from "../point/point.service"
-import { BadRequestException } from "../../core/exceptions/base"
+import { BadRequestException, NotFoundException } from "../../core/exceptions/base"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 
 export class WithdrawService {
@@ -37,6 +37,19 @@ export class WithdrawService {
             .getManyAndCount()
 
         return { data, total }
+    }
+
+    async getById(id: number, userId: number) {
+        const withdraw = await this.repository.findOne({
+            where: { id, userId },
+            relations: ["user"]
+        })
+
+        if (!withdraw) {
+            throw new NotFoundException("Withdrawal record not found")
+        }
+
+        return withdraw
     }
 
     async create(data: Partial<Withdraw>) {

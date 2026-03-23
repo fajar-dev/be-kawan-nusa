@@ -3,12 +3,12 @@ export class WithdrawResource {
         return {
             id: withdraw.id,
             userId: withdraw.userId,
-            point: Number(withdraw.point),
+            point: withdraw.point,
             bankName: withdraw.bankName,
             accountNumber: withdraw.accountNumber,
             accountHolderName: withdraw.accountHolderName,
-            payout: Number(withdraw.payout),
-            tax: Number(withdraw.tax),
+            payout: withdraw.payout,
+            tax: withdraw.tax,
             createdAt: withdraw.createdAt
         }
     }

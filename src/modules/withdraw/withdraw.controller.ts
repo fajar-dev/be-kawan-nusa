@@ -2,6 +2,7 @@ import { Context } from 'hono'
 import { WithdrawService } from './withdraw.service'
 import { ApiResponse } from '../../core/helpers/response'
 import { WithdrawResource } from './dto/withdraw.resource'
+import { generateWithdrawalNote } from '../../core/helpers/pdf'
 
 export class WithdrawController {
     private service: WithdrawService
@@ -28,6 +29,21 @@ export class WithdrawController {
             limit, 
             "Withdrawal list retrieved successfully"
         )
+    }
+
+    async receipt(c: Context, disposition: 'inline' | 'attachment' = 'inline') {
+        const user = c.get('user')
+        const idRaw = c.req.param('id') || ""
+        const id = Number(idRaw.replace('.pdf', ''))
+        
+        const withdraw = await this.service.getById(id, user.id)
+        
+        const pdfBuffer = await generateWithdrawalNote(withdraw)
+        
+        return c.body(pdfBuffer as any, 200, {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `${disposition}; filename="paid-${withdraw.id}.pdf"`
+        })
     }
 
     async store(c: Context) {

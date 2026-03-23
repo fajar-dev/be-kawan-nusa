@@ -9,6 +9,7 @@ import { AuthController } from '../modules/auth/auth.controller'
 import { RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema, RefreshTokenSchema } from '../modules/auth/dto/auth.request'
 import { authMiddleware } from '../core/middlewares/auth.middleware'
 import { apiKeyMiddleware } from '../core/middlewares/api-key.middleware'
+import { tokenAuthMiddleware } from '../core/middlewares/token-auth.middleware'
 import { ProfileController } from '../modules/profile/profile.controller'
 import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePreferenceSchema } from '../modules/profile/dto/profile.request'
 import { PointController } from '../modules/point/point.controller'
@@ -71,8 +72,10 @@ routes.get('/reward', authMiddleware, (c) => rewardController.index(c))
 routes.post('/reward', apiKeyMiddleware, zValidator('json', CreateRewardSchema, validationHook), (c) => rewardController.store(c))
 
 // Withdraw Routes
-routes.get('/withdraw', authMiddleware, (c) => withdrawController.index(c))
 routes.post('/withdraw', authMiddleware, zValidator('json', WithdrawalSchema, validationHook), (c) => withdrawController.store(c))
+routes.get('/withdraw', authMiddleware, (c) => withdrawController.index(c))
+routes.get('/withdraw/:id', tokenAuthMiddleware, (c) => withdrawController.receipt(c, 'inline'))
+routes.get('/withdraw/:id/download', tokenAuthMiddleware, (c) => withdrawController.receipt(c, 'attachment'))
 
 // Statistic Routes
 routes.get('/statistic/count', authMiddleware, (c) => statisticController.count(c))
