@@ -12,6 +12,8 @@ import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePref
 import { PointController } from '../modules/point/point.controller'
 import { StatisticController } from '../modules/statistic/statistic.controller'
 import { AdditionalController } from '../modules/additional/additional.controller'
+import { WithdrawController } from '../modules/withdraw/withdraw.controller'
+import { WithdrawalSchema } from '../modules/withdraw/dto/withdraw.request'
 import { validationHook } from '../core/helpers/validator'
 
 const routes = new Hono()
@@ -24,6 +26,7 @@ const profileController = new ProfileController()
 const pointController = new PointController()
 const statisticController = new StatisticController()
 const additionalController = new AdditionalController()
+const withdrawController = new WithdrawController()
 
 
 // Auth Routes
@@ -63,6 +66,10 @@ routes.get('/customer-service', authMiddleware, (c) => customerServiceController
 
 // Reward Routes
 routes.get('/reward', authMiddleware, (c) => rewardController.index(c))
+
+// Withdraw Routes
+routes.get('/withdraw', authMiddleware, (c) => withdrawController.index(c))
+routes.post('/withdraw', authMiddleware, zValidator('json', WithdrawalSchema, validationHook), (c) => withdrawController.store(c))
 
 // Statistic Routes
 routes.get('/statistic/count', authMiddleware, (c) => statisticController.count(c))

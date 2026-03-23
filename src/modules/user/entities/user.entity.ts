@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import type { Relation } from "typeorm"
 import { Customer } from "../../customer/entities/customer.entity"
 import { Point } from "../../point/entities/point.entity"
+import { Withdraw } from "../../withdraw/entities/withdraw.entity"
 
 @Entity("users")
 export class User {
@@ -64,6 +65,9 @@ export class User {
 
     @OneToOne(() => Point, (point) => point.user)
     point!: Relation<Point>
+
+    @OneToMany(() => Withdraw, (withdraw) => withdraw.user)
+    withdrawals!: Relation<Withdraw[]>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
