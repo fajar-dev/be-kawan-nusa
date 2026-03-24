@@ -56,7 +56,9 @@ export class RewardService {
         limit: number, 
         q: string, 
         sort: string, 
-        order: string
+        order: string,
+        startDate?: string,
+        endDate?: string
     ) {
         const query = this.repository.createQueryBuilder("reward")
             .leftJoinAndSelect("reward.customerService", "cs")
@@ -71,6 +73,14 @@ export class RewardService {
                   .orWhere("service.name LIKE :q")
                   .orWhere("cs.serviceCode LIKE :q")
             }), { q: searchPattern })
+        }
+
+        if (startDate) {
+            query.andWhere("reward.createdAt >= :startDate", { startDate })
+        }
+
+        if (endDate) {
+            query.andWhere("reward.createdAt <= :endDate", { endDate })
         }
 
         const sortAlias = sort.includes(".") ? sort : `reward.${sort}`

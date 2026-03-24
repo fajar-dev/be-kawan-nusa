@@ -15,7 +15,7 @@ export class WithdrawService {
         this.pointService = new PointService()
     }
 
-    async getAll(userId: number, page: number, limit: number, q: string = "", sort: string = "createdAt", order: string = "DESC") {
+    async getAll(userId: number, page: number, limit: number, q: string = "", sort: string = "createdAt", order: string = "DESC", startDate?: string, endDate?: string) {
         const skip = (page - 1) * limit
         
         const query = this.repository.createQueryBuilder("withdrawal")
@@ -27,6 +27,14 @@ export class WithdrawService {
                   .orWhere("withdrawal.account_number LIKE :q")
                   .orWhere("withdrawal.account_holder_name LIKE :q")
             }), { q: `%${q}%` })
+        }
+
+        if (startDate) {
+            query.andWhere("withdrawal.createdAt >= :startDate", { startDate })
+        }
+
+        if (endDate) {
+            query.andWhere("withdrawal.createdAt <= :endDate", { endDate })
         }
 
         query.orderBy(`withdrawal.${sort}`, order.toUpperCase() as any)
