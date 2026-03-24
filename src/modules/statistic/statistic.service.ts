@@ -24,21 +24,103 @@ export class StatisticService {
     }
 
     async getCount(userId: number) {
-        const [customer, customerService, point] = await Promise.all([
-            this.customerRepository.count({ where: { userId } }),
-            this.customerServiceRepository.count({
-                where: {
-                    customer: { userId }
-                },
-                relations: ["customer"]
-            }),
-            this.pointRepository.findOne({ where: { userId } })
-        ])
+        const now = new Date()
+        const currentMonth = now.getMonth() + 1
+        const currentYear = now.getFullYear()
+        
+        const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+        const lastMonth = lastMonthDate.getMonth() + 1
+        const lastYear = lastMonthDate.getFullYear()
+
+        // 1. Customer Counts
+        const customerTotal = await this.customerRepository.count({ where: { userId } })
+        
+        const customerCurrentMonth = await this.customerRepository.createQueryBuilder("customer")
+            .where("customer.userId = :userId", { userId })
+            .andWhere("MONTH(customer.createdAt) = :month", { month: currentMonth })
+            .andWhere("YEAR(customer.createdAt) = :year", { year: currentYear })
+            .getCount()
+            
+        const customerLastMonth = await this.customerRepository.createQueryBuilder("customer")
+            .where("customer.userId = :userId", { userId })
+            .andWhere("MONTH(customer.createdAt) = :month", { month: lastMonth })
+            .andWhere("YEAR(customer.createdAt) = :year", { year: lastYear })
+            .getCount()
+
+        // 2. Customer Service Counts
+        const csTotal = await this.customerServiceRepository.count({
+            where: { customer: { userId } },
+            relations: ["customer"]
+        })
+        
+        const csCurrentMonth = await this.customerServiceRepository.createQueryBuilder("cs")
+            .innerJoin("cs.customer", "customer")
+            .where("customer.userId = :userId", { userId })
+            .andWhere("MONTH(cs.referenceDate) = :month", { month: currentMonth })
+            .andWhere("YEAR(cs.referenceDate) = :year", { year: currentYear })
+            .getCount()
+            
+        const csLastMonth = await this.customerServiceRepository.createQueryBuilder("cs")
+            .innerJoin("cs.customer", "customer")
+            .where("customer.userId = :userId", { userId })
+            .andWhere("MONTH(cs.referenceDate) = :month", { month: lastMonth })
+            .andWhere("YEAR(cs.referenceDate) = :year", { year: lastYear })
+            .getCount()
+
+        // 3. Point (Current Balance from Point table)
+        const currentPoint = await this.pointRepository.findOne({ where: { userId } })
+        const pointTotal = currentPoint?.value ?? 0
+
+        const pointCurrentMonthRaw = await this.rewardRepository.createQueryBuilder("reward")
+            .innerJoin("reward.customerService", "cs")
+            .innerJoin("cs.customer", "customer")
+            .select("SUM(reward.point)", "total")
+            .where("customer.userId = :userId", { userId })
+            .andWhere("MONTH(reward.createdAt) = :month", { month: currentMonth })
+            .andWhere("YEAR(reward.createdAt) = :year", { year: currentYear })
+            .getRawOne()
+        const pointCurrentMonth = Number(pointCurrentMonthRaw?.total || 0)
+
+        const pointLastMonthRaw = await this.rewardRepository.createQueryBuilder("reward")
+            .innerJoin("reward.customerService", "cs")
+            .innerJoin("cs.customer", "customer")
+            .select("SUM(reward.point)", "total")
+            .where("customer.userId = :userId", { userId })
+            .andWhere("MONTH(reward.createdAt) = :month", { month: lastMonth })
+            .andWhere("YEAR(reward.createdAt) = :year", { year: lastYear })
+            .getRawOne()
+        const pointLastMonth = Number(pointLastMonthRaw?.total || 0)
 
         return {
-            customer,
-            customerService,
-            point: point?.value ?? 0
+            customer: {
+                value: customerTotal,
+                achievement: this.calculateAchievement(customerCurrentMonth, customerLastMonth)
+            },
+            customerService: {
+                value: csTotal,
+                achievement: this.calculateAchievement(csCurrentMonth, csLastMonth)
+            },
+            point: {
+                value: pointTotal,
+                achievement: this.calculateAchievement(pointCurrentMonth, pointLastMonth)
+            }
+        }
+    }
+
+    private calculateAchievement(current: number, previous: number) {
+        if (previous === 0) {
+            return {
+                percentage: current > 0 ? 100 : 0,
+                isUp: current > 0
+            }
+        }
+        
+        const diff = current - previous
+        const percentage = Math.abs(Math.round((diff / previous) * 100))
+        
+        return {
+            percentage,
+            isUp: diff >= 0
         }
     }
 
