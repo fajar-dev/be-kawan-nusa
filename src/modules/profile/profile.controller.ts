@@ -1,8 +1,11 @@
 import { Context } from "hono"
 import { ProfileService } from "./profile.service"
 import { ApiResponse } from "../../core/helpers/response"
-import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest, UpdatePreferenceRequest } from "./dto/profile.request"
+import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest, UpdatePreferenceRequest, UpdatePhotoRequest } from "./dto/profile.request"
 import { UserResource } from "../user/dto/user.resource"
+import { BadRequestException } from "../../core/exceptions/base"
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 
 export class ProfileController {
     private service: ProfileService
@@ -42,5 +45,28 @@ export class ProfileController {
         const body = await c.req.json() as UpdatePasswordRequest
         await this.service.updatePassword(user.id, body)
         return ApiResponse.success(c, null, "Password updated successfully")
+    }
+
+    async updatePhoto(c: Context) {
+        const user = c.get('user')
+        const { photo } = await c.req.parseBody() as unknown as UpdatePhotoRequest
+
+        const ext = photo.type.split('/')[1] === 'jpeg' ? 'jpg' : photo.type.split('/')[1]
+        const filename = `profile_${user.id}_${Date.now()}.${ext}`
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'profile')
+
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true })
+        }
+
+        const filePath = path.join(uploadDir, filename)
+        const buffer = await photo.arrayBuffer()
+        fs.writeFileSync(filePath, Buffer.from(buffer))
+
+        // Updated user with direct photo location relative to public folder
+        const photoUrl = `/uploads/profile/${filename}`
+        const updated = await this.service.updatePhoto(user.id, photoUrl)
+
+        return ApiResponse.success(c, UserResource.single(updated), "Profile photo updated successfully")
     }
 }

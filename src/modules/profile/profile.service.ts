@@ -56,4 +56,10 @@ export class ProfileService {
         user.password = await hashPassword(data.newPassword)
         return await this.repository.save(user)
     }
+
+    async updatePhoto(userId: number, photo: string) {
+        const user = await this.getProfile(userId)
+        user.photo = photo
+        return await this.repository.save(user)
+    }
 }

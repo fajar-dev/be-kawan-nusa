@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { AppDataSource } from './config/database'
+import { serveStatic } from 'hono/bun'
 import api from './routes/api'
 import { ApiResponse } from './core/helpers/response'
 import { BaseException } from './core/exceptions/base'
@@ -21,6 +22,14 @@ AppDataSource.initialize()
 
 // Application Routes
 app.route('/api', api)
+
+// Static Files
+app.get('/api/uploads/*', (c, next) => {
+    return serveStatic({ 
+        root: './public', 
+        path: c.req.path.replace(/^\/api/, '') 
+    })(c, next)
+})
 
 // Global Error Handler
 app.onError((err, c) => {

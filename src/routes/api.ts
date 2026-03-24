@@ -11,7 +11,7 @@ import { authMiddleware } from '../core/middlewares/auth.middleware'
 import { apiKeyMiddleware } from '../core/middlewares/api-key.middleware'
 import { tokenAuthMiddleware } from '../core/middlewares/token-auth.middleware'
 import { ProfileController } from '../modules/profile/profile.controller'
-import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePreferenceSchema } from '../modules/profile/dto/profile.request'
+import { UpdateAccountSchema, UpdateBankSchema, UpdatePasswordSchema, UpdatePreferenceSchema, UpdatePhotoSchema } from '../modules/profile/dto/profile.request'
 import { PointController } from '../modules/point/point.controller'
 import { StatisticController } from '../modules/statistic/statistic.controller'
 import { AdditionalController } from '../modules/additional/additional.controller'
@@ -48,6 +48,7 @@ routes.put('/profile/account', authMiddleware, zValidator('json', UpdateAccountS
 routes.put('/profile/bank', authMiddleware, zValidator('json', UpdateBankSchema, validationHook), (c) => profileController.updateBank(c))
 routes.put('/profile/preference', authMiddleware, zValidator('json', UpdatePreferenceSchema, validationHook), (c) => profileController.updatePreference(c))
 routes.put('/profile/password', authMiddleware, zValidator('json', UpdatePasswordSchema, validationHook), (c) => profileController.updatePassword(c))
+routes.post('/profile/photo', authMiddleware, zValidator('form', UpdatePhotoSchema, validationHook), (c) => profileController.updatePhoto(c))
 
 // Point Routes
 routes.get('/point', authMiddleware, (c) => pointController.show(c))
