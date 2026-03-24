@@ -20,4 +20,11 @@ export class StatisticController {
         const data = await this.service.getMonthlyPoints(user.id)
         return ApiResponse.success(c, data, "Monthly point statistics retrieved successfully")
     }
+
+    async customerStats(c: Context) {
+        const user = c.get('user')
+        const type = c.req.query('type') || 'yearly'
+        const data = await this.service.getCustomerStatistics(user.id, type)
+        return ApiResponse.success(c, data, `Customer ${type} statistics retrieved successfully`)
+    }
 }
