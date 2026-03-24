@@ -39,4 +39,13 @@ export class AdditionalController {
             "Additional customer service statuses list retrieved successfully"
         )
     }
+
+    async getRewardPointTypes(c: Context) {
+        const data = await this.additionalService.getRewardPointTypes()
+        return ApiResponse.success(
+            c, 
+            AdditionalResource.collection(data), 
+            "Additional reward point types list retrieved successfully"
+        )
+    }
 }
