@@ -14,4 +14,10 @@ export class StatisticController {
         const data = await this.service.getCount(user.id)
         return ApiResponse.success(c, data, "Statistic count retrieved successfully")
     }
+
+    async pointPerMonth(c: Context) {
+        const user = c.get('user')
+        const data = await this.service.getMonthlyPoints(user.id)
+        return ApiResponse.success(c, data, "Monthly point statistics retrieved successfully")
+    }
 }

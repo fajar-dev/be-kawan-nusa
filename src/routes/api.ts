@@ -79,6 +79,7 @@ routes.get('/withdraw/:id/download', tokenAuthMiddleware, (c) => withdrawControl
 
 // Statistic Routes
 routes.get('/statistic/count', authMiddleware, (c) => statisticController.count(c))
+routes.get('/statistic/point', authMiddleware, (c) => statisticController.pointPerMonth(c))
 
 // Additional Routes
 routes.get('/additional/service', authMiddleware, (c) => additionalController.getServices(c))
