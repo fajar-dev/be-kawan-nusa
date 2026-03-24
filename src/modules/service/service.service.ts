@@ -36,8 +36,9 @@ export class ServiceService {
         })
     }
 
-    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string) {
+    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { startDate?: string, endDate?: string, isActive?: string } = {}) {
         const skip = (page - 1) * limit
+        const { startDate, endDate, isActive } = filters
         
         const query = this.repository.createQueryBuilder("service")
             .leftJoin("customer_services", "cs", "cs.service_code = service.code")
@@ -57,26 +58,29 @@ export class ServiceService {
             }), { q: `%${q}%` })
         }
 
+        if (startDate) {
+            query.andHaving("MAX(CASE WHEN c.user_id = :userId THEN cs.reference_date ELSE NULL END) >= :startDate", { startDate })
+        }
+        if (endDate) {
+            query.andHaving("MAX(CASE WHEN c.user_id = :userId THEN cs.reference_date ELSE NULL END) <= :endDate", { endDate })
+        }
+        if (isActive) {
+            query.andWhere("service.isActive = :isActive", { isActive })
+        }
+
         if (sort === "totalCustomerServices" || sort === "lastReferanceDate" || sort === "totalPoint") {
             query.orderBy(sort, order.toUpperCase() as any)
         } else {
             query.orderBy(`service.${sort}`, order.toUpperCase() as any)
         }
 
+        const rawAll = await query.getRawMany()
+        const total = rawAll.length
+
         const { entities, raw } = await query
             .offset(skip)
             .limit(limit)
             .getRawAndEntities()
-
-        const totalQuery = this.repository.createQueryBuilder("service")
-        if (q) {
-            totalQuery.where(new Brackets(qb => {
-                qb.where("service.code LIKE :q")
-                  .orWhere("service.name LIKE :q")
-                  .orWhere("service.description LIKE :q")
-            }), { q: `%${q}%` })
-        }
-        const total = await totalQuery.getCount()
 
         const data = entities.map(entity => {
             const rawData = raw.find(r => r.service_id === entity.id)
