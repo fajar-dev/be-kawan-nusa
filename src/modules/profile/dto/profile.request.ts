@@ -36,7 +36,7 @@ export type UpdatePreferenceRequest = z.infer<typeof UpdatePreferenceSchema>
 export const UpdatePhotoSchema = z.object({
     photo: z.any()
         .refine((file) => file instanceof File, "Photo file is required")
-        .refine((file: File) => file.size <= 1 * 1024 * 1024, "Max file size is 5MB")
+        .refine((file: File) => file.size <= 5 * 1024 * 1024, "Max file size is 5MB")
         .refine(
             (file: File) => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type),
             "Only JPG, PNG and GIF are allowed"
