@@ -47,7 +47,9 @@ export class CustomerService {
                  .andWhere("cs.serviceCode IN (:...serviceCodes)", { serviceCodes: filters.serviceCodes })
         }
 
-        query.orderBy(`customer.${sort}`, order.toUpperCase() as any)
+        query.leftJoinAndSelect("customer.phones", "phones")
+             .leftJoinAndSelect("customer.emails", "emails")
+             .orderBy(`customer.${sort}`, order.toUpperCase() as any)
 
         const [data, total] = await query
             .take(limit)
