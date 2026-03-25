@@ -3,7 +3,7 @@ import { Customer } from "./entities/customer.entity"
 import { CustomerAddress } from "./entities/customer-address.entity"
 import { CustomerService as CustomerServiceEntity } from "../customer-service/entities/customer-service.entity"
 import { NotFoundException } from "../../core/exceptions/base"
-import { Like, Repository } from "typeorm"
+import { Brackets, Like, Repository } from "typeorm"
 
 export class CustomerService {
     private repository: Repository<Customer>
@@ -16,23 +16,44 @@ export class CustomerService {
         this.customerServiceRepo = AppDataSource.getRepository(CustomerServiceEntity)
     }
 
-    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string) {
+    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { startDate?: string, endDate?: string, types?: string[], isActive?: string, serviceCodes?: string[] } = {}) {
         const skip = (page - 1) * limit
-        const baseWhere = { userId }
-        const where = q ? [
-            { ...baseWhere, id: Like(`%${q}%`) },
-            { ...baseWhere, name: Like(`%${q}%`) },
-            { ...baseWhere, company: Like(`%${q}%`) },
-            { ...baseWhere, salesName: Like(`%${q}%`) }
-        ] : baseWhere
+        const query = this.repository.createQueryBuilder("customer")
+            .where("customer.userId = :userId", { userId })
 
-        const [data, total] = await this.repository.findAndCount({
-            where,
-            take: limit,
-            skip: skip,
-            relations: ["phones", "emails"],
-            order: { [sort]: order }
-        })
+        if (q) {
+            query.andWhere(new Brackets(qb => {
+                qb.where("customer.id LIKE :q")
+                  .orWhere("customer.name LIKE :q")
+                  .orWhere("customer.company LIKE :q")
+                  .orWhere("customer.salesName LIKE :q")
+            }), { q: `%${q}%` })
+        }
+
+        if (filters.startDate) {
+            query.andWhere("customer.activationDate >= :startDate", { startDate: filters.startDate })
+        }
+        if (filters.endDate) {
+            query.andWhere("customer.activationDate <= :endDate", { endDate: filters.endDate })
+        }
+        if (filters.types && filters.types.length > 0) {
+            query.andWhere("customer.type IN (:...types)", { types: filters.types })
+        }
+        if (filters.isActive !== undefined && filters.isActive !== "") {
+            query.andWhere("customer.isActive = :isActive", { isActive: filters.isActive === "1" })
+        }
+        if (filters.serviceCodes && filters.serviceCodes.length > 0) {
+            query.innerJoin("customer.services", "cs")
+                 .andWhere("cs.serviceCode IN (:...serviceCodes)", { serviceCodes: filters.serviceCodes })
+        }
+
+        query.orderBy(`customer.${sort}`, order.toUpperCase() as any)
+
+        const [data, total] = await query
+            .take(limit)
+            .skip(skip)
+            .getManyAndCount()
+
         return { data, total }
     }
 

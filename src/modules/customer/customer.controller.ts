@@ -20,7 +20,13 @@ export class CustomerController {
         const sort = c.req.query('sort') || "activationDate"
         const order = c.req.query('order') || "DESC"
         
-        const { data, total } = await this.service.getAll(user.id, page, limit, q, sort, order)
+        const startDate = c.req.query('startDate')
+        const endDate = c.req.query('endDate')
+        const isActive = c.req.query('isActive')
+        const types = c.req.queries('type[]')
+        const serviceCodes = c.req.queries('serviceCode[]')
+
+        const { data, total } = await this.service.getAll(user.id, page, limit, q, sort, order, { startDate, endDate, types, isActive, serviceCodes })
         
         return ApiResponse.paginate(
             c, 
