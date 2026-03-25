@@ -1,7 +1,7 @@
 import { AppDataSource } from "../../config/database"
 import { Point } from "./entities/point.entity"
 import { EntityManager, Repository } from "typeorm"
-import { BadRequestException } from "../../core/exceptions/base"
+import { BadValidationException } from "../../core/exceptions/base"
 
 export class PointService {
     private repository: Repository<Point>
@@ -38,7 +38,7 @@ export class PointService {
         const amount = Number(points)
 
         if (!pointRecord || Number(pointRecord.value) < amount) {
-            throw new BadRequestException("Insufficient point balance")
+            throw new BadValidationException("Insufficient point balance")
         }
 
         pointRecord.value = Number(pointRecord.value) - amount

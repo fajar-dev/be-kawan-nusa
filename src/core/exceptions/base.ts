@@ -22,8 +22,8 @@ export class BaseException extends HTTPException {
 /**
  * Common Exception Sub-classes (Standard HTTP Semantics)
  */
-export class BadRequestException extends BaseException {
-    constructor(message: string = "Bad Request", errors: any = null) {
+export class BadValidationException extends BaseException {
+    constructor(message: string = "Bad Validation", errors: any = null) {
         super(message, 400, errors)
     }
 }
@@ -35,7 +35,7 @@ export class UnauthorizedException extends BaseException {
 }
 
 export class NotFoundException extends BaseException {
-    constructor(message: string = "Requested resource not found") {
+    constructor(message: string = "Validationed resource not found") {
         super(message, 404)
     }
 }
@@ -52,8 +52,8 @@ export class ConflictException extends BaseException {
     }
 }
 
-export class TooManyRequestsException extends BaseException {
-    constructor(message: string = "Too Many Requests") {
+export class TooManyValidationsException extends BaseException {
+    constructor(message: string = "Too Many Validations") {
         super(message, 429)
     }
 }

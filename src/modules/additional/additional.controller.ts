@@ -2,7 +2,7 @@ import { Context } from 'hono'
 import { AdditionalService } from './additional.service'
 import { ServiceService } from '../service/service.service'
 import { ApiResponse } from '../../core/helpers/response'
-import { AdditionalResource } from './dto/additional.resource'
+import { AdditionalSerializer } from './serializers/additional.serialize'
 
 export class AdditionalController {
     private additionalService: AdditionalService
@@ -17,7 +17,7 @@ export class AdditionalController {
         const data = await this.serviceService.getServices()
         return ApiResponse.success(
             c, 
-            AdditionalResource.collection(data), 
+            AdditionalSerializer.collection(data), 
             "Additional services list retrieved successfully"
         )
     }
@@ -26,7 +26,7 @@ export class AdditionalController {
         const data = await this.additionalService.getCustomerTypes()
         return ApiResponse.success(
             c, 
-            AdditionalResource.collection(data), 
+            AdditionalSerializer.collection(data), 
             "Additional customer types list retrieved successfully"
         )
     }
@@ -35,7 +35,7 @@ export class AdditionalController {
         const data = await this.additionalService.getCustomerServiceStatus()
         return ApiResponse.success(
             c, 
-            AdditionalResource.collection(data), 
+            AdditionalSerializer.collection(data), 
             "Additional customer service statuses list retrieved successfully"
         )
     }
@@ -44,7 +44,7 @@ export class AdditionalController {
         const data = await this.additionalService.getRewardPointTypes()
         return ApiResponse.success(
             c, 
-            AdditionalResource.collection(data), 
+            AdditionalSerializer.collection(data), 
             "Additional reward point types list retrieved successfully"
         )
     }

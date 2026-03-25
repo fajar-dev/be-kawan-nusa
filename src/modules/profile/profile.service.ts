@@ -1,7 +1,7 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
-import { UpdateAccountRequest, UpdateBankRequest, UpdatePasswordRequest, UpdatePreferenceRequest } from "./dto/profile.request"
-import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
+import { UpdateAccountValidation, UpdateBankValidation, UpdatePasswordValidation, UpdatePreferenceValidation } from "./validations/profile.validation"
+import { NotFoundException, BadValidationException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { Repository } from "typeorm"
 
@@ -20,25 +20,25 @@ export class ProfileService {
         return user
     }
 
-    async updateAccount(userId: number, data: UpdateAccountRequest) {
+    async updateAccount(userId: number, data: UpdateAccountValidation) {
         const user = await this.getProfile(userId)
         this.repository.merge(user, data)
         return await this.repository.save(user)
     }
 
-    async updateBank(userId: number, data: UpdateBankRequest) {
+    async updateBank(userId: number, data: UpdateBankValidation) {
         const user = await this.getProfile(userId)
         this.repository.merge(user, data)
         return await this.repository.save(user)
     }
 
-    async updatePreference(userId: number, data: UpdatePreferenceRequest) {
+    async updatePreference(userId: number, data: UpdatePreferenceValidation) {
         const user = await this.getProfile(userId)
         this.repository.merge(user, data)
         return await this.repository.save(user)
     }
 
-    async updatePassword(userId: number, data: UpdatePasswordRequest) {
+    async updatePassword(userId: number, data: UpdatePasswordValidation) {
         const user = await this.repository.createQueryBuilder("user")
             .where("user.id = :id", { id: userId })
             .addSelect("user.password")
@@ -50,7 +50,7 @@ export class ProfileService {
 
         const isValid = await comparePassword(data.oldPassword, user.password)
         if (!isValid) {
-            throw new BadRequestException("Old password is incorrect")
+            throw new BadValidationException("Old password is incorrect")
         }
 
         user.password = await hashPassword(data.newPassword)

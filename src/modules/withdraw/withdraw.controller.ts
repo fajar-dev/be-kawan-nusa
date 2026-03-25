@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import { WithdrawService } from './withdraw.service'
 import { ApiResponse } from '../../core/helpers/response'
-import { WithdrawResource } from './dto/withdraw.resource'
+import { WithdrawSerializer } from './serializers/withdraw.serialize'
 import { generateWithdrawalNote } from '../../core/helpers/pdf'
 
 export class WithdrawController {
@@ -25,7 +25,7 @@ export class WithdrawController {
         
         return ApiResponse.paginate(
             c, 
-            WithdrawResource.collection(data), 
+            WithdrawSerializer.collection(data), 
             total, 
             page, 
             limit, 
@@ -60,6 +60,6 @@ export class WithdrawController {
             accountHolderName: user.accountHolderName
         })
         
-        return ApiResponse.success(c, WithdrawResource.single(data), "Withdrawal requested successfully")
+        return ApiResponse.success(c, WithdrawSerializer.single(data), "Withdrawal requested successfully")
     }
 }

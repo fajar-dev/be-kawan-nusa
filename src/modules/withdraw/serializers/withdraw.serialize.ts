@@ -1,4 +1,4 @@
-export class WithdrawResource {
+export class WithdrawSerializer {
     static single(withdraw: any) {
         return {
             id: withdraw.id,

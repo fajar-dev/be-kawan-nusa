@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import { ServiceService } from './service.service'
 import { ApiResponse } from '../../core/helpers/response'
-import { ServiceResource } from './dto/service.resource'
+import { ServiceSerializer } from './serializers/service.serialize'
 
 export class ServiceController {
     private service: ServiceService
@@ -25,7 +25,7 @@ export class ServiceController {
         
         return ApiResponse.paginate(
             c, 
-            ServiceResource.collection(data), 
+            ServiceSerializer.collection(data), 
             total, 
             page, 
             limit, 
@@ -37,6 +37,6 @@ export class ServiceController {
         const user = c.get('user')
         const code = c.req.param('code') as string
         const service = await this.service.getByCode(code, user.id)
-        return ApiResponse.success(c, ServiceResource.single(service), "Service retrieved successfully")
+        return ApiResponse.success(c, ServiceSerializer.single(service), "Service retrieved successfully")
     }
 }

@@ -1,6 +1,6 @@
 import { Reward } from "../entities/reward.entity"
 
-export class RewardResource {
+export class RewardSerializer {
     static single(reward: Reward) {
         return {
             id: reward.id,

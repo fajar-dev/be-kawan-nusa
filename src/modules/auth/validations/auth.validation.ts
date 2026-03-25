@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const RegisterSchema = z.object({
+export const RegisterValidation = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   company: z.string().optional(),
@@ -15,30 +15,30 @@ export const RegisterSchema = z.object({
   isAutoWithdraw: z.boolean().optional().default(false),
 })
 
-export type RegisterRequest = z.infer<typeof RegisterSchema>
+export type RegisterValidation = z.infer<typeof RegisterValidation>
 
-export const LoginSchema = z.object({
+export const LoginValidation = z.object({
   identifier: z.string().min(1, "Email or phone is required"),
   password: z.string().min(1, "Password is required"),
 })
 
-export type LoginRequest = z.infer<typeof LoginSchema>
+export type LoginValidation = z.infer<typeof LoginValidation>
 
-export const ForgotPasswordSchema = z.object({
+export const ForgotPasswordValidation = z.object({
   email: z.email("Invalid email format"),
 })
 
-export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordSchema>
+export type ForgotPasswordValidation = z.infer<typeof ForgotPasswordValidation>
 
-export const ResetPasswordSchema = z.object({
+export const ResetPasswordValidation = z.object({
   token: z.string().min(1, "Reset token is required"),
   newPassword: z.string().min(6, "Password must be at least 6 characters"),
 })
 
-export type ResetPasswordRequest = z.infer<typeof ResetPasswordSchema>
+export type ResetPasswordValidation = z.infer<typeof ResetPasswordValidation>
 
-export const RefreshTokenSchema = z.object({
+export const RefreshTokenValidation = z.object({
   refreshToken: z.string().min(1, "Refresh token is required"),
 })
 
-export type RefreshTokenRequest = z.infer<typeof RefreshTokenSchema>
+export type RefreshTokenValidation = z.infer<typeof RefreshTokenValidation>

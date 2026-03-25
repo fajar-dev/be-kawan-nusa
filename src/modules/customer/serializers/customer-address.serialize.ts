@@ -1,6 +1,6 @@
 import { CustomerAddress } from "../entities/customer-address.entity"
 
-export class CustomerAddressResource {
+export class CustomerAddressSerializer {
     static single(customerAddress: CustomerAddress) {
         return {
             id: customerAddress.id,

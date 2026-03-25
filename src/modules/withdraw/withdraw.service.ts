@@ -3,7 +3,7 @@ import { Withdraw } from "./entities/withdraw.entity"
 import { Repository, Brackets } from "typeorm"
 import { Point } from "../point/entities/point.entity"
 import { PointService } from "../point/point.service"
-import { BadRequestException, NotFoundException } from "../../core/exceptions/base"
+import { BadValidationException, NotFoundException } from "../../core/exceptions/base"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 
 export class WithdrawService {

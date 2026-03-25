@@ -1,6 +1,6 @@
 import { CustomerService } from "../entities/customer-service.entity"
 
-export class CustomerServiceResource {
+export class CustomerServiceSerializer {
     static single(item: CustomerService) {
         return {
             id: item.id,

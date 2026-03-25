@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import { CustomerServiceService } from './customer-service.service'
 import { ApiResponse } from '../../core/helpers/response'
-import { CustomerServiceResource } from './dto/customer-service.resource'
+import { CustomerServiceSerializer } from './serializers/customer-service.serialize'
 
 export class CustomerServiceController {
     private customerService: CustomerServiceService
@@ -22,7 +22,7 @@ export class CustomerServiceController {
         
         return ApiResponse.paginate(
             c, 
-            CustomerServiceResource.collection(data), 
+            CustomerServiceSerializer.collection(data), 
             total, 
             page, 
             limit, 
@@ -43,7 +43,7 @@ export class CustomerServiceController {
         
         return ApiResponse.paginate(
             c, 
-            CustomerServiceResource.collection(data), 
+            CustomerServiceSerializer.collection(data), 
             total, 
             page, 
             limit, 
@@ -64,7 +64,7 @@ export class CustomerServiceController {
         
         return ApiResponse.paginate(
             c, 
-            CustomerServiceResource.collection(data), 
+            CustomerServiceSerializer.collection(data), 
             total, 
             page, 
             limit, 

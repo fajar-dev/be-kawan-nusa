@@ -1,4 +1,4 @@
-export class AdditionalResource {
+export class AdditionalSerializer {
     static single(service: any) {
         return {
             code: service.code,

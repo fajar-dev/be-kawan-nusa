@@ -1,4 +1,4 @@
-export class ServiceResource {
+export class ServiceSerializer {
     static single(service: any) {
         return {
             id: service.id,

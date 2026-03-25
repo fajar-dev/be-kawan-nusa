@@ -1,9 +1,9 @@
 import { Context } from 'hono'
 import { CustomerService } from './customer.service'
 import { ApiResponse } from '../../core/helpers/response'
-import { CustomerResource } from './dto/customer.resource'
-import { CustomerDetailResource } from './dto/customer-detail.resource'
-import { CustomerAddressResource } from './dto/customer-address.resource'
+import { CustomerSerializer } from './serializers/customer.serialize'
+import { CustomerDetailSerializer } from './serializers/customer-detail.serialize'
+import { CustomerAddressSerializer } from './serializers/customer-address.serialize'
 
 export class CustomerController {
     private service: CustomerService
@@ -30,7 +30,7 @@ export class CustomerController {
         
         return ApiResponse.paginate(
             c, 
-            CustomerResource.collection(data), 
+            CustomerSerializer.collection(data), 
             total, 
             page, 
             limit, 
@@ -42,7 +42,7 @@ export class CustomerController {
         const user = c.get('user')
         const id = c.req.param('id') as string
         const customer = await this.service.getById(id, user.id)
-        return ApiResponse.success(c, CustomerDetailResource.single(customer), "Customer retrieved successfully")
+        return ApiResponse.success(c, CustomerDetailSerializer.single(customer), "Customer retrieved successfully")
     }
 
     async addresses(c: Context) {
@@ -55,7 +55,7 @@ export class CustomerController {
         
         return ApiResponse.paginate(
             c,
-            CustomerAddressResource.collection(data), 
+            CustomerAddressSerializer.collection(data), 
             total,
             page,
             limit,

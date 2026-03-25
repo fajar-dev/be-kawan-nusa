@@ -1,7 +1,7 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
-import { RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest, } from "./dto/auth.request"
-import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
+import { RegisterValidation, LoginValidation, ForgotPasswordValidation, ResetPasswordValidation, RefreshTokenValidation, } from "./validations/auth.validation"
+import { UnauthorizedException, BadValidationException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { sign, verify } from "hono/jwt"
 import { config } from "../../config/config"
@@ -22,10 +22,10 @@ export class AuthService {
         this.pointService = new PointService()
     }
 
-    async register(data: RegisterRequest) {
+    async register(data: RegisterValidation) {
         const user = await this.userService.getByEmail(data.email)
         if (user) {
-            throw new BadRequestException("Email already in use")
+            throw new BadValidationException("Email already in use")
         }
 
         return AppDataSource.transaction(async (manager: EntityManager) => {
@@ -40,7 +40,7 @@ export class AuthService {
         })
     }
 
-    async login(data: LoginRequest) {
+    async login(data: LoginValidation) {
         const user = await this.userService.getByIdentifier(data.identifier)
 
         if (!user) {
@@ -79,7 +79,7 @@ export class AuthService {
         return { user: userWithoutSensitiveData, accessToken, refreshToken }
     }
 
-    async refreshToken(data: RefreshTokenRequest) {
+    async refreshToken(data: RefreshTokenValidation) {
         try {
             const decoded = await verify(data.refreshToken, config.app.jwtRefreshSecret, "HS256") as { sub: number }
             
@@ -119,10 +119,10 @@ export class AuthService {
         }
     }
 
-    async forgotPassword(data: ForgotPasswordRequest) {
+    async forgotPassword(data: ForgotPasswordValidation) {
         const user = await this.userService.getByEmail(data.email)
         if (!user) {
-            throw new BadRequestException("Email not found")
+            throw new BadValidationException("Email not found")
         }
 
         const resetToken = crypto.randomBytes(32).toString('hex')
@@ -146,11 +146,11 @@ export class AuthService {
         return true
     }
 
-    async resetPassword(data: ResetPasswordRequest) {
+    async resetPassword(data: ResetPasswordValidation) {
         const user = await this.userService.getByResetToken(data.token)
         
         if (!user) {
-            throw new BadRequestException("Invalid or expired reset token")
+            throw new BadValidationException("Invalid or expired reset token")
         }
 
         user.password = await hashPassword(data.newPassword)
@@ -165,7 +165,7 @@ export class AuthService {
         const user = await this.userService.getByEmailAndResetToken(email, token)
         
         if (!user) {
-            throw new BadRequestException("Invalid or expired reset token")
+            throw new BadValidationException("Invalid or expired reset token")
         }
 
         return true

@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import { RewardService } from './reward.service'
 import { ApiResponse } from '../../core/helpers/response'
-import { RewardResource } from './dto/reward.resource'
+import { RewardSerializer } from './serializers/reward.serialize'
 
 export class RewardController {
     private service: RewardService
@@ -24,7 +24,7 @@ export class RewardController {
 
         return ApiResponse.paginate(
             c, 
-            RewardResource.collection(data), 
+            RewardSerializer.collection(data), 
             total, 
             page, 
             limit, 
@@ -45,7 +45,7 @@ export class RewardController {
 
         return ApiResponse.paginate(
             c, 
-            RewardResource.collection(data), 
+            RewardSerializer.collection(data), 
             total, 
             page, 
             limit, 
@@ -56,6 +56,6 @@ export class RewardController {
     async store(c: Context) {
         const body = await c.req.json()
         const data = await this.service.create(body)
-        return ApiResponse.success(c, RewardResource.single(data), "Reward created successfully")
+        return ApiResponse.success(c, RewardSerializer.single(data), "Reward created successfully")
     }
 }
