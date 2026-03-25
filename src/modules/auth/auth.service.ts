@@ -7,6 +7,8 @@ import { sign, verify } from "hono/jwt"
 import { config } from "../../config/config"
 import crypto from "crypto"
 import { mail } from "../../core/helpers/mail"
+import * as fs from "fs"
+import * as path from "path"
 import { PointService } from "../point/point.service"
 import { EntityManager } from "typeorm"
 import { UserService } from "../user/user.service"
@@ -128,17 +130,19 @@ export class AuthService {
         user.resetPasswordExpires = new Date(Date.now() + 36000000) // 1 hour
 
         await this.userService.save(user)
-        // Send actual email
-        // await mail.sendHtml(
-        //     user.email,
-        //     "Password Reset Request",
-        //     `<h1>Password Reset</h1>
-        //      <p>You requested a password reset. Use the token below to reset your password:</p>
-        //      <p><strong>${resetToken}</strong></p>
-        //      <p>This token will expire in 1 hour.</p>`
-        // )
-        console.log(`http://localhost:3000/auth/reset-password?email=${user.email}&token=${resetToken}`)
+        const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'User'
+        const resetLink = `${config.app.feUrl}/auth/reset-password?email=${user.email}&token=${resetToken}`
         
+        const templatePath = path.join(__dirname, '../../core/templates/forgot-password.html')
+        const html = fs.readFileSync(templatePath, 'utf8')
+            .replace(/{{name}}/g, name)
+            .replace(/{{resetLink}}/g, resetLink)
+
+        await mail.sendHtml(
+            user.email,
+            "Atur Ulang Kata Sandi",
+            html
+        )        
         return true
     }
 

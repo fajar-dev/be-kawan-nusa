@@ -5,6 +5,7 @@
 export const config = {
     app: {
         port: Number(process.env.PORT) || 3000,
+        feUrl: process.env.FE_URL || 'http://localhost:3000',
         env: process.env.NODE_ENV || 'development',
         jwtSecret: process.env.JWT_SECRET || 'supersecretkey',
         jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'superrefreshsecretkey',
@@ -19,11 +20,11 @@ export const config = {
         sync: Boolean(process.env.DB_SYNC) || false,
     },
     mail: {
-        host: process.env.MAIL_HOST || 'smtp.gmail.com',
-        port: Number(process.env.MAIL_PORT) || 587, 
-        user: process.env.MAIL_USER || '',
-        pass: process.env.MAIL_PASS || '',  
-        from: process.env.MAIL_FROM || '"Kawan Nusa" <[EMAIL_ADDRESS]>',
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: Number(process.env.SMTP_PORT) || 587, 
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASS || '',  
+        from: process.env.SMTP_FROM || '"Kawan Nusa" <kawan@nusa.net.id>',
     }
 }
 
