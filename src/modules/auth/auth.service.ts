@@ -133,7 +133,7 @@ export class AuthService {
         const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'User'
         const resetLink = `${config.app.feUrl}/auth/reset-password?email=${user.email}&token=${resetToken}`
         
-        const templatePath = path.join(__dirname, '../../core/templates/forgot-password.html')
+        const templatePath = path.join(process.cwd(), 'emails/forgot-password.html')
         const html = fs.readFileSync(templatePath, 'utf8')
             .replace(/{{name}}/g, name)
             .replace(/{{resetLink}}/g, resetLink)
