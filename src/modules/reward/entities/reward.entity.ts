@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { CustomerService } from "../../customer-service/entities/customer-service.entity"
 import { RewardPointType } from "../reward.enum"
@@ -8,6 +8,7 @@ export class Reward {
     @PrimaryGeneratedColumn()
     id!: number
 
+    @Index()
     @Column({ name: "customer_service_id" })
     customerServiceId!: number
 
@@ -20,6 +21,7 @@ export class Reward {
     @Column({ name: "payment_date", type: "date"})
     paymentDate!: Date
 
+    @Index()
     @Column({
         type: "enum",
         enum: RewardPointType,
@@ -32,6 +34,7 @@ export class Reward {
     @JoinColumn({ name: "customer_service_id" })
     customerService!: Relation<CustomerService>
 
+    @Index()
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
 

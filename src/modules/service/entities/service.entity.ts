@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from "typeorm"
 import { ServiceType } from "../service.enum"
 
 @Entity("services")
@@ -22,6 +22,7 @@ export class Service {
     })
     type!: ServiceType
 
+    @Index()
     @Column({ name: "is_active", default: true })
     isActive!: boolean
 

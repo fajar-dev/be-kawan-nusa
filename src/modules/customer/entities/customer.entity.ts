@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from "typeorm"
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { CustomerPhone } from "./customer-phone.entity"
 import { CustomerEmail } from "./customer-email.entity"
@@ -12,12 +12,14 @@ export class Customer {
     @PrimaryColumn()
     id!: string
 
+    @Index()
     @Column()
     name!: string
 
     @Column({ nullable: true })
     company?: string
 
+    @Index()
     @Column({ 
         type: "enum",
         enum: CustomerType,
@@ -26,6 +28,7 @@ export class Customer {
     })
     type?: CustomerType
 
+    @Index()
     @Column({ name: "activation_date", type: "date", nullable: true })
     activationDate?: Date
 
@@ -35,9 +38,11 @@ export class Customer {
     @Column({ name: "sales_name", nullable: true })
     salesName?: string
 
+    @Index()
     @Column({ name: "is_active", default: true })
     isActive!: boolean
 
+    @Index()
     @Column({ name: "user_id" })
     userId!: number
 

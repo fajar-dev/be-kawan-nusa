@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { User } from "../../user/entities/user.entity"
 
@@ -7,6 +7,7 @@ export class Withdraw {
     @PrimaryGeneratedColumn()
     id!: number
 
+    @Index()
     @Column({ name: "user_id" })
     userId!: number
 
@@ -32,6 +33,7 @@ export class Withdraw {
     @JoinColumn({ name: "user_id" })
     user!: Relation<User>
 
+    @Index()
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
 

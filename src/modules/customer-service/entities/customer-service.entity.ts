@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { Customer } from "../../customer/entities/customer.entity"
 import { Service } from "../../service/entities/service.entity"
@@ -10,9 +10,11 @@ export class CustomerService {
     @PrimaryGeneratedColumn()
     id!: number
 
+    @Index()
     @Column({ name: "customer_id" })
     customerId!: string
 
+    @Index()
     @Column({ name: "service_code" })
     serviceCode!: string
 
@@ -28,6 +30,7 @@ export class CustomerService {
     @Column({ name: "end_date", type: "date", nullable: true })
     endDate?: Date
 
+    @Index()
     @CreateDateColumn({ name: "reference_date" })
     referenceDate!: Date
 
