@@ -22,8 +22,8 @@ export class BaseException extends HTTPException {
 /**
  * Common Exception Sub-classes (Standard HTTP Semantics)
  */
-export class BadValidationException extends BaseException {
-    constructor(message: string = "Bad Validation", errors: any = null) {
+export class BadValidatorException extends BaseException {
+    constructor(message: string = "Bad Validator", errors: any = null) {
         super(message, 400, errors)
     }
 }
@@ -35,7 +35,7 @@ export class UnauthorizedException extends BaseException {
 }
 
 export class NotFoundException extends BaseException {
-    constructor(message: string = "Validationed resource not found") {
+    constructor(message: string = "Validatored resource not found") {
         super(message, 404)
     }
 }
@@ -52,15 +52,15 @@ export class ConflictException extends BaseException {
     }
 }
 
-export class TooManyValidationsException extends BaseException {
-    constructor(message: string = "Too Many Validations") {
+export class TooManyValidatorsException extends BaseException {
+    constructor(message: string = "Too Many Validators") {
         super(message, 429)
     }
 }
 
-export class ValidationException extends BaseException {
+export class ValidatorException extends BaseException {
     constructor(errors: ZodError) {
-        super("Validation failed", 422, errors.issues.map(i => ({
+        super("Validator failed", 422, errors.issues.map(i => ({
             field: i.path.join("."),
             message: i.message
         })))

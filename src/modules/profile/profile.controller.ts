@@ -1,9 +1,9 @@
 import { Context } from "hono"
 import { ProfileService } from "./profile.service"
 import { ApiResponse } from "../../core/helpers/response"
-import { UpdateAccountValidation, UpdateBankValidation, UpdatePasswordValidation, UpdatePreferenceValidation, UpdatePhotoValidation } from "./validations/profile.validation"
+import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator, UpdatePhotoValidator } from "./validators/profile.validator"
 import { UserSerializer } from "../user/serializers/user.serialize"
-import { BadValidationException } from "../../core/exceptions/base"
+import { BadValidatorException } from "../../core/exceptions/base"
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
@@ -21,35 +21,35 @@ export class ProfileController {
 
     async updateAccount(c: Context) {
         const user = c.get('user')
-        const body = await c.req.json() as UpdateAccountValidation
+        const body = await c.req.json() as UpdateAccountValidator
         const updated = await this.service.updateAccount(user.id, body)
         return ApiResponse.success(c, UserSerializer.single(updated), "Account updated successfully")
     }
 
     async updateBank(c: Context) {
         const user = c.get('user')
-        const body = await c.req.json() as UpdateBankValidation
+        const body = await c.req.json() as UpdateBankValidator
         const updated = await this.service.updateBank(user.id, body)
         return ApiResponse.success(c, UserSerializer.single(updated), "Bank details updated successfully")
     }
 
     async updatePreference(c: Context) {
         const user = c.get('user')
-        const body = await c.req.json() as UpdatePreferenceValidation
+        const body = await c.req.json() as UpdatePreferenceValidator
         const updated = await this.service.updatePreference(user.id, body)
         return ApiResponse.success(c, UserSerializer.single(updated), "Preference updated successfully")
     }
 
     async updatePassword(c: Context) {
         const user = c.get('user')
-        const body = await c.req.json() as UpdatePasswordValidation
+        const body = await c.req.json() as UpdatePasswordValidator
         await this.service.updatePassword(user.id, body)
         return ApiResponse.success(c, null, "Password updated successfully")
     }
 
     async updatePhoto(c: Context) {
         const user = c.get('user')
-        const { photo } = await c.req.parseBody() as unknown as UpdatePhotoValidation
+        const { photo } = await c.req.parseBody() as unknown as UpdatePhotoValidator
 
         const ext = photo.type.split('/')[1] === 'jpeg' ? 'jpg' : photo.type.split('/')[1]
         const filename = `profile_${user.id}_${Date.now()}.${ext}`

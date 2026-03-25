@@ -1,7 +1,7 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
-import { UpdateAccountValidation, UpdateBankValidation, UpdatePasswordValidation, UpdatePreferenceValidation } from "./validations/profile.validation"
-import { NotFoundException, BadValidationException } from "../../core/exceptions/base"
+import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator } from "./validators/profile.validator"
+import { NotFoundException, BadValidatorException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { Repository } from "typeorm"
 
@@ -20,25 +20,25 @@ export class ProfileService {
         return user
     }
 
-    async updateAccount(userId: number, data: UpdateAccountValidation) {
+    async updateAccount(userId: number, data: UpdateAccountValidator) {
         const user = await this.getProfile(userId)
         this.repository.merge(user, data)
         return await this.repository.save(user)
     }
 
-    async updateBank(userId: number, data: UpdateBankValidation) {
+    async updateBank(userId: number, data: UpdateBankValidator) {
         const user = await this.getProfile(userId)
         this.repository.merge(user, data)
         return await this.repository.save(user)
     }
 
-    async updatePreference(userId: number, data: UpdatePreferenceValidation) {
+    async updatePreference(userId: number, data: UpdatePreferenceValidator) {
         const user = await this.getProfile(userId)
         this.repository.merge(user, data)
         return await this.repository.save(user)
     }
 
-    async updatePassword(userId: number, data: UpdatePasswordValidation) {
+    async updatePassword(userId: number, data: UpdatePasswordValidator) {
         const user = await this.repository.createQueryBuilder("user")
             .where("user.id = :id", { id: userId })
             .addSelect("user.password")
@@ -50,7 +50,7 @@ export class ProfileService {
 
         const isValid = await comparePassword(data.oldPassword, user.password)
         if (!isValid) {
-            throw new BadValidationException("Old password is incorrect")
+            throw new BadValidatorException("Old password is incorrect")
         }
 
         user.password = await hashPassword(data.newPassword)

@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const UpdateAccountValidation = z.object({
+export const UpdateAccountValidator = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
     phone: z.string().min(1, "Phone is required"),
@@ -9,31 +9,31 @@ export const UpdateAccountValidation = z.object({
     jobPosition: z.string().optional(),
 })
 
-export type UpdateAccountValidation = z.infer<typeof UpdateAccountValidation>
+export type UpdateAccountValidator = z.infer<typeof UpdateAccountValidator>
 
-export const UpdateBankValidation = z.object({
+export const UpdateBankValidator = z.object({
     accountHolderName: z.string().min(1, "Account holder name is required"),
     bankName: z.string().min(1, "Bank name is required"),
     accountNumber: z.string().min(1, "Account number is required"),
 })
 
-export type UpdateBankValidation = z.infer<typeof UpdateBankValidation>
+export type UpdateBankValidator = z.infer<typeof UpdateBankValidator>
 
-export const UpdatePasswordValidation = z.object({
+export const UpdatePasswordValidator = z.object({
     oldPassword: z.string().min(1, "Old password is required"),
     newPassword: z.string().min(6, "New password must be at least 6 characters"),
 })
 
-export type UpdatePasswordValidation = z.infer<typeof UpdatePasswordValidation>
+export type UpdatePasswordValidator = z.infer<typeof UpdatePasswordValidator>
 
-export const UpdatePreferenceValidation = z.object({
+export const UpdatePreferenceValidator = z.object({
     isSubscribe: z.boolean().optional(),
     isAutoWithdraw: z.boolean().optional(),
 })
 
-export type UpdatePreferenceValidation = z.infer<typeof UpdatePreferenceValidation>
+export type UpdatePreferenceValidator = z.infer<typeof UpdatePreferenceValidator>
 
-export const UpdatePhotoValidation = z.object({
+export const UpdatePhotoValidator = z.object({
     photo: z.any()
         .refine((file) => file instanceof File, "Photo file is required")
         .refine((file: File) => file.size <= 5 * 1024 * 1024, "Max file size is 5MB")
@@ -43,4 +43,4 @@ export const UpdatePhotoValidation = z.object({
         )
 })
 
-export type UpdatePhotoValidation = z.infer<typeof UpdatePhotoValidation>
+export type UpdatePhotoValidator = z.infer<typeof UpdatePhotoValidator>

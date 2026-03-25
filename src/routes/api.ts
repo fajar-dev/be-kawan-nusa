@@ -4,19 +4,19 @@ import { CustomerController } from '../modules/customer/customer.controller'
 import { CustomerServiceController } from '../modules/customer-service/customer-service.controller'
 import { ServiceController } from '../modules/service/service.controller'
 import { RewardController } from '../modules/reward/reward.controller'
-import { CreateRewardValidation } from '../modules/reward/validations/reward.validation'
+import { CreateRewardValidator } from '../modules/reward/validators/reward.validator'
 import { AuthController } from '../modules/auth/auth.controller'
-import { RegisterValidation, LoginValidation, ForgotPasswordValidation, ResetPasswordValidation, RefreshTokenValidation } from '../modules/auth/validations/auth.validation'
+import { RegisterValidator, LoginValidator, ForgotPasswordValidator, ResetPasswordValidator, RefreshTokenValidator } from '../modules/auth/validators/auth.validator'
 import { authMiddleware } from '../core/middlewares/auth.middleware'
 import { apiKeyMiddleware } from '../core/middlewares/api-key.middleware'
 import { tokenAuthMiddleware } from '../core/middlewares/token-auth.middleware'
 import { ProfileController } from '../modules/profile/profile.controller'
-import { UpdateAccountValidation, UpdateBankValidation, UpdatePasswordValidation, UpdatePreferenceValidation, UpdatePhotoValidation } from '../modules/profile/validations/profile.validation'
+import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator, UpdatePhotoValidator } from '../modules/profile/validators/profile.validator'
 import { PointController } from '../modules/point/point.controller'
 import { StatisticController } from '../modules/statistic/statistic.controller'
 import { AdditionalController } from '../modules/additional/additional.controller'
 import { WithdrawController } from '../modules/withdraw/withdraw.controller'
-import { WithdrawalValidation } from '../modules/withdraw/validations/withdraw.validation'
+import { WithdrawalValidator } from '../modules/withdraw/validators/withdraw.validator'
 import { validationHook } from '../core/helpers/validator'
 
 const routes = new Hono()
@@ -33,22 +33,22 @@ const withdrawController = new WithdrawController()
 
 
 // Auth Routes
-routes.post('/auth/register', zValidator('json', RegisterValidation, validationHook), (c) => authController.register(c))
-routes.post('/auth/login', zValidator('json', LoginValidation, validationHook), (c) => authController.login(c))
-routes.post('/auth/forgot-password', zValidator('json', ForgotPasswordValidation, validationHook), (c) => authController.forgotPassword(c))
+routes.post('/auth/register', zValidator('json', RegisterValidator, validationHook), (c) => authController.register(c))
+routes.post('/auth/login', zValidator('json', LoginValidator, validationHook), (c) => authController.login(c))
+routes.post('/auth/forgot-password', zValidator('json', ForgotPasswordValidator, validationHook), (c) => authController.forgotPassword(c))
 routes.get('/auth/validate-reset-token', (c) => authController.validateResetToken(c))
-routes.post('/auth/reset-password', zValidator('json', ResetPasswordValidation, validationHook), (c) => authController.resetPassword(c))
-routes.post('/auth/refresh', zValidator('json', RefreshTokenValidation, validationHook), (c) => authController.refreshToken(c))
+routes.post('/auth/reset-password', zValidator('json', ResetPasswordValidator, validationHook), (c) => authController.resetPassword(c))
+routes.post('/auth/refresh', zValidator('json', RefreshTokenValidator, validationHook), (c) => authController.refreshToken(c))
 routes.get('/auth/me', authMiddleware, (c) => authController.me(c))
 routes.post('/auth/logout', authMiddleware, (c) => authController.logout(c))
 
 // Profile Routes
 routes.get('/profile', authMiddleware, (c) => profileController.show(c))
-routes.put('/profile/account', authMiddleware, zValidator('json', UpdateAccountValidation, validationHook), (c) => profileController.updateAccount(c))
-routes.put('/profile/bank', authMiddleware, zValidator('json', UpdateBankValidation, validationHook), (c) => profileController.updateBank(c))
-routes.put('/profile/preference', authMiddleware, zValidator('json', UpdatePreferenceValidation, validationHook), (c) => profileController.updatePreference(c))
-routes.put('/profile/password', authMiddleware, zValidator('json', UpdatePasswordValidation, validationHook), (c) => profileController.updatePassword(c))
-routes.post('/profile/photo', authMiddleware, zValidator('form', UpdatePhotoValidation, validationHook), (c) => profileController.updatePhoto(c))
+routes.put('/profile/account', authMiddleware, zValidator('json', UpdateAccountValidator, validationHook), (c) => profileController.updateAccount(c))
+routes.put('/profile/bank', authMiddleware, zValidator('json', UpdateBankValidator, validationHook), (c) => profileController.updateBank(c))
+routes.put('/profile/preference', authMiddleware, zValidator('json', UpdatePreferenceValidator, validationHook), (c) => profileController.updatePreference(c))
+routes.put('/profile/password', authMiddleware, zValidator('json', UpdatePasswordValidator, validationHook), (c) => profileController.updatePassword(c))
+routes.post('/profile/photo', authMiddleware, zValidator('form', UpdatePhotoValidator, validationHook), (c) => profileController.updatePhoto(c))
 
 // Point Routes
 routes.get('/point', authMiddleware, (c) => pointController.show(c))
@@ -70,10 +70,10 @@ routes.get('/customer-service', authMiddleware, (c) => customerServiceController
 
 // Reward Routes
 routes.get('/reward', authMiddleware, (c) => rewardController.index(c))
-routes.post('/reward', apiKeyMiddleware, zValidator('json', CreateRewardValidation, validationHook), (c) => rewardController.store(c))
+routes.post('/reward', apiKeyMiddleware, zValidator('json', CreateRewardValidator, validationHook), (c) => rewardController.store(c))
 
 // Withdraw Routes
-routes.post('/withdraw', authMiddleware, zValidator('json', WithdrawalValidation, validationHook), (c) => withdrawController.store(c))
+routes.post('/withdraw', authMiddleware, zValidator('json', WithdrawalValidator, validationHook), (c) => withdrawController.store(c))
 routes.get('/withdraw', authMiddleware, (c) => withdrawController.index(c))
 routes.get('/withdraw/:id', tokenAuthMiddleware, (c) => withdrawController.receipt(c, 'inline'))
 routes.get('/withdraw/:id/download', tokenAuthMiddleware, (c) => withdrawController.receipt(c, 'attachment'))
