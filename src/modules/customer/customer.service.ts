@@ -1,22 +1,20 @@
 import { AppDataSource } from "../../config/database"
 import { Customer } from "./entities/customer.entity"
-import { CustomerAddress } from "./entities/customer-address.entity"
+
 import { CustomerService as CustomerServiceEntity } from "../customer-service/entities/customer-service.entity"
 import { NotFoundException } from "../../core/exceptions/base"
 import { Brackets, Like, Repository } from "typeorm"
 
 export class CustomerService {
     private repository: Repository<Customer>
-    private addressRepository: Repository<CustomerAddress>
     private customerServiceRepo: Repository<CustomerServiceEntity>
 
     constructor() {
         this.repository = AppDataSource.getRepository(Customer)
-        this.addressRepository = AppDataSource.getRepository(CustomerAddress)
         this.customerServiceRepo = AppDataSource.getRepository(CustomerServiceEntity)
     }
 
-    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { startDate?: string, endDate?: string, types?: string[], isActive?: string, serviceCodes?: string[] } = {}) {
+    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { types?: string[], isActive?: string, serviceCodes?: string[] } = {}) {
         const skip = (page - 1) * limit
         const query = this.repository.createQueryBuilder("customer")
             .where("customer.userId = :userId", { userId })
@@ -26,16 +24,10 @@ export class CustomerService {
                 qb.where("customer.id LIKE :q")
                   .orWhere("customer.name LIKE :q")
                   .orWhere("customer.company LIKE :q")
-                  .orWhere("customer.salesName LIKE :q")
             }), { q: `%${q}%` })
         }
 
-        if (filters.startDate) {
-            query.andWhere("customer.activationDate >= :startDate", { startDate: filters.startDate })
-        }
-        if (filters.endDate) {
-            query.andWhere("customer.activationDate <= :endDate", { endDate: filters.endDate })
-        }
+
         if (filters.types && filters.types.length > 0) {
             query.andWhere("customer.type IN (:...types)", { types: filters.types })
         }
@@ -47,9 +39,12 @@ export class CustomerService {
                  .andWhere("cs.serviceCode IN (:...serviceCodes)", { serviceCodes: filters.serviceCodes })
         }
 
+        const validSortFields = ["id", "name", "company", "registrationDate", "isActive", "createdAt", "updatedAt"]
+        const finalSort = validSortFields.includes(sort) ? sort : "registrationDate"
+
         query.leftJoinAndSelect("customer.phones", "phones")
              .leftJoinAndSelect("customer.emails", "emails")
-             .orderBy(`customer.${sort}`, order.toUpperCase() as any)
+             .orderBy(`customer.${finalSort}`, order.toUpperCase() as any)
 
         const [data, total] = await query
             .take(limit)
@@ -83,21 +78,5 @@ export class CustomerService {
             totalCustomerServices,
             latestCustomerService
         }
-    }
-
-    async getAddresses(customerId: string, userId: number, page: number = 1, limit: number = 10) {
-        const customer = await this.repository.findOne({ where: { id: customerId, userId } })
-        if (!customer) {
-            throw new NotFoundException("Customer not found")
-        }
-
-        const skip = (page - 1) * limit
-        const [data, total] = await this.addressRepository.findAndCount({
-            where: { customerId },
-            take: limit,
-            skip: skip,
-            order: { createdAt: "DESC" }
-        })
-        return { data, total }
     }
 }

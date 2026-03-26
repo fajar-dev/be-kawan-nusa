@@ -25,6 +25,7 @@ export class CustomerServiceService {
             query.andWhere(new Brackets(qb => {
                 qb.where("cs.serviceCode LIKE :q")
                   .orWhere("cs.salesName LIKE :q")
+                  .orWhere("cs.address LIKE :q")
                   .orWhere("service.name LIKE :q")
             }), { q: searchPattern })
         }
@@ -73,6 +74,7 @@ export class CustomerServiceService {
             query.andWhere(new Brackets(qb => {
                 qb.where("cs.serviceCode LIKE :q")
                   .orWhere("cs.salesName LIKE :q")
+                  .orWhere("cs.address LIKE :q")
                   .orWhere("service.name LIKE :q")
             }), { q: searchPattern })
         }

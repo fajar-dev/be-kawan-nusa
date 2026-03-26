@@ -24,6 +24,9 @@ export class CustomerService {
     @Column({ name: "activation_date", type: "date" })
     activationDate!: Date
 
+    @Column({ name: "address", type: "varchar", nullable: true })
+    address?: string
+
     @Column({ name: "start_date", type: "date" })
     startDate!: Date
 

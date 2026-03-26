@@ -8,6 +8,7 @@ export class CustomerServiceSerializer {
             serviceCode: item.serviceCode,
             registrationDate: item.registrationDate,
             activationDate: item.activationDate,
+            address: item.address,
             startDate: item.startDate,
             endDate: item.endDate,
             status: item.status,

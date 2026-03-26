@@ -56,7 +56,6 @@ routes.get('/point', authMiddleware, (c) => pointController.show(c))
 // Customer Routes
 routes.get('/customer', authMiddleware, (c) => customerController.index(c))
 routes.get('/customer/:id', authMiddleware, (c) => customerController.show(c))
-routes.get('/customer/:id/address', authMiddleware, (c) => customerController.addresses(c))
 routes.get('/customer/:id/service', authMiddleware, (c) => customerServiceController.byCustomer(c))
 routes.get('/customer/:id/reward', authMiddleware, (c) => rewardController.byCustomer(c))
 

@@ -2,7 +2,7 @@ import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneT
 import type { Relation } from "typeorm"
 import { CustomerPhone } from "./customer-phone.entity"
 import { CustomerEmail } from "./customer-email.entity"
-import { CustomerAddress } from "./customer-address.entity"
+
 import { CustomerType } from "../customer.enum"
 import { CustomerService as CustomerServiceObject } from "../../customer-service/entities/customer-service.entity"
 import { User } from "../../user/entities/user.entity"
@@ -20,7 +20,7 @@ export class Customer {
     company?: string
 
     @Index()
-    @Column({ 
+    @Column({
         type: "enum",
         enum: CustomerType,
         nullable: true,
@@ -28,15 +28,8 @@ export class Customer {
     })
     type?: CustomerType
 
-    @Index()
-    @Column({ name: "activation_date", type: "date", nullable: true })
-    activationDate?: Date
-
     @Column({ name: "registration_date", type: "date", nullable: true })
     registrationDate?: Date
-
-    @Column({ name: "sales_name", nullable: true })
-    salesName?: string
 
     @Index()
     @Column({ name: "is_active", default: true })
@@ -52,9 +45,6 @@ export class Customer {
 
     @OneToMany(() => CustomerEmail, (email) => email.customer, { cascade: true })
     emails!: Relation<CustomerEmail[]>
-
-    @OneToMany(() => CustomerAddress, (address) => address.customer, { cascade: true })
-    addresses!: Relation<CustomerAddress[]>
 
     @OneToMany(() => CustomerServiceObject, (service) => service.customer)
     services!: Relation<CustomerServiceObject[]>

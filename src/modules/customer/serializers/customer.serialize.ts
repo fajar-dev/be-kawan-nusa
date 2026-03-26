@@ -7,9 +7,7 @@ export class CustomerSerializer {
             name: customer.name,
             company: customer.company,
             type: customer.type,
-            activationDate: customer.activationDate,
             registrationDate: customer.registrationDate,
-            salesName: customer.salesName,
             isActive: customer.isActive,
             ...(customer.phones && {
                 phones: customer.phones.map(p => ({
@@ -25,13 +23,6 @@ export class CustomerSerializer {
                     label: e.label
                 }))
             }),
-            ...(customer.addresses && {
-                addresses: customer.addresses.map(a => ({
-                    id: a.id,
-                    address: a.address,
-                    label: a.label
-                }))
-            })
         }
     }
 

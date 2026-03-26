@@ -3,7 +3,6 @@ import { DataSource } from "typeorm"
 import { Customer } from "../modules/customer/entities/customer.entity"
 import { CustomerPhone } from "../modules/customer/entities/customer-phone.entity"
 import { CustomerEmail } from "../modules/customer/entities/customer-email.entity"
-import { CustomerAddress } from "../modules/customer/entities/customer-address.entity"
 import { Service } from "../modules/service/entities/service.entity"
 import { CustomerService } from "../modules/customer-service/entities/customer-service.entity"
 import { User } from "../modules/user/entities/user.entity"
@@ -24,7 +23,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, CustomerAddress, Service, CustomerService, User, Point, Reward, Withdraw],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Point, Reward, Withdraw],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",
