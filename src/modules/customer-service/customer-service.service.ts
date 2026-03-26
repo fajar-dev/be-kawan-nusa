@@ -2,6 +2,7 @@ import { AppDataSource } from "../../config/database"
 import { CustomerService } from "./entities/customer-service.entity"
 import { Customer } from "../customer/entities/customer.entity"
 import { NotFoundException } from "../../core/exceptions/base"
+import { Reward } from "../reward/entities/reward.entity"
 import { Brackets, Repository } from "typeorm"
 
 export class CustomerServiceService {
@@ -13,7 +14,7 @@ export class CustomerServiceService {
         this.customerRepository = AppDataSource.getRepository(Customer)
     }
 
-    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { startRegistration?: string, endRegistration?: string, startActivation?: string, endActivation?: string, status?: string[] } = {}) {
+    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { startDate?: string, endDate?: string, types?: string[], serviceCodes?: string[] } = {}) {
         const query = this.repository.createQueryBuilder("cs")
             .innerJoinAndSelect("cs.customer", "customer")
             .leftJoinAndSelect("cs.service", "service")
@@ -30,24 +31,51 @@ export class CustomerServiceService {
             }), { q: searchPattern })
         }
 
-        if (filters.startRegistration) {
-            query.andWhere("cs.registrationDate >= :startRegistration", { startRegistration: filters.startRegistration })
+        if (filters.startDate) {
+            query.andWhere("cs.registrationDate >= :startDate", { startDate: filters.startDate })
         }
-        if (filters.endRegistration) {
-            query.andWhere("cs.registrationDate <= :endRegistration", { endRegistration: filters.endRegistration })
+        if (filters.endDate) {
+            query.andWhere("cs.registrationDate <= :endDate", { endDate: filters.endDate })
         }
-        if (filters.startActivation) {
-            query.andWhere("cs.activationDate >= :startActivation", { startActivation: filters.startActivation })
+        if (filters.serviceCodes && filters.serviceCodes.length > 0) {
+            query.andWhere("cs.serviceCode IN (:...serviceCodes)", { serviceCodes: filters.serviceCodes })
         }
-        if (filters.endActivation) {
-            query.andWhere("cs.activationDate <= :endActivation", { endActivation: filters.endActivation })
-        }
-        if (filters.status && filters.status.length > 0) {
-            query.andWhere("cs.status IN (:...status)", { status: filters.status })
+        if (filters.types && filters.types.length > 0) {
+            query.andWhere(qb => {
+                const subQuery = qb.subQuery()
+                    .select("r.type")
+                    .from(Reward, "r")
+                    .where("r.customerServiceId = cs.id")
+                    .orderBy("r.createdAt", "DESC")
+                    .limit(1)
+                    .getQuery()
+                return `(${subQuery}) IN (:...types)`
+            }, { types: filters.types })
         }
 
-        const sortAlias = sort.includes(".") ? sort : `cs.${sort}`
-        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+        if (sort === "latestReward.point" || sort === "latestReward.type") {
+            const field = sort.split(".")[1]
+            query.addSelect(subQuery => {
+                return subQuery
+                    .select(`r.${field}`)
+                    .from(Reward, "r")
+                    .where("r.customerServiceId = cs.id")
+                    .orderBy("r.createdAt", "DESC")
+                    .limit(1)
+            }, "latest_reward_field")
+            query.orderBy("latest_reward_field", order.toUpperCase() as any)
+        } else if (sort === "totalPoint") {
+            query.addSelect(subQuery => {
+                return subQuery
+                    .select("COALESCE(SUM(r2.point), 0)")
+                    .from(Reward, "r2")
+                    .where("r2.customerServiceId = cs.id")
+            }, "total_point_sort")
+            query.orderBy("total_point_sort", order.toUpperCase() as any)
+        } else {
+            const sortAlias = sort.includes(".") ? sort : `cs.${sort}`
+            query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+        }
 
         const [entities, total] = await query
             .take(limit)
@@ -112,8 +140,29 @@ export class CustomerServiceService {
             query.andWhere("cs.status IN (:...status)", { status: filters.status })
         }
 
-        const sortAlias = sort.includes(".") ? sort : `cs.${sort}`
-        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+        if (sort === "latestReward.point" || sort === "latestReward.type") {
+            const field = sort.split(".")[1]
+            query.addSelect(subQuery => {
+                return subQuery
+                    .select(`r.${field}`)
+                    .from(Reward, "r")
+                    .where("r.customerServiceId = cs.id")
+                    .orderBy("r.createdAt", "DESC")
+                    .limit(1)
+            }, "latest_reward_field")
+            query.orderBy("latest_reward_field", order.toUpperCase() as any)
+        } else if (sort === "totalPoint") {
+            query.addSelect(subQuery => {
+                return subQuery
+                    .select("COALESCE(SUM(r2.point), 0)")
+                    .from(Reward, "r2")
+                    .where("r2.customerServiceId = cs.id")
+            }, "total_point_sort")
+            query.orderBy("total_point_sort", order.toUpperCase() as any)
+        } else {
+            const sortAlias = sort.includes(".") ? sort : `cs.${sort}`
+            query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+        }
 
         const [entities, total] = await query
             .take(limit)
@@ -174,8 +223,29 @@ export class CustomerServiceService {
             query.andWhere("cs.status IN (:...status)", { status: filters.status })
         }
 
-        const sortAlias = sort.includes(".") ? sort : `cs.${sort}`
-        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+        if (sort === "latestReward.point" || sort === "latestReward.type") {
+            const field = sort.split(".")[1]
+            query.addSelect(subQuery => {
+                return subQuery
+                    .select(`r.${field}`)
+                    .from(Reward, "r")
+                    .where("r.customerServiceId = cs.id")
+                    .orderBy("r.createdAt", "DESC")
+                    .limit(1)
+            }, "latest_reward_field")
+            query.orderBy("latest_reward_field", order.toUpperCase() as any)
+        } else if (sort === "totalPoint") {
+            query.addSelect(subQuery => {
+                return subQuery
+                    .select("COALESCE(SUM(r2.point), 0)")
+                    .from(Reward, "r2")
+                    .where("r2.customerServiceId = cs.id")
+            }, "total_point_sort")
+            query.orderBy("total_point_sort", order.toUpperCase() as any)
+        } else {
+            const sortAlias = sort.includes(".") ? sort : `cs.${sort}`
+            query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+        }
 
         const [entities, total] = await query
             .take(limit)

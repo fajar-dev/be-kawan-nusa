@@ -17,19 +17,16 @@ export class CustomerServiceController {
         const q = c.req.query('q') || ""
         const sort = c.req.query('sort') || "referenceDate"
         const order = c.req.query('order') || "DESC"
-        
-        const startRegistration = c.req.query('startRegistration')
-        const endRegistration = c.req.query('endRegistration')
-        const startActivation = c.req.query('startActivation')
-        const endActivation = c.req.query('endActivation')
-        const status = c.req.queries('status[]')
+        const startDate = c.req.query('startDate')
+        const endDate = c.req.query('endDate')
+        const types = c.req.queries('type[]')
+        const serviceCodes = c.req.queries('serviceCode[]')
 
         const { data, total } = await this.customerService.getAll(user.id, page, limit, q, sort, order, { 
-            startRegistration, 
-            endRegistration, 
-            startActivation, 
-            endActivation, 
-            status 
+            startDate, 
+            endDate,
+            types,
+            serviceCodes
         })
         
         return ApiResponse.paginate(
