@@ -19,8 +19,9 @@ export class RewardController {
         const order = c.req.query('order') || "DESC"
         const startDate = c.req.query('startDate')
         const endDate = c.req.query('endDate')
+        const types = c.req.queries('type[]')
 
-        const { data, total } = await this.service.getAll(user.id, page, limit, q, sort, order, startDate, endDate)
+        const { data, total } = await this.service.getAll(user.id, page, limit, q, sort, order, { startDate, endDate, types })
 
         return ApiResponse.paginate(
             c, 
@@ -40,8 +41,11 @@ export class RewardController {
         const q = c.req.query('q') || ""
         const sort = c.req.query('sort') || "createdAt"
         const order = c.req.query('order') || "DESC"
+        const startDate = c.req.query('startDate')
+        const endDate = c.req.query('endDate')
+        const types = c.req.queries('type[]')
 
-        const { data, total } = await this.service.getByCustomerId(customerId, user.id, page, limit, q, sort, order)
+        const { data, total } = await this.service.getByCustomerId(customerId, user.id, page, limit, q, sort, order, { startDate, endDate, types })
 
         return ApiResponse.paginate(
             c, 

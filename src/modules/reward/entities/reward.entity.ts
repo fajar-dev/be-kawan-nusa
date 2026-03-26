@@ -25,7 +25,7 @@ export class Reward {
     @Column({
         type: "enum",
         enum: RewardPointType,
-        default: RewardPointType.OTC
+        default: RewardPointType.OTP
     })
     type!: RewardPointType
 

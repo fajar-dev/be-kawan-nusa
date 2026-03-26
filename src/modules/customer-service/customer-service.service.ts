@@ -13,7 +13,7 @@ export class CustomerServiceService {
         this.customerRepository = AppDataSource.getRepository(Customer)
     }
 
-    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string) {
+    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { startRegistration?: string, endRegistration?: string, startActivation?: string, endActivation?: string, status?: string[] } = {}) {
         const query = this.repository.createQueryBuilder("cs")
             .innerJoinAndSelect("cs.customer", "customer")
             .leftJoinAndSelect("cs.service", "service")
@@ -28,6 +28,22 @@ export class CustomerServiceService {
                   .orWhere("cs.address LIKE :q")
                   .orWhere("service.name LIKE :q")
             }), { q: searchPattern })
+        }
+
+        if (filters.startRegistration) {
+            query.andWhere("cs.registrationDate >= :startRegistration", { startRegistration: filters.startRegistration })
+        }
+        if (filters.endRegistration) {
+            query.andWhere("cs.registrationDate <= :endRegistration", { endRegistration: filters.endRegistration })
+        }
+        if (filters.startActivation) {
+            query.andWhere("cs.activationDate >= :startActivation", { startActivation: filters.startActivation })
+        }
+        if (filters.endActivation) {
+            query.andWhere("cs.activationDate <= :endActivation", { endActivation: filters.endActivation })
+        }
+        if (filters.status && filters.status.length > 0) {
+            query.andWhere("cs.status IN (:...status)", { status: filters.status })
         }
 
         const sortAlias = sort.includes(".") ? sort : `cs.${sort}`
@@ -57,7 +73,8 @@ export class CustomerServiceService {
         limit: number, 
         q: string, 
         sort: string, 
-        order: string
+        order: string,
+        filters: { startRegistration?: string, endRegistration?: string, startActivation?: string, endActivation?: string, status?: string[] } = {}
     ) {
         const customer = await this.customerRepository.findOneBy({ id: customerId, userId })
         if (!customer) {
@@ -77,6 +94,22 @@ export class CustomerServiceService {
                   .orWhere("cs.address LIKE :q")
                   .orWhere("service.name LIKE :q")
             }), { q: searchPattern })
+        }
+
+        if (filters.startRegistration) {
+            query.andWhere("cs.registrationDate >= :startRegistration", { startRegistration: filters.startRegistration })
+        }
+        if (filters.endRegistration) {
+            query.andWhere("cs.registrationDate <= :endRegistration", { endRegistration: filters.endRegistration })
+        }
+        if (filters.startActivation) {
+            query.andWhere("cs.activationDate >= :startActivation", { startActivation: filters.startActivation })
+        }
+        if (filters.endActivation) {
+            query.andWhere("cs.activationDate <= :endActivation", { endActivation: filters.endActivation })
+        }
+        if (filters.status && filters.status.length > 0) {
+            query.andWhere("cs.status IN (:...status)", { status: filters.status })
         }
 
         const sortAlias = sort.includes(".") ? sort : `cs.${sort}`
@@ -106,7 +139,8 @@ export class CustomerServiceService {
         limit: number,
         q: string,
         sort: string,
-        order: string
+        order: string,
+        filters: { startRegistration?: string, endRegistration?: string, startActivation?: string, endActivation?: string, status?: string[] } = {}
     ) {
         const query = this.repository.createQueryBuilder("cs")
             .innerJoinAndSelect("cs.customer", "customer")
@@ -122,6 +156,22 @@ export class CustomerServiceService {
                   .orWhere("customer.name LIKE :q")
                   .orWhere("customer.id LIKE :q")
             }), { q: searchPattern })
+        }
+
+        if (filters.startRegistration) {
+            query.andWhere("cs.registrationDate >= :startRegistration", { startRegistration: filters.startRegistration })
+        }
+        if (filters.endRegistration) {
+            query.andWhere("cs.registrationDate <= :endRegistration", { endRegistration: filters.endRegistration })
+        }
+        if (filters.startActivation) {
+            query.andWhere("cs.activationDate >= :startActivation", { startActivation: filters.startActivation })
+        }
+        if (filters.endActivation) {
+            query.andWhere("cs.activationDate <= :endActivation", { endActivation: filters.endActivation })
+        }
+        if (filters.status && filters.status.length > 0) {
+            query.andWhere("cs.status IN (:...status)", { status: filters.status })
         }
 
         const sortAlias = sort.includes(".") ? sort : `cs.${sort}`

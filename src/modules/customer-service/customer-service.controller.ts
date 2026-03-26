@@ -18,7 +18,19 @@ export class CustomerServiceController {
         const sort = c.req.query('sort') || "referenceDate"
         const order = c.req.query('order') || "DESC"
         
-        const { data, total } = await this.customerService.getAll(user.id, page, limit, q, sort, order)
+        const startRegistration = c.req.query('startRegistration')
+        const endRegistration = c.req.query('endRegistration')
+        const startActivation = c.req.query('startActivation')
+        const endActivation = c.req.query('endActivation')
+        const status = c.req.queries('status[]')
+
+        const { data, total } = await this.customerService.getAll(user.id, page, limit, q, sort, order, { 
+            startRegistration, 
+            endRegistration, 
+            startActivation, 
+            endActivation, 
+            status 
+        })
         
         return ApiResponse.paginate(
             c, 
@@ -39,7 +51,19 @@ export class CustomerServiceController {
         const sort = c.req.query('sort') || "referenceDate"
         const order = c.req.query('order') || "DESC"
         
-        const { data, total } = await this.customerService.getAllByCustomer(customerId, user.id, page, limit, q, sort, order)
+        const startRegistration = c.req.query('startRegistration')
+        const endRegistration = c.req.query('endRegistration')
+        const startActivation = c.req.query('startActivation')
+        const endActivation = c.req.query('endActivation')
+        const status = c.req.queries('status[]')
+
+        const { data, total } = await this.customerService.getAllByCustomer(customerId, user.id, page, limit, q, sort, order, {
+            startRegistration,
+            endRegistration,
+            startActivation,
+            endActivation,
+            status
+        })
         
         return ApiResponse.paginate(
             c, 
@@ -60,7 +84,19 @@ export class CustomerServiceController {
         const sort = c.req.query('sort') || "referenceDate"
         const order = c.req.query('order') || "DESC"
         
-        const { data, total } = await this.customerService.getAllByService(serviceCode, user.id, page, limit, q, sort, order)
+        const startRegistration = c.req.query('startRegistration')
+        const endRegistration = c.req.query('endRegistration')
+        const startActivation = c.req.query('startActivation')
+        const endActivation = c.req.query('endActivation')
+        const status = c.req.queries('status[]')
+
+        const { data, total } = await this.customerService.getAllByService(serviceCode, user.id, page, limit, q, sort, order, {
+            startRegistration,
+            endRegistration,
+            startActivation,
+            endActivation,
+            status
+        })
         
         return ApiResponse.paginate(
             c, 

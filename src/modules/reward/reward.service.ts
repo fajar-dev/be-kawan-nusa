@@ -22,7 +22,8 @@ export class RewardService {
         limit: number, 
         q: string, 
         sort: string, 
-        order: string
+        order: string,
+        filters: { startDate?: string, endDate?: string, types?: string[] } = {}
     ) {
         const query = this.repository.createQueryBuilder("reward")
             .leftJoinAndSelect("reward.customerService", "cs")
@@ -36,7 +37,18 @@ export class RewardService {
             query.andWhere(new Brackets(qb => {
                 qb.where("reward.type LIKE :q")
                   .orWhere("service.name LIKE :q")
+                  .orWhere("cs.serviceCode LIKE :q")
             }), { q: searchPattern })
+        }
+
+        if (filters.startDate) {
+            query.andWhere("reward.createdAt >= :startDate", { startDate: filters.startDate })
+        }
+        if (filters.endDate) {
+            query.andWhere("reward.createdAt <= :endDate", { endDate: filters.endDate })
+        }
+        if (filters.types && filters.types.length > 0) {
+            query.andWhere("reward.type IN (:...types)", { types: filters.types })
         }
 
         const sortAlias = sort.includes(".") ? sort : `reward.${sort}`
@@ -57,8 +69,7 @@ export class RewardService {
         q: string, 
         sort: string, 
         order: string,
-        startDate?: string,
-        endDate?: string
+        filters: { startDate?: string, endDate?: string, types?: string[] } = {}
     ) {
         const query = this.repository.createQueryBuilder("reward")
             .leftJoinAndSelect("reward.customerService", "cs")
@@ -75,12 +86,16 @@ export class RewardService {
             }), { q: searchPattern })
         }
 
-        if (startDate) {
-            query.andWhere("reward.createdAt >= :startDate", { startDate })
+        if (filters.startDate) {
+            query.andWhere("reward.createdAt >= :startDate", { startDate: filters.startDate })
         }
 
-        if (endDate) {
-            query.andWhere("reward.createdAt <= :endDate", { endDate })
+        if (filters.endDate) {
+            query.andWhere("reward.createdAt <= :endDate", { endDate: filters.endDate })
+        }
+
+        if (filters.types && filters.types.length > 0) {
+            query.andWhere("reward.type IN (:...types)", { types: filters.types })
         }
 
         const sortAlias = sort.includes(".") ? sort : `reward.${sort}`
