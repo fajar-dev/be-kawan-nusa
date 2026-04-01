@@ -17,6 +17,8 @@ import { StatisticController } from '../modules/statistic/statistic.controller'
 import { AdditionalController } from '../modules/additional/additional.controller'
 import { WithdrawController } from '../modules/withdraw/withdraw.controller'
 import { WithdrawalValidator } from '../modules/withdraw/validators/withdraw.validator'
+import { CatalogCategoryController } from '../modules/catalog-category/catalog-category.controller'
+import { CatalogController } from '../modules/catalog/catalog.controller'
 import { validationHook } from '../core/helpers/validator'
 
 const routes = new Hono()
@@ -30,6 +32,8 @@ const pointController = new PointController()
 const statisticController = new StatisticController()
 const additionalController = new AdditionalController()
 const withdrawController = new WithdrawController()
+const catalogCategoryController = new CatalogCategoryController()
+const catalogController = new CatalogController()
 
 
 // Auth Routes
@@ -81,6 +85,11 @@ routes.get('/withdraw/:id/download', tokenAuthMiddleware, (c) => withdrawControl
 routes.get('/statistic/count', authMiddleware, (c) => statisticController.count(c))
 routes.get('/statistic/point', authMiddleware, (c) => statisticController.pointPerMonth(c))
 routes.get('/statistic/customer', authMiddleware, (c) => statisticController.customerStats(c))
+
+// Catalog Routes
+routes.get('/catalog/category', authMiddleware, (c) => catalogCategoryController.index(c))
+routes.get('/catalog', authMiddleware, (c) => catalogController.index(c))
+routes.get('/catalog/:id', authMiddleware, (c) => catalogController.show(c))
 
 // Additional Routes
 routes.get('/additional/service', authMiddleware, (c) => additionalController.getServices(c))
