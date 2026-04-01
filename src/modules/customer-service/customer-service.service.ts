@@ -19,7 +19,7 @@ export class CustomerServiceService {
             .innerJoinAndSelect("cs.customer", "customer")
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.rewards", "reward")
-            .where("customer.userId = :userId", { userId })
+            .where("cs.userId = :userId", { userId })
 
         if (q) {
             const searchPattern = `%${q}%`
@@ -104,15 +104,17 @@ export class CustomerServiceService {
         order: string,
         filters: { startRegistration?: string, endRegistration?: string, startActivation?: string, endActivation?: string, status?: string[] } = {}
     ) {
-        const customer = await this.customerRepository.findOneBy({ id: customerId, userId })
-        if (!customer) {
+        const customerService = await this.repository.findOneBy({ customerId, userId })
+        if (!customerService) {
             throw new NotFoundException("Customer not found")
         }
+        const customer = await this.customerRepository.findOneBy({ id: customerId })
 
         const query = this.repository.createQueryBuilder("cs")
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.rewards", "reward")
             .where("cs.customerId = :customerId", { customerId })
+            .andWhere("cs.userId = :userId", { userId })
 
         if (q) {
             const searchPattern = `%${q}%`
@@ -196,7 +198,7 @@ export class CustomerServiceService {
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.rewards", "reward")
             .where("cs.serviceCode = :serviceCode", { serviceCode })
-            .andWhere("customer.userId = :userId", { userId })
+            .andWhere("cs.userId = :userId", { userId })
 
         if (q) {
             const searchPattern = `%${q}%`

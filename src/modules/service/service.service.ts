@@ -20,7 +20,7 @@ export class ServiceService {
         const customerServices = await this.customerServiceRepo.find({
             where: {
                 serviceCode: In(serviceCodes),
-                customer: { userId }
+                userId
             },
             relations: ["customer", "rewards"],
             order: { referenceDate: "DESC" }
@@ -41,13 +41,12 @@ export class ServiceService {
         const { startDate, endDate, isActive } = filters
         
         const query = this.repository.createQueryBuilder("service")
-            .leftJoin("customer_services", "cs", "cs.service_code = service.code")
-            .leftJoin("customers", "c", "c.id = cs.customer_id AND c.user_id = :userId", { userId })
+            .leftJoin("customer_services", "cs", "cs.service_code = service.code AND cs.user_id = :userId", { userId })
             .leftJoin("rewards", "r", "r.customer_service_id = cs.id")
             .select("service")
-            .addSelect("COUNT(DISTINCT CASE WHEN c.user_id = :userId THEN cs.id ELSE NULL END)", "totalCustomerServices")
-            .addSelect("MAX(CASE WHEN c.user_id = :userId THEN cs.reference_date ELSE NULL END)", "lastReferanceDate")
-            .addSelect("SUM(CASE WHEN c.user_id = :userId THEN r.point ELSE 0 END)", "totalPoint")
+            .addSelect("COUNT(DISTINCT cs.id)", "totalCustomerServices")
+            .addSelect("MAX(cs.reference_date)", "lastReferanceDate")
+            .addSelect("SUM(r.point)", "totalPoint")
             .groupBy("service.id")
 
         if (q) {
@@ -59,10 +58,10 @@ export class ServiceService {
         }
 
         if (startDate) {
-            query.andHaving("MAX(CASE WHEN c.user_id = :userId THEN cs.reference_date ELSE NULL END) >= :startDate", { startDate })
+            query.andHaving("MAX(cs.reference_date) >= :startDate", { startDate })
         }
         if (endDate) {
-            query.andHaving("MAX(CASE WHEN c.user_id = :userId THEN cs.reference_date ELSE NULL END) <= :endDate", { endDate })
+            query.andHaving("MAX(cs.reference_date) <= :endDate", { endDate })
         }
         if (isActive) {
             query.andWhere("service.isActive = :isActive", { isActive })

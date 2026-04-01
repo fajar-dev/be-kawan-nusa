@@ -35,10 +35,6 @@ export class Customer {
     @Column({ name: "is_active", default: true })
     isActive!: boolean
 
-    @Index()
-    @Column({ name: "user_id" })
-    userId!: number
-
     // Relations
     @OneToMany(() => CustomerPhone, (phone) => phone.customer, { cascade: true })
     phones!: Relation<CustomerPhone[]>
@@ -48,10 +44,6 @@ export class Customer {
 
     @OneToMany(() => CustomerServiceObject, (service) => service.customer)
     services!: Relation<CustomerServiceObject[]>
-
-    @ManyToOne(() => User, (user) => user.customers)
-    @JoinColumn({ name: "user_id" })
-    user!: Relation<User>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

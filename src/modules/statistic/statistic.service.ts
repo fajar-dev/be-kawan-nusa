@@ -33,36 +33,44 @@ export class StatisticService {
         const lastYear = lastMonthDate.getFullYear()
 
         // 1. Customer Counts
-        const customerTotal = await this.customerRepository.count({ where: { userId } })
+        const customerTotalRaw = await this.customerRepository.createQueryBuilder("customer")
+            .innerJoin("customer.services", "cs")
+            .where("cs.userId = :userId", { userId })
+            .select("COUNT(DISTINCT customer.id)", "total")
+            .getRawOne()
+        const customerTotal = Number(customerTotalRaw?.total || 0)
         
-        const customerCurrentMonth = await this.customerRepository.createQueryBuilder("customer")
-            .where("customer.userId = :userId", { userId })
+        const customerCurrentMonthRaw = await this.customerRepository.createQueryBuilder("customer")
+            .innerJoin("customer.services", "cs")
+            .where("cs.userId = :userId", { userId })
             .andWhere("MONTH(customer.createdAt) = :month", { month: currentMonth })
             .andWhere("YEAR(customer.createdAt) = :year", { year: currentYear })
-            .getCount()
+            .select("COUNT(DISTINCT customer.id)", "total")
+            .getRawOne()
+        const customerCurrentMonth = Number(customerCurrentMonthRaw?.total || 0)
             
-        const customerLastMonth = await this.customerRepository.createQueryBuilder("customer")
-            .where("customer.userId = :userId", { userId })
+        const customerLastMonthRaw = await this.customerRepository.createQueryBuilder("customer")
+            .innerJoin("customer.services", "cs")
+            .where("cs.userId = :userId", { userId })
             .andWhere("MONTH(customer.createdAt) = :month", { month: lastMonth })
             .andWhere("YEAR(customer.createdAt) = :year", { year: lastYear })
-            .getCount()
+            .select("COUNT(DISTINCT customer.id)", "total")
+            .getRawOne()
+        const customerLastMonth = Number(customerLastMonthRaw?.total || 0)
 
         // 2. Customer Service Counts
         const csTotal = await this.customerServiceRepository.count({
-            where: { customer: { userId } },
-            relations: ["customer"]
+            where: { userId }
         })
         
         const csCurrentMonth = await this.customerServiceRepository.createQueryBuilder("cs")
-            .innerJoin("cs.customer", "customer")
-            .where("customer.userId = :userId", { userId })
+            .where("cs.userId = :userId", { userId })
             .andWhere("MONTH(cs.referenceDate) = :month", { month: currentMonth })
             .andWhere("YEAR(cs.referenceDate) = :year", { year: currentYear })
             .getCount()
             
         const csLastMonth = await this.customerServiceRepository.createQueryBuilder("cs")
-            .innerJoin("cs.customer", "customer")
-            .where("customer.userId = :userId", { userId })
+            .where("cs.userId = :userId", { userId })
             .andWhere("MONTH(cs.referenceDate) = :month", { month: lastMonth })
             .andWhere("YEAR(cs.referenceDate) = :year", { year: lastYear })
             .getCount()
@@ -73,9 +81,8 @@ export class StatisticService {
 
         const pointCurrentMonthRaw = await this.rewardRepository.createQueryBuilder("reward")
             .innerJoin("reward.customerService", "cs")
-            .innerJoin("cs.customer", "customer")
             .select("SUM(reward.point)", "total")
-            .where("customer.userId = :userId", { userId })
+            .where("cs.userId = :userId", { userId })
             .andWhere("MONTH(reward.createdAt) = :month", { month: currentMonth })
             .andWhere("YEAR(reward.createdAt) = :year", { year: currentYear })
             .getRawOne()
@@ -83,9 +90,8 @@ export class StatisticService {
 
         const pointLastMonthRaw = await this.rewardRepository.createQueryBuilder("reward")
             .innerJoin("reward.customerService", "cs")
-            .innerJoin("cs.customer", "customer")
             .select("SUM(reward.point)", "total")
-            .where("customer.userId = :userId", { userId })
+            .where("cs.userId = :userId", { userId })
             .andWhere("MONTH(reward.createdAt) = :month", { month: lastMonth })
             .andWhere("YEAR(reward.createdAt) = :year", { year: lastYear })
             .getRawOne()
@@ -129,10 +135,9 @@ export class StatisticService {
         
         const rawData = await this.rewardRepository.createQueryBuilder("reward")
             .innerJoin("reward.customerService", "cs")
-            .innerJoin("cs.customer", "customer")
             .select("MONTH(reward.createdAt)", "month")
             .addSelect("SUM(reward.point)", "total")
-            .where("customer.userId = :userId", { userId })
+            .where("cs.userId = :userId", { userId })
             .andWhere("YEAR(reward.createdAt) = :year", { year })
             .groupBy("month")
             .orderBy("month", "ASC")
@@ -162,9 +167,10 @@ export class StatisticService {
 
         if (type === "monthly") {
             const rawData = await this.customerRepository.createQueryBuilder("customer")
+                .innerJoin("customer.services", "cs")
                 .select("DAY(customer.createdAt)", "day")
-                .addSelect("COUNT(*)", "count")
-                .where("customer.userId = :userId", { userId })
+                .addSelect("COUNT(DISTINCT customer.id)", "count")
+                .where("cs.userId = :userId", { userId })
                 .andWhere("YEAR(customer.createdAt) = :year", { year })
                 .andWhere("MONTH(customer.createdAt) = :month", { month })
                 .groupBy("day")
@@ -189,9 +195,10 @@ export class StatisticService {
 
         // Yearly view (default)
         const rawData = await this.customerRepository.createQueryBuilder("customer")
+            .innerJoin("customer.services", "cs")
             .select("MONTH(customer.createdAt)", "month")
-            .addSelect("COUNT(*)", "count")
-            .where("customer.userId = :userId", { userId })
+            .addSelect("COUNT(DISTINCT customer.id)", "count")
+            .where("cs.userId = :userId", { userId })
             .andWhere("YEAR(customer.createdAt) = :year", { year })
             .groupBy("month")
             .orderBy("month", "ASC")

@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, OneToOne } from "typeorm"
 import type { Relation } from "typeorm"
-import { Customer } from "../../customer/entities/customer.entity"
+import { CustomerService } from "../../customer-service/entities/customer-service.entity"
 import { Point } from "../../point/entities/point.entity"
 import { Withdraw } from "../../withdraw/entities/withdraw.entity"
 
@@ -60,8 +60,8 @@ export class User {
     @CreateDateColumn({ name: "password_updated_at" })
     passwordUpdatedAt?: Date
 
-    @OneToMany(() => Customer, (customer) => customer.user)
-    customers!: Relation<Customer[]>
+    @OneToMany(() => CustomerService, (customerService) => customerService.user)
+    customerServices!: Relation<CustomerService[]>
 
     @OneToOne(() => Point, (point) => point.user)
     point!: Relation<Point>

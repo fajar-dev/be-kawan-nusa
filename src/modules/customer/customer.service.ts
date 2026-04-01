@@ -17,7 +17,8 @@ export class CustomerService {
     async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { types?: string[], isActive?: string, serviceCodes?: string[] } = {}) {
         const skip = (page - 1) * limit
         const query = this.repository.createQueryBuilder("customer")
-            .where("customer.userId = :userId", { userId })
+            .innerJoin("customer.services", "user_cs")
+            .where("user_cs.userId = :userId", { userId })
 
         if (q) {
             query.andWhere(new Brackets(qb => {
@@ -47,6 +48,7 @@ export class CustomerService {
              .orderBy(`customer.${finalSort}`, order.toUpperCase() as any)
 
         const [data, total] = await query
+            .groupBy("customer.id")
             .take(limit)
             .skip(skip)
             .getManyAndCount()
@@ -55,10 +57,12 @@ export class CustomerService {
     }
 
     async getById(id: string, userId: number) {
-        const customer = await this.repository.findOne({
-            where: { id, userId },
-            relations: ["phones", "emails"]
-        })
+        const customer = await this.repository.createQueryBuilder("customer")
+            .leftJoinAndSelect("customer.phones", "phones")
+            .leftJoinAndSelect("customer.emails", "emails")
+            .innerJoin("customer.services", "cs")
+            .where("customer.id = :id AND cs.userId = :userId", { id, userId })
+            .getOne()
 
         if (!customer) {
             throw new NotFoundException("Customer not found")

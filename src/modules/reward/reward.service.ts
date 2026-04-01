@@ -30,7 +30,7 @@ export class RewardService {
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.customer", "customer")
             .where("customer.id = :customerId", { customerId })
-            .andWhere("customer.userId = :userId", { userId })
+            .andWhere("cs.userId = :userId", { userId })
 
         if (q) {
             const searchPattern = `%${q}%`
@@ -75,7 +75,7 @@ export class RewardService {
             .leftJoinAndSelect("reward.customerService", "cs")
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.customer", "customer")
-            .where("customer.userId = :userId", { userId })
+            .where("cs.userId = :userId", { userId })
 
         if (q) {
             const searchPattern = `%${q}%`
@@ -120,7 +120,7 @@ export class RewardService {
                 throw new NotFoundException("Customer service not found")
             }
 
-            const ownerId = cs.customer.userId
+            const ownerId = cs.userId
 
             const reward = manager.create(Reward, data)
             const savedReward = await manager.save(reward)

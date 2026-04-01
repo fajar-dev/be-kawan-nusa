@@ -4,6 +4,7 @@ import { Customer } from "../../customer/entities/customer.entity"
 import { Service } from "../../service/entities/service.entity"
 import { CustomerServiceStatus } from "../customer-service.enum"
 import { Reward } from "../../reward/entities/reward.entity"
+import { User } from "../../user/entities/user.entity"
 
 @Entity("customer_services")
 export class CustomerService {
@@ -17,6 +18,10 @@ export class CustomerService {
     @Index()
     @Column({ name: "service_code" })
     serviceCode!: string
+
+    @Index()
+    @Column({ name: "user_id" })
+    userId!: number
 
     @Column({ name: "registration_date", type: "date" })
     registrationDate!: Date
@@ -58,6 +63,10 @@ export class CustomerService {
 
     @OneToMany(() => Reward, (reward) => reward.customerService)
     rewards!: Relation<Reward[]>
+
+    @ManyToOne(() => User, (user) => user.customerServices)
+    @JoinColumn({ name: "user_id" })
+    user!: Relation<User>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
