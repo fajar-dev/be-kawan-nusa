@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index, BeforeInsert } from "typeorm"
 import type { Relation } from "typeorm"
 import { CustomerService } from "../../customer-service/entities/customer-service.entity"
 import { RewardPointType } from "../reward.enum"
@@ -21,6 +21,9 @@ export class Reward {
     @Column({ name: "payment_date", type: "date"})
     paymentDate!: Date
 
+    @Column({ name: "expired_date", type: "date" })
+    expiredDate!: Date
+
     @Index()
     @Column({
         type: "enum",
@@ -40,4 +43,13 @@ export class Reward {
 
     @UpdateDateColumn({ name: "updated_at" })
     updatedAt!: Date
+
+    @BeforeInsert()
+    setExpiredDate() {
+        if (!this.expiredDate) {
+            const date = new Date()
+            date.setFullYear(date.getFullYear() + 1)
+            this.expiredDate = date
+        }
+    }
 }
