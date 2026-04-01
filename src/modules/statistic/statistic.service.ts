@@ -1,8 +1,8 @@
 import { AppDataSource } from "../../config/database"
 import { Customer } from "../customer/entities/customer.entity"
 import { CustomerService } from "../customer-service/entities/customer-service.entity"
-import { Point } from "../point/entities/point.entity"
 import { Reward } from "../reward/entities/reward.entity"
+import { PointService } from "../point/point.service"
 import { Repository } from "typeorm"
 
 const MONTH_NAMES = [
@@ -13,14 +13,14 @@ const MONTH_NAMES = [
 export class StatisticService {
     private customerRepository: Repository<Customer>
     private customerServiceRepository: Repository<CustomerService>
-    private pointRepository: Repository<Point>
     private rewardRepository: Repository<Reward>
+    private pointService: PointService
 
     constructor() {
         this.customerRepository = AppDataSource.getRepository(Customer)
         this.customerServiceRepository = AppDataSource.getRepository(CustomerService)
-        this.pointRepository = AppDataSource.getRepository(Point)
         this.rewardRepository = AppDataSource.getRepository(Reward)
+        this.pointService = new PointService()
     }
 
     async getCount(userId: number) {
@@ -75,9 +75,9 @@ export class StatisticService {
             .andWhere("YEAR(cs.referenceDate) = :year", { year: lastYear })
             .getCount()
 
-        // 3. Point (Current Balance from Point table)
-        const currentPoint = await this.pointRepository.findOne({ where: { userId } })
-        const pointTotal = currentPoint?.value ?? 0
+        // 3. Point (Current Available Balance via PointService for consistency and cleanup)
+        const pointData = await this.pointService.getByUserId(userId)
+        const pointTotal = pointData.value
 
         const pointCurrentMonthRaw = await this.rewardRepository.createQueryBuilder("reward")
             .innerJoin("reward.customerService", "cs")

@@ -6,7 +6,6 @@ import { CustomerEmail } from "../modules/customer/entities/customer-email.entit
 import { Service } from "../modules/service/entities/service.entity"
 import { CustomerService } from "../modules/customer-service/entities/customer-service.entity"
 import { User } from "../modules/user/entities/user.entity"
-import { Point } from "../modules/point/entities/point.entity"
 import { Reward } from "../modules/reward/entities/reward.entity"
 import { Withdraw } from "../modules/withdraw/entities/withdraw.entity"
 import { Catalog } from "../modules/catalog/entities/catalog.entity"
@@ -25,7 +24,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Point, Reward, Withdraw, Catalog, CatalogCategory],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Withdraw, Catalog, CatalogCategory],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

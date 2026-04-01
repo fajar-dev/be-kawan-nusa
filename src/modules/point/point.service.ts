@@ -1,47 +1,62 @@
 import { AppDataSource } from "../../config/database"
-import { Point } from "./entities/point.entity"
-import { EntityManager, Repository } from "typeorm"
+import { EntityManager, Repository, MoreThan } from "typeorm"
 import { BadValidatorException } from "../../core/exceptions/base"
+import { Reward } from "../reward/entities/reward.entity"
+import { PointHelper } from "../../core/helpers/point"
 
 export class PointService {
-    private repository: Repository<Point>
+    private rewardRepository: Repository<Reward>
 
     constructor() {
-        this.repository = AppDataSource.getRepository(Point)
+        this.rewardRepository = AppDataSource.getRepository(Reward)
     }
 
+    /**
+     * Get the total available points for a user by summing all non-expired remaining points.
+     */
     async getByUserId(userId: number) {
-        return await this.repository.findOne({
-            where: { userId }
-        })
-    }
+        // Clean up expired points first to ensure DB matches logic
+        await this.cleanupExpiredPoints(userId)
 
-    async create(data: Partial<Point>, manager?: EntityManager) {
-        return manager ? manager.save(Point, data) : this.repository.save(data)
-    }
+        const today = new Date().toISOString().split('T')[0]
+        const result = await this.rewardRepository.createQueryBuilder("reward")
+            .innerJoin("reward.customerService", "cs")
+            .select("SUM(reward.remainingPoint)", "total")
+            .where("cs.userId = :userId", { userId })
+            .andWhere("reward.expiredDate > :today", { today })
+            .getRawOne()
 
-    async addPoints(userId: number, points: number, manager: EntityManager) {
-        const pointRecord = await manager.findOneBy(Point, { userId })
-        const amount = Number(points)
-
-        if (pointRecord) {
-            pointRecord.value = Number(pointRecord.value) + amount
-            return await manager.save(pointRecord)
-        } else {
-            const newPoint = manager.create(Point, { userId, value: amount })
-            return await manager.save(newPoint)
+        return {
+            value: Number(result?.total || 0)
         }
     }
 
+    /**
+     * Consume points using FIFO (First-In, First-Out) logic based on expiration date.
+     */
     async subtractPoints(userId: number, points: number, manager: EntityManager) {
-        const pointRecord = await manager.findOneBy(Point, { userId })
-        const amount = Number(points)
+        await PointHelper.subtractPointsFIFO(manager, userId, points)
+    }
 
-        if (!pointRecord || Number(pointRecord.value) < amount) {
-            throw new BadValidatorException("Insufficient point balance")
+    /**
+     * Zeros out remainingPoint for expired records.
+     */
+    private async cleanupExpiredPoints(userId: number) {
+        const today = new Date().toISOString().split('T')[0]
+        
+        // Find expired rewards for this user that still have remaining points
+        const expiredRewards = await this.rewardRepository.createQueryBuilder("reward")
+            .innerJoin("reward.customerService", "cs")
+            .where("cs.userId = :userId", { userId })
+            .andWhere("reward.expiredDate <= :today", { today })
+            .andWhere("reward.remainingPoint > 0")
+            .getMany()
+
+        if (expiredRewards.length > 0) {
+            for (const reward of expiredRewards) {
+                reward.remainingPoint = 0
+            }
+            await this.rewardRepository.save(expiredRewards)
         }
-
-        pointRecord.value = Number(pointRecord.value) - amount
-        return await manager.save(pointRecord)
     }
 }

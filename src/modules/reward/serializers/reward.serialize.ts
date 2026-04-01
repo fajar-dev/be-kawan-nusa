@@ -6,9 +6,11 @@ export class RewardSerializer {
             id: reward.id,
             customerServiceId: reward.customerServiceId,
             price: Number(reward.price),
-            point: Number(reward.point),
             paymentDate: reward.paymentDate,
             expiredDate: reward.expiredDate,
+            point: Number(reward.point),
+            remainingPoint: Number(reward.remainingPoint),
+            isExpired: new Date(reward.expiredDate).toISOString().split('T')[0] <= new Date().toISOString().split('T')[0],
             type: reward.type,
             customerService: reward.customerService ? {
                 id: reward.customerService.id,

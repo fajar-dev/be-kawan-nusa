@@ -1,9 +1,8 @@
 import { AppDataSource } from "../../config/database"
 import { Withdraw } from "./entities/withdraw.entity"
 import { Repository, Brackets } from "typeorm"
-import { Point } from "../point/entities/point.entity"
 import { PointService } from "../point/point.service"
-import { BadValidatorException, NotFoundException } from "../../core/exceptions/base"
+import { NotFoundException } from "../../core/exceptions/base"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 
 export class WithdrawService {

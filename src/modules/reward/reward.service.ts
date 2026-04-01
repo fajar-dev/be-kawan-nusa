@@ -2,9 +2,9 @@ import { AppDataSource } from "../../config/database"
 import { Reward } from "./entities/reward.entity"
 import { Brackets, Repository, EntityManager } from "typeorm"
 import { CustomerService } from "../customer-service/entities/customer-service.entity"
-import { Point } from "../point/entities/point.entity"
 import { PointService } from "../point/point.service"
 import { NotFoundException } from "../../core/exceptions/base"
+import { PointHelper } from "../../core/helpers/point"
 
 export class RewardService {
     private repository: Repository<Reward>
@@ -119,14 +119,8 @@ export class RewardService {
             if (!cs) {
                 throw new NotFoundException("Customer service not found")
             }
-
-            const ownerId = cs.userId
-
-            const reward = manager.create(Reward, data)
-            const savedReward = await manager.save(reward)
-
-            const rewardPoints = Number(data.point || 0)
-            await this.pointService.addPoints(ownerId, rewardPoints, manager)
+            
+            const savedReward = await PointHelper.addPointsReward(manager, data)
 
             return savedReward
         })

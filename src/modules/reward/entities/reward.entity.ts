@@ -24,6 +24,9 @@ export class Reward {
     @Column({ name: "expired_date", type: "date" })
     expiredDate!: Date
 
+    @Column({ name: "remaining_point", type: "decimal", precision: 15, scale: 2, default: 0 })
+    remainingPoint!: number
+
     @Index()
     @Column({
         type: "enum",
@@ -45,11 +48,15 @@ export class Reward {
     updatedAt!: Date
 
     @BeforeInsert()
-    setExpiredDate() {
+    setInitialValues() {
         if (!this.expiredDate) {
             const date = new Date()
             date.setFullYear(date.getFullYear() + 1)
             this.expiredDate = date
+        }
+
+        if (!this.remainingPoint) {
+            this.remainingPoint = this.point
         }
     }
 }
