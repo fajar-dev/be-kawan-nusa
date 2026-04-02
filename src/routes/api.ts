@@ -14,9 +14,9 @@ import { ProfileController } from '../modules/profile/profile.controller'
 import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator, UpdatePhotoValidator } from '../modules/profile/validators/profile.validator'
 import { PointController } from '../modules/point/point.controller'
 import { StatisticController } from '../modules/statistic/statistic.controller'
+import { RedemptionController } from '../modules/redemption/redemption.controller'
+import { CreateRedemptionValidator } from '../modules/redemption/validators/redemption.validator'
 import { AdditionalController } from '../modules/additional/additional.controller'
-import { WithdrawController } from '../modules/withdraw/withdraw.controller'
-import { WithdrawalValidator } from '../modules/withdraw/validators/withdraw.validator'
 import { CatalogCategoryController } from '../modules/catalog-category/catalog-category.controller'
 import { CatalogController } from '../modules/catalog/catalog.controller'
 import { validationHook } from '../core/helpers/validator'
@@ -30,8 +30,8 @@ const authController = new AuthController()
 const profileController = new ProfileController()
 const pointController = new PointController()
 const statisticController = new StatisticController()
+const redemptionController = new RedemptionController()
 const additionalController = new AdditionalController()
-const withdrawController = new WithdrawController()
 const catalogCategoryController = new CatalogCategoryController()
 const catalogController = new CatalogController()
 
@@ -57,6 +57,12 @@ routes.post('/profile/photo', authMiddleware, zValidator('form', UpdatePhotoVali
 // Point Routes
 routes.get('/point', authMiddleware, (c) => pointController.show(c))
 
+// Redemption Routes
+routes.get('/redemptions', authMiddleware, (c) => redemptionController.index(c))
+routes.get('/redemptions/:id', authMiddleware, (c) => redemptionController.show(c))
+routes.get('/redemptions/:id/receipt', authMiddleware, (c) => redemptionController.downloadReceipt(c))
+routes.post('/redemptions', authMiddleware, zValidator('json', CreateRedemptionValidator, validationHook), (c) => redemptionController.store(c))
+
 // Customer Routes
 routes.get('/customer', authMiddleware, (c) => customerController.index(c))
 routes.get('/customer/:id', authMiddleware, (c) => customerController.show(c))
@@ -74,12 +80,6 @@ routes.get('/customer-service', authMiddleware, (c) => customerServiceController
 // Reward Routes
 routes.get('/reward', authMiddleware, (c) => rewardController.index(c))
 routes.post('/reward', apiKeyMiddleware, zValidator('json', CreateRewardValidator, validationHook), (c) => rewardController.store(c))
-
-// Withdraw Routes
-routes.post('/withdraw', authMiddleware, zValidator('json', WithdrawalValidator, validationHook), (c) => withdrawController.store(c))
-routes.get('/withdraw', authMiddleware, (c) => withdrawController.index(c))
-routes.get('/withdraw/:id', tokenAuthMiddleware, (c) => withdrawController.receipt(c, 'inline'))
-routes.get('/withdraw/:id/download', tokenAuthMiddleware, (c) => withdrawController.receipt(c, 'attachment'))
 
 // Statistic Routes
 routes.get('/statistic/count', authMiddleware, (c) => statisticController.count(c))

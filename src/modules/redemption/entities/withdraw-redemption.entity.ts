@@ -1,18 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from "typeorm"
-import type { Relation } from "typeorm"
-import { User } from "../../user/entities/user.entity"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
 
-@Entity("withdrawals")
-export class Withdraw {
+@Entity("withdraw_redemptions")
+export class WithdrawRedemption {
     @PrimaryGeneratedColumn()
     id!: number
-
-    @Index()
-    @Column({ name: "user_id" })
-    userId!: number
-
-    @Column({ type: "decimal", precision: 15, scale: 2, default: 0 })
-    point!: number
 
     @Column({ name: "bank_name" })
     bankName!: string
@@ -29,11 +20,6 @@ export class Withdraw {
     @Column({ type: "decimal", precision: 15, scale: 2, default: 0 })
     tax!: number
 
-    @ManyToOne(() => User, (user) => user.withdrawals)
-    @JoinColumn({ name: "user_id" })
-    user!: Relation<User>
-
-    @Index()
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
 

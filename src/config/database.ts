@@ -7,9 +7,12 @@ import { Service } from "../modules/service/entities/service.entity"
 import { CustomerService } from "../modules/customer-service/entities/customer-service.entity"
 import { User } from "../modules/user/entities/user.entity"
 import { Reward } from "../modules/reward/entities/reward.entity"
-import { Withdraw } from "../modules/withdraw/entities/withdraw.entity"
 import { Catalog } from "../modules/catalog/entities/catalog.entity"
 import { CatalogCategory } from "../modules/catalog-category/entities/catalog-category.entity"
+import { Redemption } from "../modules/redemption/entities/redemption.entity"
+import { WithdrawRedemption } from "../modules/redemption/entities/withdraw-redemption.entity"
+import { VoucherRedemption } from "../modules/redemption/entities/voucher-redemption.entity"
+import { ProductRedemption } from "../modules/redemption/entities/product-redemption.entity"
 import { config } from "./config"
 
 /**
@@ -24,7 +27,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Withdraw, Catalog, CatalogCategory],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, WithdrawRedemption, VoucherRedemption, ProductRedemption],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

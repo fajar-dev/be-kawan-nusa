@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm"
 import type { Relation } from "typeorm"
 import { CustomerService } from "../../customer-service/entities/customer-service.entity"
-import { Withdraw } from "../../withdraw/entities/withdraw.entity"
+import { Redemption } from "../../redemption/entities/redemption.entity"
 
 @Entity("users")
 export class User {
@@ -62,8 +62,8 @@ export class User {
     @OneToMany(() => CustomerService, (customerService) => customerService.user)
     customerServices!: Relation<CustomerService[]>
 
-    @OneToMany(() => Withdraw, (withdraw) => withdraw.user)
-    withdrawals!: Relation<Withdraw[]>
+    @OneToMany(() => Redemption, (redemption) => redemption.user)
+    redemptions!: Relation<Redemption[]>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

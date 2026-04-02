@@ -1,5 +1,5 @@
 import PDFDocument from 'pdfkit'
-import { Withdraw } from '../../modules/withdraw/entities/withdraw.entity'
+import { Redemption } from '../../modules/redemption/entities/redemption.entity'
 
 const GREEN = '#4a7c3f'
 const GREEN_BG = '#eef4ec'
@@ -27,7 +27,7 @@ const fmtDateTime = (d: Date | string) => {
     return `${day} ${mo[dt.getMonth()]} ${dt.getFullYear()} - ${h}:${mn}`
 }
 
-export const generateWithdrawalNote = (withdraw: Withdraw): Promise<Buffer> => {
+export const generateWithdrawalNote = (redemption: Redemption): Promise<Buffer> => {
     return new Promise((resolve, reject) => {
         const doc = new PDFDocument({ margin: 0, size: 'A4' })
         const chunks: Buffer[] = []
@@ -71,15 +71,20 @@ export const generateWithdrawalNote = (withdraw: Withdraw): Promise<Buffer> => {
             const fontMedium = hasMontserrat ? 'Montserrat-500' : 'Helvetica-Bold'
             const fontSemiBold = hasMontserrat ? 'Montserrat-600' : 'Helvetica-Bold'
 
-            const gross = withdraw.point * 1000
-            const tax = Number(withdraw.tax)
-            const net = Number(withdraw.payout)
+            const withdrawDetail = redemption.withdrawRedemption
+            if (!withdrawDetail) {
+                console.error('Withdrawal details missing for redemption note')
+            }
 
-            const yy = String(new Date(withdraw.createdAt).getFullYear()).slice(-2)
-            const mm = String(new Date(withdraw.createdAt).getMonth() + 1).padStart(2, '0')
-            const seq = String(withdraw.id).padStart(4, '0')
+            const gross = redemption.pointsUsed * 1000
+            const tax = withdrawDetail ? Number(withdrawDetail.tax) : 0
+            const net = withdrawDetail ? Number(withdrawDetail.payout) : 0
+
+            const yy = String(new Date(redemption.createdAt).getFullYear()).slice(-2)
+            const mm = String(new Date(redemption.createdAt).getMonth() + 1).padStart(2, '0')
+            const seq = String(redemption.id).padStart(4, '0')
             const nomor = `MDI/${yy}/${mm}/SV/${seq}/SD`
-            const terbit = fmtDate(withdraw.createdAt)
+            const terbit = fmtDate(redemption.createdAt)
 
             // Header Box
             const HM = 20
@@ -131,11 +136,11 @@ export const generateWithdrawalNote = (withdraw: Withdraw): Promise<Buffer> => {
                 doc.moveDown(0.5)
             }
 
-            const name = [withdraw.user?.firstName, withdraw.user?.lastName].filter(Boolean).join(' ')
+            const name = [redemption.user?.firstName, redemption.user?.lastName].filter(Boolean).join(' ')
             drawRow('Nama', name)
-            drawRow('Nama Pemilik Rekening', withdraw.accountHolderName)
-            drawRow('Nomor Rekening', withdraw.accountNumber)
-            drawRow('Nama Bank', withdraw.bankName)
+            drawRow('Nama Pemilik Rekening', withdrawDetail?.accountHolderName || '-')
+            drawRow('Nomor Rekening', withdrawDetail?.accountNumber || '-')
+            drawRow('Nama Bank', withdrawDetail?.bankName || '-')
             let y = doc.y + 12
 
             // Table
@@ -162,8 +167,8 @@ export const generateWithdrawalNote = (withdraw: Withdraw): Promise<Buffer> => {
             doc.rect(M, y, TW, DRH).strokeColor(BORDER).lineWidth(0.5).stroke()
 
             const VALS = [
-                fmtDateTime(withdraw.createdAt),
-                String(withdraw.point),
+                fmtDateTime(redemption.createdAt),
+                String(redemption.pointsUsed),
                 fmtRp(gross),
                 fmtRp(tax),
                 fmtRp(net),
