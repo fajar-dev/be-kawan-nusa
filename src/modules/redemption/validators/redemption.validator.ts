@@ -12,23 +12,22 @@ const productDetails = z.object({
     address: z.string().min(1, "Shipping address is required")
 })
 
-export const CreateRedemptionValidator = z.discriminatedUnion("type", [
-    z.object({
-        type: z.literal(RedemptionType.CASH),
-        pointsUsed: z.number().min(1, "Points must be at least 1"),
-        notes: z.string().optional(),
-        cashDetails: cashDetails
-    }),
-    z.object({
-        type: z.literal(RedemptionType.VOUCHER),
-        notes: z.string().optional(),
-        voucherDetails: voucherDetails
-    }),
-    z.object({
-        type: z.literal(RedemptionType.PRODUCT),
-        notes: z.string().optional(),
-        productDetails: productDetails
-    })
-])
+export const CreateCashRedemptionValidator = z.object({
+    pointsUsed: z.number().min(1, "Points must be at least 1"),
+    notes: z.string().optional()
+})
 
-export type CreateRedemptionValidator = z.infer<typeof CreateRedemptionValidator>
+export const CreateVoucherRedemptionValidator = z.object({
+    catalogId: z.number(),
+    notes: z.string().optional()
+})
+
+export const CreateProductRedemptionValidator = z.object({
+    catalogId: z.number(),
+    address: z.string().min(1, "Shipping address is required"),
+    notes: z.string().optional()
+})
+
+export type CreateCashRedemptionValidator = z.infer<typeof CreateCashRedemptionValidator>
+export type CreateVoucherRedemptionValidator = z.infer<typeof CreateVoucherRedemptionValidator>
+export type CreateProductRedemptionValidator = z.infer<typeof CreateProductRedemptionValidator>

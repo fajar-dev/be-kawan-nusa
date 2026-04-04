@@ -9,7 +9,7 @@ import { RedemptionType, RedemptionStatus } from "./redemption.enum"
 import { PointHelper } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 import { Repository } from "typeorm"
-import { BadValidatorException, NotFoundException } from "../../core/exceptions/base"
+import { NotFoundException } from "../../core/exceptions/base"
 
 export class RedemptionService {
     private repository: Repository<Redemption>
@@ -52,79 +52,99 @@ export class RedemptionService {
         return redemption
     }
 
-    async create(userId: number, data: any) {
+    async createCash(userId: number, pointsUsed: number, notes?: string) {
         return await AppDataSource.transaction(async (manager) => {
-            let pointsUsed = 0
             const user = await manager.findOne(User, { where: { id: userId } })
             if (!user) throw new NotFoundException("User not found")
 
-            // 1. Determine points used and fetch details if needed
-            if (data.type === RedemptionType.CASH) {
-                pointsUsed = Number(data.pointsUsed)
-            } else if (data.type === RedemptionType.VOUCHER) {
-                const catalog = await manager.findOne(Catalog, { where: { id: data.voucherDetails.catalogId } })
-                if (!catalog) throw new NotFoundException("Catalog item not found")
-                pointsUsed = Number(catalog.point)
-            } else if (data.type === RedemptionType.PRODUCT) {
-                const catalog = await manager.findOne(Catalog, { where: { id: data.productDetails.catalogId } })
-                if (!catalog) throw new NotFoundException("Catalog item not found")
-                pointsUsed = Number(catalog.point)
-            }
-
-            // 2. Deduct points via FIFO
+            // 1. Calculate and deduct points
             await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
-            // 3. Create detail record based on type
-            let withdrawRedempId, voucherRedempId, productRedempId
-            
-            if (data.type === RedemptionType.CASH) {
-                const { tax, payout } = calculateWithdrawal(pointsUsed)
-                const cashData = {
-                    bankName: user.bankName,
-                    accountNumber: user.accountNumber,
-                    accountHolderName: user.accountHolderName,
-                    payout,
-                    tax
-                }
-                const withdraw = manager.create(WithdrawRedemption, cashData)
-                const savedWithdraw = await manager.save(withdraw)
-                withdrawRedempId = savedWithdraw.id
-            } else if (data.type === RedemptionType.VOUCHER) {
-                const voucherData = {
-                    catalogId: data.voucherDetails.catalogId,
-                    name: [user.firstName, user.lastName].filter(Boolean).join(" "),
-                    email: user.email
-                }
-                const voucher = manager.create(VoucherRedemption, voucherData)
-                const savedVoucher = await manager.save(voucher)
-                voucherRedempId = savedVoucher.id
-            } else if (data.type === RedemptionType.PRODUCT) {
-                const productData = {
-                    catalogId: data.productDetails.catalogId,
-                    name: [user.firstName, user.lastName].filter(Boolean).join(" "),
-                    email: user.email,
-                    phone: user.phone,
-                    address: data.productDetails.address
-                }
-                const product = manager.create(ProductRedemption, productData)
-                const savedProduct = await manager.save(product)
-                productRedempId = savedProduct.id
-            } else {
-                throw new BadValidatorException("Invalid redemption type")
-            }
+            // 2. Create cash redemption detail
+            const { tax, payout } = calculateWithdrawal(pointsUsed)
+            const withdraw = manager.create(WithdrawRedemption, {
+                bankName: user.bankName,
+                accountNumber: user.accountNumber,
+                accountHolderName: user.accountHolderName,
+                payout,
+                tax
+            })
+            const savedWithdraw = await manager.save(withdraw)
 
-            // 3. Create parent redemption record
+            // 3. Create parent record
             const redempNo = await this.generateRedempNo()
             const redemption = manager.create(Redemption, {
-                redempNo,
-                userId,
-                pointsUsed,
-                type: data.type,
-                status: RedemptionStatus.PENDING,
-                notes: data.notes,
-                withdrawRedemptionId: withdrawRedempId,
-                voucherRedemptionId: voucherRedempId,
-                productRedemptionId: productRedempId
+                redempNo, userId, pointsUsed, type: RedemptionType.CASH,
+                status: RedemptionStatus.PENDING, notes,
+                withdrawRedemptionId: savedWithdraw.id
+            })
+
+            return await manager.save(redemption)
+        })
+    }
+
+    async createVoucher(userId: number, catalogId: number, notes?: string) {
+        return await AppDataSource.transaction(async (manager) => {
+            const user = await manager.findOne(User, { where: { id: userId } })
+            if (!user) throw new NotFoundException("User not found")
+
+            const catalog = await manager.findOne(Catalog, { where: { id: catalogId } })
+            if (!catalog) throw new NotFoundException("Catalog item not found")
+
+            const pointsUsed = Number(catalog.point)
+
+            // 1. Deduct points
+            await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
+
+            // 2. Create voucher redemption detail
+            const voucher = manager.create(VoucherRedemption, {
+                catalogId,
+                name: [user.firstName, user.lastName].filter(Boolean).join(" "),
+                email: user.email
+            })
+            const savedVoucher = await manager.save(voucher)
+
+            // 3. Create parent record
+            const redempNo = await this.generateRedempNo()
+            const redemption = manager.create(Redemption, {
+                redempNo, userId, pointsUsed, type: RedemptionType.VOUCHER,
+                status: RedemptionStatus.PENDING, notes,
+                voucherRedemptionId: savedVoucher.id
+            })
+
+            return await manager.save(redemption)
+        })
+    }
+
+    async createProduct(userId: number, catalogId: number, address: string, notes?: string) {
+        return await AppDataSource.transaction(async (manager) => {
+            const user = await manager.findOne(User, { where: { id: userId } })
+            if (!user) throw new NotFoundException("User not found")
+
+            const catalog = await manager.findOne(Catalog, { where: { id: catalogId } })
+            if (!catalog) throw new NotFoundException("Catalog item not found")
+
+            const pointsUsed = Number(catalog.point)
+
+            // 1. Deduct points
+            await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
+
+            // 2. Create product redemption detail
+            const product = manager.create(ProductRedemption, {
+                catalogId,
+                name: [user.firstName, user.lastName].filter(Boolean).join(" "),
+                email: user.email,
+                phone: user.phone,
+                address
+            })
+            const savedProduct = await manager.save(product)
+
+            // 3. Create parent record
+            const redempNo = await this.generateRedempNo()
+            const redemption = manager.create(Redemption, {
+                redempNo, userId, pointsUsed, type: RedemptionType.PRODUCT,
+                status: RedemptionStatus.PENDING, notes,
+                productRedemptionId: savedProduct.id
             })
 
             return await manager.save(redemption)

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { CatalogCategory } from "../../catalog-category/entities/catalog-category.entity"
+import { CatalogType } from "../catalog.enum"
 
 @Entity("catalogs")
 export class Catalog {
@@ -13,6 +14,13 @@ export class Catalog {
 
     @Column()
     name!: string
+
+    @Column({
+        type: "enum",
+        enum: CatalogType,
+        default: CatalogType.PRODUCT
+    })
+    type!: CatalogType
 
     @Column({ type: "text", nullable: true })
     description?: string

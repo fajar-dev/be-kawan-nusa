@@ -15,7 +15,7 @@ import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, U
 import { PointController } from '../modules/point/point.controller'
 import { StatisticController } from '../modules/statistic/statistic.controller'
 import { RedemptionController } from '../modules/redemption/redemption.controller'
-import { CreateRedemptionValidator } from '../modules/redemption/validators/redemption.validator'
+import { CreateCashRedemptionValidator, CreateVoucherRedemptionValidator, CreateProductRedemptionValidator } from '../modules/redemption/validators/redemption.validator'
 import { AdditionalController } from '../modules/additional/additional.controller'
 import { CatalogCategoryController } from '../modules/catalog-category/catalog-category.controller'
 import { CatalogController } from '../modules/catalog/catalog.controller'
@@ -61,7 +61,9 @@ routes.get('/point', authMiddleware, (c) => pointController.show(c))
 routes.get('/redemptions', authMiddleware, (c) => redemptionController.index(c))
 routes.get('/redemptions/:id', authMiddleware, (c) => redemptionController.show(c))
 routes.get('/redemptions/:id/receipt', authMiddleware, (c) => redemptionController.downloadReceipt(c))
-routes.post('/redemptions', authMiddleware, zValidator('json', CreateRedemptionValidator, validationHook), (c) => redemptionController.store(c))
+routes.post('/redemptions/cash', authMiddleware, zValidator('json', CreateCashRedemptionValidator, validationHook), (c) => redemptionController.storeCash(c))
+routes.post('/redemptions/voucher', authMiddleware, zValidator('json', CreateVoucherRedemptionValidator, validationHook), (c) => redemptionController.storeVoucher(c))
+routes.post('/redemptions/product', authMiddleware, zValidator('json', CreateProductRedemptionValidator, validationHook), (c) => redemptionController.storeProduct(c))
 
 // Customer Routes
 routes.get('/customer', authMiddleware, (c) => customerController.index(c))

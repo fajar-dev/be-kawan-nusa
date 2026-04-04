@@ -6,6 +6,7 @@ export class CatalogSerializer {
             id: Number(item.id),
             categoryId: Number(item.categoryId),
             name: item.name,
+            type: item.type,
             description: item.description,
             point: Number(item.point),
             image: item.image,

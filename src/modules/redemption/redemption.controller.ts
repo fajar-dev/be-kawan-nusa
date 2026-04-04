@@ -35,15 +35,39 @@ export class RedemptionController {
         return ApiResponse.success(c, RedemptionSerializer.single(data), "Redemption details retrieved successfully")
     }
 
-    async store(c: any) {
+    async storeCash(c: any) {
         const user = c.get('user')
         const body = c.req.valid('json')
         
         try {
-            const data = await this.service.create(user.id, body)
-            return ApiResponse.success(c, RedemptionSerializer.single(data as any), "Redemption created successfully")
+            const data = await this.service.createCash(user.id, body.pointsUsed, body.notes)
+            return ApiResponse.success(c, RedemptionSerializer.single(data), "Cash redemption created successfully")
         } catch (error: any) {
-            return ApiResponse.error(c, error.message || "Failed to create redemption", 400)
+            return ApiResponse.error(c, error.message || "Failed to create cash redemption", 400)
+        }
+    }
+
+    async storeVoucher(c: any) {
+        const user = c.get('user')
+        const body = c.req.valid('json')
+        
+        try {
+            const data = await this.service.createVoucher(user.id, body.catalogId, body.notes)
+            return ApiResponse.success(c, RedemptionSerializer.single(data), "Voucher redemption created successfully")
+        } catch (error: any) {
+            return ApiResponse.error(c, error.message || "Failed to create voucher redemption", 400)
+        }
+    }
+
+    async storeProduct(c: any) {
+        const user = c.get('user')
+        const body = c.req.valid('json')
+        
+        try {
+            const data = await this.service.createProduct(user.id, body.catalogId, body.address, body.notes)
+            return ApiResponse.success(c, RedemptionSerializer.single(data), "Product redemption created successfully")
+        } catch (error: any) {
+            return ApiResponse.error(c, error.message || "Failed to create product redemption", 400)
         }
     }
 

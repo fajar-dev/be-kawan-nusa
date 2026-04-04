@@ -39,7 +39,6 @@ export class RedemptionSerializer {
                 address: redemption.productRedemption.address
             } : null,
             createdAt: redemption.createdAt,
-            updatedAt: redemption.updatedAt
         }
     }
 
