@@ -15,8 +15,23 @@ export class RedemptionController {
         const user = c.get('user')
         const page = Number(c.req.query('page')) || 1
         const limit = Number(c.req.query('limit')) || 10
+        const startDate = c.req.query('startDate')
+        const endDate = c.req.query('endDate')
+        const q = c.req.query('q') || ""
+        const sort = c.req.query('sort') || "createdAt"
+        const order = c.req.query('order') || "DESC"
+        
+        const queries = c.req.queries()
+        const status = queries['status[]'] || queries['status']
+        const type = queries['type[]'] || queries['type']
 
-        const { data, total } = await this.service.getAll(user.id, page, limit)
+        const { data, total } = await this.service.getAll(user.id, page, limit, {
+            startDate,
+            endDate,
+            status,
+            type,
+            q
+        }, sort, order)
 
         return ApiResponse.paginate(
             c,

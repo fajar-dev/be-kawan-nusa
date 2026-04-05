@@ -17,7 +17,6 @@ export class RedemptionSerializer {
                 tax: Number(redemption.withdrawRedemption.tax)
             } : null,
             voucherDetails: redemption.voucherRedemption ? {
-                catalogId: redemption.voucherRedemption.catalogId,
                 catalog: redemption.voucherRedemption.catalog ? {
                     id: redemption.voucherRedemption.catalog.id,
                     name: redemption.voucherRedemption.catalog.name,
@@ -27,7 +26,6 @@ export class RedemptionSerializer {
                 email: redemption.voucherRedemption.email
             } : null,
             productDetails: redemption.productRedemption ? {
-                catalogId: redemption.productRedemption.catalogId,
                 catalog: redemption.productRedemption.catalog ? {
                     id: redemption.productRedemption.catalog.id,
                     name: redemption.productRedemption.catalog.name,

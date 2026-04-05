@@ -8,7 +8,7 @@ import { Catalog } from "../catalog/entities/catalog.entity"
 import { RedemptionType, RedemptionStatus } from "./redemption.enum"
 import { PointHelper } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
-import { Repository } from "typeorm"
+import { Repository, Brackets } from "typeorm"
 import { NotFoundException, BadValidatorException } from "../../core/exceptions/base"
 
 export class RedemptionService {
@@ -18,18 +18,49 @@ export class RedemptionService {
         this.repository = AppDataSource.getRepository(Redemption)
     }
 
-    async getAll(userId: number, page: number, limit: number) {
-        const [data, total] = await this.repository.findAndCount({
-            where: { userId },
-            relations: [
-                "withdrawRedemption", 
-                "voucherRedemption", "voucherRedemption.catalog",
-                "productRedemption", "productRedemption.catalog"
-            ],
-            order: { createdAt: "DESC" },
-            take: limit,
-            skip: (page - 1) * limit
-        })
+    async getAll(userId: number, page: number, limit: number, filters: { startDate?: string, endDate?: string, status?: string[], type?: string[], q?: string } = {}, sort: string = "createdAt", order: string = "DESC") {
+        const query = this.repository.createQueryBuilder("redemption")
+            .leftJoinAndSelect("redemption.withdrawRedemption", "withdraw")
+            .leftJoinAndSelect("redemption.voucherRedemption", "voucher")
+            .leftJoinAndSelect("voucher.catalog", "vCatalog")
+            .leftJoinAndSelect("redemption.productRedemption", "product")
+            .leftJoinAndSelect("product.catalog", "pCatalog")
+            .where("redemption.userId = :userId", { userId })
+
+        if (filters.startDate) {
+            query.andWhere("redemption.createdAt >= :startDate", { startDate: filters.startDate })
+        }
+
+        if (filters.endDate) {
+            query.andWhere("redemption.createdAt <= :endDate", { endDate: `${filters.endDate} 23:59:59` })
+        }
+
+        if (filters.status && filters.status.length > 0) {
+            query.andWhere("redemption.status IN (:...status)", { status: filters.status })
+        }
+
+        if (filters.type && filters.type.length > 0) {
+            query.andWhere("redemption.type IN (:...type)", { type: filters.type })
+        }
+
+        if (filters.q) {
+            const searchPattern = `%${filters.q}%`
+            query.andWhere(new Brackets(qb => {
+                qb.where("redemption.redempNo LIKE :q")
+                  .orWhere("redemption.notes LIKE :q")
+                  .orWhere("vCatalog.name LIKE :q")
+                  .orWhere("pCatalog.name LIKE :q")
+                  .orWhere("voucher.name LIKE :q")
+                  .orWhere("product.name LIKE :q")
+            }), { q: searchPattern })
+        }
+
+        const sortAlias = sort.includes(".") ? sort : `redemption.${sort}`
+        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+            .take(limit)
+            .skip((page - 1) * limit)
+
+        const [data, total] = await query.getManyAndCount()
 
         return { data, total }
     }
