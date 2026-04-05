@@ -83,6 +83,24 @@ export class RedemptionService {
         return redemption
     }
 
+     async getReceiptById(id: number, userId: number) {
+        const redemption = await this.repository.findOne({
+            where: { id, userId, type: RedemptionType.CASH },
+            relations: [
+                "user", 
+                "withdrawRedemption", 
+                "voucherRedemption", "voucherRedemption.catalog",
+                "productRedemption", "productRedemption.catalog"
+            ]
+        })
+
+        if (!redemption) {
+            throw new NotFoundException("Redemption record not found")
+        }
+
+        return redemption
+    }
+
     async createCash(userId: number, pointsUsed: number, notes?: string) {
         return await AppDataSource.transaction(async (manager) => {
             const user = await manager.findOne(User, { where: { id: userId } })

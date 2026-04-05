@@ -86,16 +86,24 @@ export class RedemptionController {
         }
     }
 
+    async previewReceipt(c: Context) {
+        return this.generateReceipt(c, 'inline')
+    }
+
     async downloadReceipt(c: Context) {
+        return this.generateReceipt(c, 'attachment')
+    }
+
+    private async generateReceipt(c: Context, disposition: 'inline' | 'attachment') {
         const user = c.get('user')
         const id = Number(c.req.param('id'))
 
         try {
-            const redemption = await this.service.getById(id, user.id)
+            const redemption = await this.service.getReceiptById(id, user.id)
             const pdfBuffer = await generateWithdrawalNote(redemption)
             
             c.header('Content-Type', 'application/pdf')
-            c.header('Content-Disposition', `attachment; filename="redemption-${redemption.redempNo}.pdf"`)
+            c.header('Content-Disposition', `${disposition}; filename="${redemption.redempNo}.pdf"`)
             return c.body(pdfBuffer as any)
         } catch (error: any) {
             return ApiResponse.error(c, error.message || "Failed to generate PDF", 400)
