@@ -9,7 +9,7 @@ import { RedemptionType, RedemptionStatus } from "./redemption.enum"
 import { PointHelper } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 import { Repository } from "typeorm"
-import { NotFoundException } from "../../core/exceptions/base"
+import { NotFoundException, BadValidatorException } from "../../core/exceptions/base"
 
 export class RedemptionService {
     private repository: Repository<Redemption>
@@ -57,7 +57,13 @@ export class RedemptionService {
             const user = await manager.findOne(User, { where: { id: userId } })
             if (!user) throw new NotFoundException("User not found")
 
-            // 1. Calculate and deduct points
+            // 1. Check point balance
+            const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
+            if (availablePoints < pointsUsed) {
+                throw new BadValidatorException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
+            }
+
+            // 2. Calculate and deduct points
             await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
             // 2. Create cash redemption detail
@@ -93,10 +99,16 @@ export class RedemptionService {
 
             const pointsUsed = Number(catalog.point)
 
-            // 1. Deduct points
+            // 1. Check point balance
+            const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
+            if (availablePoints < pointsUsed) {
+                throw new BadValidatorException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
+            }
+
+            // 2. Deduct points
             await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
-            // 2. Create voucher redemption detail
+            // 3. Create voucher redemption detail
             const voucher = manager.create(VoucherRedemption, {
                 catalogId,
                 name: [user.firstName, user.lastName].filter(Boolean).join(" "),
@@ -104,7 +116,7 @@ export class RedemptionService {
             })
             const savedVoucher = await manager.save(voucher)
 
-            // 3. Create parent record
+            // 4. Create parent record
             const redempNo = await this.generateRedempNo()
             const redemption = manager.create(Redemption, {
                 redempNo, userId, pointsUsed, type: RedemptionType.VOUCHER,
@@ -126,10 +138,16 @@ export class RedemptionService {
 
             const pointsUsed = Number(catalog.point)
 
-            // 1. Deduct points
+            // 1. Check point balance
+            const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
+            if (availablePoints < pointsUsed) {
+                throw new BadValidatorException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
+            }
+
+            // 2. Deduct points
             await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
-            // 2. Create product redemption detail
+            // 3. Create product redemption detail
             const product = manager.create(ProductRedemption, {
                 catalogId,
                 name: [user.firstName, user.lastName].filter(Boolean).join(" "),
@@ -139,7 +157,7 @@ export class RedemptionService {
             })
             const savedProduct = await manager.save(product)
 
-            // 3. Create parent record
+            // 4. Create parent record
             const redempNo = await this.generateRedempNo()
             const redemption = manager.create(Redemption, {
                 redempNo, userId, pointsUsed, type: RedemptionType.PRODUCT,

@@ -7,6 +7,22 @@ import { Reward } from "../../modules/reward/entities/reward.entity"
  */
 export class PointHelper {
     /**
+     * Get the total available points for a user.
+     */
+    static async getAvailablePoints(manager: EntityManager, userId: number): Promise<number> {
+        const today = new Date().toISOString().split('T')[0]
+        const rewards = await manager.find(Reward, {
+            where: {
+                customerService: { userId },
+                remainingPoint: MoreThan(0),
+                expiredDate: MoreThan(today as any)
+            }
+        })
+
+        return rewards.reduce((sum, r) => sum + Number(r.remainingPoint), 0)
+    }
+
+    /**
      * Deduct points from oldest rewards first.
      */
     static async subtractPointsFIFO(manager: EntityManager, userId: number, amount: number) {
@@ -26,9 +42,9 @@ export class PointHelper {
         })
 
         // Check if total matches
-        const totalAvailable = rewards.reduce((sum, r) => sum + Number(r.remainingPoint), 0)
+        const totalAvailable = await this.getAvailablePoints(manager, userId)
         if (totalAvailable < amountToSubtract) {
-            throw new BadValidatorException("Insufficient point balance")
+            throw new BadValidatorException(`Insufficient point balance. Available: ${totalAvailable}, Required: ${amountToSubtract}`)
         }
 
         let remainingToSubtract = amountToSubtract

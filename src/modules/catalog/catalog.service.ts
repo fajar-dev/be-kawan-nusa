@@ -11,6 +11,7 @@ export class CatalogService {
 
     async getAll(categoryId?: number, page: number = 1, limit: number = 10, q: string = "") {
         const query = this.repository.createQueryBuilder("catalog")
+            .leftJoinAndSelect("catalog.category", "category")
             .where(new Brackets(qb => {
                 qb.where("catalog.expiredDate IS NULL")
                   .orWhere("catalog.expiredDate >= :today", { today: new Date().toISOString().split('T')[0] })
@@ -35,9 +36,9 @@ export class CatalogService {
     }
 
     async getById(id: number) {
-        return await this.repository.findOne({
-            where: { id },
-            relations: ["category"]
-        })
+        return await this.repository.createQueryBuilder("catalog")
+            .leftJoinAndSelect("catalog.category", "category")
+            .where("catalog.id = :id", { id })
+            .getOne()
     }
 }

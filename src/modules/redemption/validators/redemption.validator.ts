@@ -1,16 +1,4 @@
 import { z } from "zod"
-import { RedemptionType } from "../redemption.enum"
-
-const cashDetails = z.object({})
-
-const voucherDetails = z.object({
-    catalogId: z.number()
-})
-
-const productDetails = z.object({
-    catalogId: z.number(),
-    address: z.string().min(1, "Shipping address is required")
-})
 
 export const CreateCashRedemptionValidator = z.object({
     pointsUsed: z.number().min(1, "Points must be at least 1"),

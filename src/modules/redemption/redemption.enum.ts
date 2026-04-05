@@ -5,11 +5,8 @@ export enum RedemptionType {
 }
 
 export enum RedemptionStatus {
-    DRAFT = 'draft',
     PENDING = 'pending',
-    APPROVED = 'approved',
+    PROCESSING = 'processing',
     COMPLETED = 'completed',
-    REJECTED = 'rejected',
-    CANCELLED = 'cancelled',
-    REFUNDED = 'refunded'
+    CANCELLED = 'cancelled'
 }
