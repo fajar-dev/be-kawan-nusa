@@ -3,7 +3,7 @@ import { AuthService } from './auth.service'
 import { ApiResponse } from '../../core/helpers/response'
 import { RegisterValidator, LoginValidator, ForgotPasswordValidator, ResetPasswordValidator, RefreshTokenValidator } from './validators/auth.validator'
 import { UserSerializer } from '../user/serializers/user.serialize'
-import { BadValidatorException } from '../../core/exceptions/base'
+import { BadRequestException } from '../../core/exceptions/base'
 
 export class AuthController {
     private service: AuthService
@@ -60,10 +60,10 @@ export class AuthController {
         const email = c.req.query('email')
         const token = c.req.query('token')
         if (!token) {
-            throw new BadValidatorException("Reset token is required")
+            throw new BadRequestException("Reset token is required")
         }
         if (!email) {
-            throw new BadValidatorException("Email is required")
+            throw new BadRequestException("Email is required")
         }
         
         await this.service.validateResetToken(email, token)

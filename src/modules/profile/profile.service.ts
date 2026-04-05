@@ -1,7 +1,7 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
 import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator } from "./validators/profile.validator"
-import { NotFoundException, BadValidatorException } from "../../core/exceptions/base"
+import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { Repository } from "typeorm"
 
@@ -50,7 +50,7 @@ export class ProfileService {
 
         const isValid = await comparePassword(data.oldPassword, user.password)
         if (!isValid) {
-            throw new BadValidatorException("Old password is incorrect")
+            throw new BadRequestException("Old password is incorrect")
         }
 
         user.password = await hashPassword(data.newPassword)

@@ -1,5 +1,5 @@
 import { EntityManager, MoreThan } from "typeorm"
-import { BadValidatorException } from "../exceptions/base"
+import { BadRequestException } from "../exceptions/base"
 import { Reward } from "../../modules/reward/entities/reward.entity"
 
 /**
@@ -44,7 +44,7 @@ export class PointHelper {
         // Check if total matches
         const totalAvailable = await this.getAvailablePoints(manager, userId)
         if (totalAvailable < amountToSubtract) {
-            throw new BadValidatorException(`Insufficient point balance. Available: ${totalAvailable}, Required: ${amountToSubtract}`)
+            throw new BadRequestException(`Insufficient point balance. Available: ${totalAvailable}, Required: ${amountToSubtract}`)
         }
 
         let remainingToSubtract = amountToSubtract

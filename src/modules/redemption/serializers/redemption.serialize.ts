@@ -20,7 +20,11 @@ export class RedemptionSerializer {
                 catalog: redemption.voucherRedemption.catalog ? {
                     id: redemption.voucherRedemption.catalog.id,
                     name: redemption.voucherRedemption.catalog.name,
-                    image: redemption.voucherRedemption.catalog.image
+                    image: redemption.voucherRedemption.catalog.image,
+                    category: redemption.voucherRedemption.catalog.category ? {
+                        id: redemption.voucherRedemption.catalog.category.id,
+                        name: redemption.voucherRedemption.catalog.category.name
+                    } : null
                 } : null,
                 name: redemption.voucherRedemption.name,
                 email: redemption.voucherRedemption.email
@@ -29,7 +33,11 @@ export class RedemptionSerializer {
                 catalog: redemption.productRedemption.catalog ? {
                     id: redemption.productRedemption.catalog.id,
                     name: redemption.productRedemption.catalog.name,
-                    image: redemption.productRedemption.catalog.image
+                    image: redemption.productRedemption.catalog.image,
+                    category: redemption.productRedemption.catalog.category ? {
+                        id: redemption.productRedemption.catalog.category.id,
+                        name: redemption.productRedemption.catalog.category.name
+                    } : null
                 } : null,
                 name: redemption.productRedemption.name,
                 email: redemption.productRedemption.email,

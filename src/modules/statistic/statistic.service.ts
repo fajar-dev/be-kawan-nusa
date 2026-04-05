@@ -3,6 +3,8 @@ import { Customer } from "../customer/entities/customer.entity"
 import { CustomerService } from "../customer-service/entities/customer-service.entity"
 import { Reward } from "../reward/entities/reward.entity"
 import { PointService } from "../point/point.service"
+import { Redemption } from "../redemption/entities/redemption.entity"
+import { RedemptionType, RedemptionStatus } from "../redemption/redemption.enum"
 import { Repository } from "typeorm"
 
 const MONTH_NAMES = [
@@ -14,12 +16,14 @@ export class StatisticService {
     private customerRepository: Repository<Customer>
     private customerServiceRepository: Repository<CustomerService>
     private rewardRepository: Repository<Reward>
+    private redemptionRepository: Repository<Redemption>
     private pointService: PointService
 
     constructor() {
         this.customerRepository = AppDataSource.getRepository(Customer)
         this.customerServiceRepository = AppDataSource.getRepository(CustomerService)
         this.rewardRepository = AppDataSource.getRepository(Reward)
+        this.redemptionRepository = AppDataSource.getRepository(Redemption)
         this.pointService = new PointService()
     }
 
@@ -218,5 +222,31 @@ export class StatisticService {
         })
 
         return result
+    }
+
+    async getRedemptionRewardStats(userId: number) {
+        const rawData = await this.redemptionRepository.createQueryBuilder("redemption")
+            .select("redemption.status", "status")
+            .addSelect("COUNT(redemption.id)", "count")
+            .where("redemption.userId = :userId", { userId })
+            .andWhere("redemption.type IN (:...types)", { types: [RedemptionType.PRODUCT, RedemptionType.VOUCHER] })
+            .groupBy("redemption.status")
+            .getRawMany()
+
+        const statusCounts = Object.values(RedemptionStatus).reduce((acc, status) => {
+            acc[status] = 0
+            return acc
+        }, {} as Record<string, number>)
+
+        rawData.forEach(item => {
+            if (statusCounts[item.status] !== undefined) {
+                statusCounts[item.status] = Number(item.count)
+            }
+        })
+
+        return Object.entries(statusCounts).map(([status, count]) => ({
+            status,
+            count
+        }))
     }
 }

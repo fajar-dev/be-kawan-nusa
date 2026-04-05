@@ -88,6 +88,7 @@ routes.post('/reward', apiKeyMiddleware, zValidator('json', CreateRewardValidato
 routes.get('/statistic/count', authMiddleware, (c) => statisticController.count(c))
 routes.get('/statistic/point', authMiddleware, (c) => statisticController.pointPerMonth(c))
 routes.get('/statistic/customer', authMiddleware, (c) => statisticController.customerStats(c))
+routes.get('/statistic/redemption-reward', authMiddleware, (c) => statisticController.redemptionRewardStats(c))
 
 // Catalog Routes
 routes.get('/catalog/category', authMiddleware, (c) => catalogCategoryController.index(c))

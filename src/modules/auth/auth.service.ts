@@ -1,7 +1,7 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
 import { RegisterValidator, LoginValidator, ForgotPasswordValidator, ResetPasswordValidator, RefreshTokenValidator, } from "./validators/auth.validator"
-import { UnauthorizedException, BadValidatorException } from "../../core/exceptions/base"
+import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { sign, verify } from "hono/jwt"
 import { config } from "../../config/config"
@@ -9,23 +9,20 @@ import crypto from "crypto"
 import { mail } from "../../core/helpers/mail"
 import * as fs from "fs"
 import * as path from "path"
-import { PointService } from "../point/point.service"
 import { EntityManager } from "typeorm"
 import { UserService } from "../user/user.service"
 
 export class AuthService {
     private userService: UserService
-    private pointService: PointService
 
     constructor() {
         this.userService = new UserService()
-        this.pointService = new PointService()
     }
 
     async register(data: RegisterValidator) {
         const user = await this.userService.getByEmail(data.email)
         if (user) {
-            throw new BadValidatorException("Email already in use")
+            throw new BadRequestException("Email already in use")
         }
 
         return AppDataSource.transaction(async (manager: EntityManager) => {
@@ -33,8 +30,6 @@ export class AuthService {
                 ...data,
                 password: await hashPassword(data.password)
             }, manager)
-
-            await this.pointService.create({ userId: user.id }, manager)
 
             return user
         })
@@ -122,7 +117,7 @@ export class AuthService {
     async forgotPassword(data: ForgotPasswordValidator) {
         const user = await this.userService.getByEmail(data.email)
         if (!user) {
-            throw new BadValidatorException("Email not found")
+            throw new BadRequestException("Email not found")
         }
 
         const resetToken = crypto.randomBytes(32).toString('hex')
@@ -150,7 +145,7 @@ export class AuthService {
         const user = await this.userService.getByResetToken(data.token)
         
         if (!user) {
-            throw new BadValidatorException("Invalid or expired reset token")
+            throw new BadRequestException("Invalid or expired reset token")
         }
 
         user.password = await hashPassword(data.newPassword)
@@ -165,7 +160,7 @@ export class AuthService {
         const user = await this.userService.getByEmailAndResetToken(email, token)
         
         if (!user) {
-            throw new BadValidatorException("Invalid or expired reset token")
+            throw new BadRequestException("Invalid or expired reset token")
         }
 
         return true

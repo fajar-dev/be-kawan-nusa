@@ -9,7 +9,7 @@ import { RedemptionType, RedemptionStatus } from "./redemption.enum"
 import { PointHelper } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 import { Repository, Brackets } from "typeorm"
-import { NotFoundException, BadValidatorException } from "../../core/exceptions/base"
+import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 
 export class RedemptionService {
     private repository: Repository<Redemption>
@@ -23,8 +23,10 @@ export class RedemptionService {
             .leftJoinAndSelect("redemption.withdrawRedemption", "withdraw")
             .leftJoinAndSelect("redemption.voucherRedemption", "voucher")
             .leftJoinAndSelect("voucher.catalog", "vCatalog")
+            .leftJoinAndSelect("vCatalog.category", "vCategory")
             .leftJoinAndSelect("redemption.productRedemption", "product")
             .leftJoinAndSelect("product.catalog", "pCatalog")
+            .leftJoinAndSelect("pCatalog.category", "pCategory")
             .where("redemption.userId = :userId", { userId })
 
         if (filters.startDate) {
@@ -71,8 +73,8 @@ export class RedemptionService {
             relations: [
                 "user", 
                 "withdrawRedemption", 
-                "voucherRedemption", "voucherRedemption.catalog",
-                "productRedemption", "productRedemption.catalog"
+                "voucherRedemption", "voucherRedemption.catalog", "voucherRedemption.catalog.category",
+                "productRedemption", "productRedemption.catalog", "productRedemption.catalog.category"
             ]
         })
 
@@ -89,8 +91,8 @@ export class RedemptionService {
             relations: [
                 "user", 
                 "withdrawRedemption", 
-                "voucherRedemption", "voucherRedemption.catalog",
-                "productRedemption", "productRedemption.catalog"
+                "voucherRedemption", "voucherRedemption.catalog", "voucherRedemption.catalog.category",
+                "productRedemption", "productRedemption.catalog", "productRedemption.catalog.category"
             ]
         })
 
@@ -109,7 +111,7 @@ export class RedemptionService {
             // 1. Check point balance
             const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
-                throw new BadValidatorException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
+                throw new BadRequestException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
             }
 
             // 2. Calculate and deduct points
@@ -151,7 +153,7 @@ export class RedemptionService {
             // 1. Check point balance
             const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
-                throw new BadValidatorException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
+                throw new BadRequestException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
             }
 
             // 2. Deduct points
@@ -190,7 +192,7 @@ export class RedemptionService {
             // 1. Check point balance
             const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
-                throw new BadValidatorException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
+                throw new BadRequestException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
             }
 
             // 2. Deduct points

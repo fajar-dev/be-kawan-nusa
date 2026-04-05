@@ -1,6 +1,6 @@
 import { AppDataSource } from "../../config/database"
 import { EntityManager, Repository, MoreThan } from "typeorm"
-import { BadValidatorException } from "../../core/exceptions/base"
+import { BadRequestException } from "../../core/exceptions/base"
 import { Reward } from "../reward/entities/reward.entity"
 import { PointHelper } from "../../core/helpers/point"
 

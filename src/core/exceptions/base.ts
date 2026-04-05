@@ -22,7 +22,7 @@ export class BaseException extends HTTPException {
 /**
  * Common Exception Sub-classes (Standard HTTP Semantics)
  */
-export class BadValidatorException extends BaseException {
+export class BadRequestException extends BaseException {
     constructor(message: string = "Bad Validator", errors: any = null) {
         super(message, 400, errors)
     }

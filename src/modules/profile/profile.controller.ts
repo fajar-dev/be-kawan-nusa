@@ -3,7 +3,7 @@ import { ProfileService } from "./profile.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator, UpdatePhotoValidator } from "./validators/profile.validator"
 import { UserSerializer } from "../user/serializers/user.serialize"
-import { BadValidatorException } from "../../core/exceptions/base"
+import { BadRequestException } from "../../core/exceptions/base"
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
