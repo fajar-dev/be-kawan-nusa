@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToOne, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { Catalog } from "../../catalog/entities/catalog.entity"
+import { ProductRedemptionShipping } from "./product-redemption-shipping.entity"
 
 @Entity("product_redemptions")
 export class ProductRedemption {
@@ -26,6 +27,9 @@ export class ProductRedemption {
 
     @Column({ name: "address", type: "text", nullable: true })
     address?: string
+
+    @OneToOne(() => ProductRedemptionShipping, (shipping) => shipping.productRedemption)
+    shipping?: Relation<ProductRedemptionShipping>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

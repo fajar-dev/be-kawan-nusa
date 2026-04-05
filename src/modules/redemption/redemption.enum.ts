@@ -10,3 +10,13 @@ export enum RedemptionStatus {
     COMPLETED = 'completed',
     CANCELLED = 'cancelled'
 }
+
+export enum Shipper {
+    JNE = 'jne',
+    JNT = 'jnt',
+    SICEPAT = 'sicepat',
+    NINJA = 'ninja',
+    WAHANA = 'wahana',
+    POS = 'pos',
+    OTHERS = 'others'
+}

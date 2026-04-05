@@ -13,6 +13,8 @@ import { Redemption } from "../modules/redemption/entities/redemption.entity"
 import { WithdrawRedemption } from "../modules/redemption/entities/withdraw-redemption.entity"
 import { VoucherRedemption } from "../modules/redemption/entities/voucher-redemption.entity"
 import { ProductRedemption } from "../modules/redemption/entities/product-redemption.entity"
+import { ProductRedemptionShipping } from "../modules/redemption/entities/product-redemption-shipping.entity"
+import { VoucherRedemptionDetail } from "../modules/redemption/entities/voucher-redemption-detail.entity"
 import { config } from "./config"
 
 /**
@@ -27,7 +29,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, WithdrawRedemption, VoucherRedemption, ProductRedemption],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, WithdrawRedemption, VoucherRedemption, ProductRedemption, ProductRedemptionShipping, VoucherRedemptionDetail],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

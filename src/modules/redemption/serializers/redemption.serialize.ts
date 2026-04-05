@@ -27,7 +27,12 @@ export class RedemptionSerializer {
                     } : null
                 } : null,
                 name: redemption.voucherRedemption.name,
-                email: redemption.voucherRedemption.email
+                email: redemption.voucherRedemption.email,
+                detail: redemption.voucherRedemption.detail ? {
+                    id: redemption.voucherRedemption.detail.id,
+                    code: redemption.voucherRedemption.detail.code,
+                    expiredDate: redemption.voucherRedemption.detail.expiredDate
+                } : null
             } : null,
             productDetails: redemption.productRedemption ? {
                 catalog: redemption.productRedemption.catalog ? {
@@ -42,7 +47,13 @@ export class RedemptionSerializer {
                 name: redemption.productRedemption.name,
                 email: redemption.productRedemption.email,
                 phone: redemption.productRedemption.phone,
-                address: redemption.productRedemption.address
+                address: redemption.productRedemption.address,
+                shipping: redemption.productRedemption.shipping ? {
+                    id: redemption.productRedemption.shipping.id,
+                    shipper: redemption.productRedemption.shipping.shipper,
+                    trackingNumber: redemption.productRedemption.shipping.trackingNumber,
+                    shippedAt: redemption.productRedemption.shipping.shippedAt
+                } : null
             } : null,
             createdAt: redemption.createdAt,
         }

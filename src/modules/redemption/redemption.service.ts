@@ -27,6 +27,8 @@ export class RedemptionService {
             .leftJoinAndSelect("redemption.productRedemption", "product")
             .leftJoinAndSelect("product.catalog", "pCatalog")
             .leftJoinAndSelect("pCatalog.category", "pCategory")
+            .leftJoinAndSelect("voucher.detail", "vDetail")
+            .leftJoinAndSelect("product.shipping", "pShipping")
             .where("redemption.userId = :userId", { userId })
 
         if (filters.startDate) {
@@ -54,6 +56,8 @@ export class RedemptionService {
                   .orWhere("pCatalog.name LIKE :q")
                   .orWhere("voucher.name LIKE :q")
                   .orWhere("product.name LIKE :q")
+                  .orWhere("vDetail.code LIKE :q")
+                  .orWhere("pShipping.trackingNumber LIKE :q")
             }), { q: searchPattern })
         }
 
@@ -73,8 +77,8 @@ export class RedemptionService {
             relations: [
                 "user", 
                 "withdrawRedemption", 
-                "voucherRedemption", "voucherRedemption.catalog", "voucherRedemption.catalog.category",
-                "productRedemption", "productRedemption.catalog", "productRedemption.catalog.category"
+                "voucherRedemption", "voucherRedemption.catalog", "voucherRedemption.catalog.category", "voucherRedemption.detail",
+                "productRedemption", "productRedemption.catalog", "productRedemption.catalog.category", "productRedemption.shipping"
             ]
         })
 
@@ -91,8 +95,8 @@ export class RedemptionService {
             relations: [
                 "user", 
                 "withdrawRedemption", 
-                "voucherRedemption", "voucherRedemption.catalog", "voucherRedemption.catalog.category",
-                "productRedemption", "productRedemption.catalog", "productRedemption.catalog.category"
+                "voucherRedemption", "voucherRedemption.catalog", "voucherRedemption.catalog.category", "voucherRedemption.detail",
+                "productRedemption", "productRedemption.catalog", "productRedemption.catalog.category", "productRedemption.shipping"
             ]
         })
 

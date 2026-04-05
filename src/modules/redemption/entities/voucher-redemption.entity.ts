@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToOne, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { Catalog } from "../../catalog/entities/catalog.entity"
+import { VoucherRedemptionDetail } from "./voucher-redemption-detail.entity"
 
 @Entity("voucher_redemptions")
 export class VoucherRedemption {
@@ -20,6 +21,9 @@ export class VoucherRedemption {
 
     @Column({ name: "email", nullable: true })
     email?: string
+
+    @OneToOne(() => VoucherRedemptionDetail, (detail) => detail.voucherRedemption)
+    detail?: Relation<VoucherRedemptionDetail>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
