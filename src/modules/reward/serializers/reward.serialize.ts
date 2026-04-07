@@ -6,7 +6,6 @@ export class RewardSerializer {
             id: reward.id,
             customerServiceId: reward.customerServiceId,
             price: Number(reward.price),
-            paymentDate: reward.paymentDate,
             expiredDate: reward.expiredDate,
             point: Number(reward.point),
             remainingPoint: Number(reward.remainingPoint),
