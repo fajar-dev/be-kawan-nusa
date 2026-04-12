@@ -9,6 +9,7 @@ export class EducationVideoSerializer {
             thumbnail: item.thumbnail,
             description: item.description,
             author: item.author,
+            isView: !!item.isViewed,
             categoryId: item.categoryId,
             category: item.category ? {
                 id: item.category.id,

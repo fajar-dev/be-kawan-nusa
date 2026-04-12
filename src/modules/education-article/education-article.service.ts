@@ -55,12 +55,12 @@ export class EducationArticleService {
         if (currentUserId && data.length > 0) {
             const viewedArticleIds = await AppDataSource.getRepository(EducationArticleView)
                 .createQueryBuilder("view")
-                .select("view.articleId")
+                .select("view.educationArticleId")
                 .where("view.userId = :currentUserId", { currentUserId })
-                .andWhere("view.articleId IN (:...articleIds)", { articleIds: data.map(a => a.id) })
+                .andWhere("view.educationArticleId IN (:...articleIds)", { articleIds: data.map(a => a.id) })
                 .getRawMany()
             
-            const viewedSet = new Set(viewedArticleIds.map(v => v.article_id))
+            const viewedSet = new Set(viewedArticleIds.map(v => v.view_education_article_id))
             data.forEach(a => {
                 a.isViewed = viewedSet.has(a.id)
             })
@@ -81,12 +81,12 @@ export class EducationArticleService {
 
         if (userId) {
             const existingView = await AppDataSource.getRepository(EducationArticleView).findOne({
-                where: { articleId: id, userId }
+                where: { educationArticleId: id, userId }
             })
 
             if (!existingView) {
                 await AppDataSource.getRepository(EducationArticleView).save({
-                    articleId: id,
+                    educationArticleId: id,
                     userId: userId
                 })
             }

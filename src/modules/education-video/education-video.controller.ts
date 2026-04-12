@@ -12,12 +12,15 @@ export class EducationVideoController {
     }
 
     async index(c: Context) {
+        const user = c.get('user')
         const page = Number(c.req.query('page')) || 1
         const limit = Number(c.req.query('limit')) || 10
         const categoryId = c.req.query('categoryId') ? Number(c.req.query('categoryId')) : undefined
         const q = c.req.query('q') || ""
+        const isViewParam = c.req.query('isView')
+        const isView = isViewParam !== undefined ? isViewParam === 'true' : undefined
         
-        const { data, total } = await this.service.getAll(categoryId, page, limit, q)
+        const { data, total } = await this.service.getAll(categoryId, page, limit, q, user?.id, isView)
         
         return ApiResponse.paginate(
             c, 
@@ -30,9 +33,9 @@ export class EducationVideoController {
     }
 
     async show(c: Context) {
+        const user = c.get('user')
         const id = Number(c.req.param('id'))
-        const video = await this.service.getById(id)
-        if (!video) throw new NotFoundException("Video not found")
+        const video = await this.service.getById(id, user?.id)
         
         return ApiResponse.success(c, EducationVideoSerializer.single(video), "Education video details retrieved successfully")
     }
