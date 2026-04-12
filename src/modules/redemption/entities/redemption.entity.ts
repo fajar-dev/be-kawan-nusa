@@ -2,9 +2,9 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import type { Relation } from "typeorm"
 import { User } from "../../user/entities/user.entity"
 import { RedemptionType, RedemptionStatus } from "../redemption.enum"
-import { WithdrawRedemption } from "./withdraw-redemption.entity"
-import { VoucherRedemption } from "./voucher-redemption.entity"
-import { ProductRedemption } from "./product-redemption.entity"
+import { RedemptionWithdraw } from "./redemption-withdraw.entity"
+import { RedemptionVoucher } from "./redemption-voucher.entity"
+import { RedemptionProduct } from "./redemption-product.entity"
 
 @Entity("redemptions")
 export class Redemption {
@@ -37,30 +37,30 @@ export class Redemption {
     @Column({ type: "text", nullable: true })
     notes?: string
 
-    @Column({ name: "withdraw_redemp_id", nullable: true })
-    withdrawRedemptionId?: number
+    @Column({ name: "redemption_withdraw_id", nullable: true })
+    redemptionWithdrawId?: number
 
-    @Column({ name: "voucher_redemp_id", nullable: true })
-    voucherRedemptionId?: number
+    @Column({ name: "redemption_voucher_id", nullable: true })
+    redemptionVoucherId?: number
 
-    @Column({ name: "product_redemp_id", nullable: true })
-    productRedemptionId?: number
+    @Column({ name: "redemption_product_id", nullable: true })
+    redemptionProductId?: number
 
     @ManyToOne(() => User)
     @JoinColumn({ name: "user_id" })
     user!: Relation<User>
 
-    @OneToOne(() => WithdrawRedemption)
-    @JoinColumn({ name: "withdraw_redemp_id" })
-    withdrawRedemption?: Relation<WithdrawRedemption>
+    @OneToOne(() => RedemptionWithdraw)
+    @JoinColumn({ name: "redemption_withdraw_id" })
+    redemptionWithdraw?: Relation<RedemptionWithdraw>
 
-    @OneToOne(() => VoucherRedemption)
-    @JoinColumn({ name: "voucher_redemp_id" })
-    voucherRedemption?: Relation<VoucherRedemption>
+    @OneToOne(() => RedemptionVoucher)
+    @JoinColumn({ name: "redemption_voucher_id" })
+    redemptionVoucher?: Relation<RedemptionVoucher>
 
-    @OneToOne(() => ProductRedemption)
-    @JoinColumn({ name: "product_redemp_id" })
-    productRedemption?: Relation<ProductRedemption>
+    @OneToOne(() => RedemptionProduct)
+    @JoinColumn({ name: "redemption_product_id" })
+    redemptionProduct?: Relation<RedemptionProduct>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

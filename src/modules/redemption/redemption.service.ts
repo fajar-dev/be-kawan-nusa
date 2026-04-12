@@ -1,8 +1,8 @@
 import { AppDataSource } from "../../config/database"
 import { Redemption } from "./entities/redemption.entity"
-import { WithdrawRedemption } from "./entities/withdraw-redemption.entity"
-import { VoucherRedemption } from "./entities/voucher-redemption.entity"
-import { ProductRedemption } from "./entities/product-redemption.entity"
+import { RedemptionWithdraw } from "./entities/redemption-withdraw.entity"
+import { RedemptionVoucher } from "./entities/redemption-voucher.entity"
+import { RedemptionProduct } from "./entities/redemption-product.entity"
 import { User } from "../user/entities/user.entity"
 import { Catalog } from "../catalog/entities/catalog.entity"
 import { RedemptionType, RedemptionStatus } from "./redemption.enum"
@@ -20,11 +20,11 @@ export class RedemptionService {
 
     async getAll(userId: number, page: number, limit: number, filters: { startDate?: string, endDate?: string, status?: string[], type?: string[], q?: string } = {}, sort: string = "createdAt", order: string = "DESC") {
         const query = this.repository.createQueryBuilder("redemption")
-            .leftJoinAndSelect("redemption.withdrawRedemption", "withdraw")
-            .leftJoinAndSelect("redemption.voucherRedemption", "voucher")
+            .leftJoinAndSelect("redemption.redemptionWithdraw", "withdraw")
+            .leftJoinAndSelect("redemption.redemptionVoucher", "voucher")
             .leftJoinAndSelect("voucher.catalog", "vCatalog")
             .leftJoinAndSelect("vCatalog.category", "vCategory")
-            .leftJoinAndSelect("redemption.productRedemption", "product")
+            .leftJoinAndSelect("redemption.redemptionProduct", "product")
             .leftJoinAndSelect("product.catalog", "pCatalog")
             .leftJoinAndSelect("pCatalog.category", "pCategory")
             .leftJoinAndSelect("voucher.detail", "vDetail")
@@ -76,9 +76,9 @@ export class RedemptionService {
             where: { id, userId },
             relations: [
                 "user", 
-                "withdrawRedemption", 
-                "voucherRedemption", "voucherRedemption.catalog", "voucherRedemption.catalog.category", "voucherRedemption.detail",
-                "productRedemption", "productRedemption.catalog", "productRedemption.catalog.category", "productRedemption.shipping"
+                "redemptionWithdraw", 
+                "redemptionVoucher", "redemptionVoucher.catalog", "redemptionVoucher.catalog.category", "redemptionVoucher.detail",
+                "redemptionProduct", "redemptionProduct.catalog", "redemptionProduct.catalog.category", "redemptionProduct.shipping"
             ]
         })
 
@@ -94,9 +94,9 @@ export class RedemptionService {
             where: { id, userId, type: RedemptionType.CASH },
             relations: [
                 "user", 
-                "withdrawRedemption", 
-                "voucherRedemption", "voucherRedemption.catalog", "voucherRedemption.catalog.category", "voucherRedemption.detail",
-                "productRedemption", "productRedemption.catalog", "productRedemption.catalog.category", "productRedemption.shipping"
+                "redemptionWithdraw", 
+                "redemptionVoucher", "redemptionVoucher.catalog", "redemptionVoucher.catalog.category", "redemptionVoucher.detail",
+                "redemptionProduct", "redemptionProduct.catalog", "redemptionProduct.catalog.category", "redemptionProduct.shipping"
             ]
         })
 
@@ -123,7 +123,7 @@ export class RedemptionService {
 
             // 2. Create cash redemption detail
             const { tax, payout } = calculateWithdrawal(pointsUsed)
-            const withdraw = manager.create(WithdrawRedemption, {
+            const withdraw = manager.create(RedemptionWithdraw, {
                 bankName: user.bankName,
                 accountNumber: user.accountNumber,
                 accountHolderName: user.accountHolderName,
@@ -137,7 +137,7 @@ export class RedemptionService {
             const redemption = manager.create(Redemption, {
                 redempNo, userId, pointsUsed, type: RedemptionType.CASH,
                 status: RedemptionStatus.PENDING, notes,
-                withdrawRedemptionId: savedWithdraw.id
+                redemptionWithdrawId: savedWithdraw.id
             })
 
             return await manager.save(redemption)
@@ -164,7 +164,7 @@ export class RedemptionService {
             await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
             // 3. Create voucher redemption detail
-            const voucher = manager.create(VoucherRedemption, {
+            const voucher = manager.create(RedemptionVoucher, {
                 catalogId,
                 name: [user.firstName, user.lastName].filter(Boolean).join(" "),
                 email: user.email
@@ -176,7 +176,7 @@ export class RedemptionService {
             const redemption = manager.create(Redemption, {
                 redempNo, userId, pointsUsed, type: RedemptionType.VOUCHER,
                 status: RedemptionStatus.PENDING, notes,
-                voucherRedemptionId: savedVoucher.id
+                redemptionVoucherId: savedVoucher.id
             })
 
             return await manager.save(redemption)
@@ -203,7 +203,7 @@ export class RedemptionService {
             await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
             // 3. Create product redemption detail
-            const product = manager.create(ProductRedemption, {
+            const product = manager.create(RedemptionProduct, {
                 catalogId,
                 name: [user.firstName, user.lastName].filter(Boolean).join(" "),
                 email: user.email,
@@ -217,7 +217,7 @@ export class RedemptionService {
             const redemption = manager.create(Redemption, {
                 redempNo, userId, pointsUsed, type: RedemptionType.PRODUCT,
                 status: RedemptionStatus.PENDING, notes,
-                productRedemptionId: savedProduct.id
+                redemptionProductId: savedProduct.id
             })
 
             return await manager.save(redemption)

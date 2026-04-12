@@ -1,16 +1,16 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
-import { ProductRedemption } from "./product-redemption.entity"
+import { RedemptionProduct } from "./redemption-product.entity"
 import { Shipper } from "../redemption.enum"
 
-@Entity("product_redemption_shippings")
-export class ProductRedemptionShipping {
+@Entity("redemption_product_shippings")
+export class RedemptionProductShipping {
     @PrimaryGeneratedColumn()
     id!: number
 
     @Index()
-    @Column({ name: "product_redemption_id" })
-    productRedemptionId!: number
+    @Column({ name: "redemption_product_id" })
+    redemptionProductId!: number
     
     @Column({
         type: "enum",
@@ -31,7 +31,7 @@ export class ProductRedemptionShipping {
     @UpdateDateColumn({ name: "updated_at" })
     updatedAt!: Date
 
-    @OneToOne(() => ProductRedemption)
-    @JoinColumn({ name: "product_redemption_id" })
-    productRedemption!: Relation<ProductRedemption>
+    @OneToOne(() => RedemptionProduct, (redemption) => redemption.shipping)
+    @JoinColumn({ name: "redemption_product_id" })
+    redemptionProduct!: Relation<RedemptionProduct>
 }

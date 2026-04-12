@@ -1,10 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToOne, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { Catalog } from "../../catalog/entities/catalog.entity"
-import { ProductRedemptionShipping } from "./product-redemption-shipping.entity"
+import { RedemptionVoucherDetail } from "./redemption-voucher-detail.entity"
 
-@Entity("product_redemptions")
-export class ProductRedemption {
+@Entity("redemption_vouchers")
+export class RedemptionVoucher {
     @PrimaryGeneratedColumn()
     id!: number
 
@@ -22,14 +22,8 @@ export class ProductRedemption {
     @Column({ name: "email", nullable: true })
     email?: string
 
-    @Column({ name: "phone", nullable: true })
-    phone?: string
-
-    @Column({ name: "address", type: "text", nullable: true })
-    address?: string
-
-    @OneToOne(() => ProductRedemptionShipping, (shipping) => shipping.productRedemption)
-    shipping?: Relation<ProductRedemptionShipping>
+    @OneToOne(() => RedemptionVoucherDetail, (detail) => detail.redemptionVoucher)
+    detail?: Relation<RedemptionVoucherDetail>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

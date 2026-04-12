@@ -9,50 +9,50 @@ export class RedemptionSerializer {
             type: redemption.type,
             status: redemption.status,
             notes: redemption.notes,
-            withdrawDetails: redemption.withdrawRedemption ? {
-                bankName: redemption.withdrawRedemption.bankName,
-                accountNumber: redemption.withdrawRedemption.accountNumber,
-                accountHolderName: redemption.withdrawRedemption.accountHolderName,
-                payout: Number(redemption.withdrawRedemption.payout),
-                tax: Number(redemption.withdrawRedemption.tax)
+            withdrawDetails: redemption.redemptionWithdraw ? {
+                bankName: redemption.redemptionWithdraw.bankName,
+                accountNumber: redemption.redemptionWithdraw.accountNumber,
+                accountHolderName: redemption.redemptionWithdraw.accountHolderName,
+                payout: Number(redemption.redemptionWithdraw.payout),
+                tax: Number(redemption.redemptionWithdraw.tax)
             } : null,
-            voucherDetails: redemption.voucherRedemption ? {
-                catalog: redemption.voucherRedemption.catalog ? {
-                    id: redemption.voucherRedemption.catalog.id,
-                    name: redemption.voucherRedemption.catalog.name,
-                    image: redemption.voucherRedemption.catalog.image,
-                    category: redemption.voucherRedemption.catalog.category ? {
-                        id: redemption.voucherRedemption.catalog.category.id,
-                        name: redemption.voucherRedemption.catalog.category.name
+            voucherDetails: redemption.redemptionVoucher ? {
+                catalog: redemption.redemptionVoucher.catalog ? {
+                    id: redemption.redemptionVoucher.catalog.id,
+                    name: redemption.redemptionVoucher.catalog.name,
+                    image: redemption.redemptionVoucher.catalog.image,
+                    category: redemption.redemptionVoucher.catalog.category ? {
+                        id: redemption.redemptionVoucher.catalog.category.id,
+                        name: redemption.redemptionVoucher.catalog.category.name
                     } : null
                 } : null,
-                name: redemption.voucherRedemption.name,
-                email: redemption.voucherRedemption.email,
-                detail: redemption.voucherRedemption.detail ? {
-                    id: redemption.voucherRedemption.detail.id,
-                    code: redemption.voucherRedemption.detail.code,
-                    expiredDate: redemption.voucherRedemption.detail.expiredDate
+                name: redemption.redemptionVoucher.name,
+                email: redemption.redemptionVoucher.email,
+                detail: redemption.redemptionVoucher.detail ? {
+                    id: redemption.redemptionVoucher.detail.id,
+                    code: redemption.redemptionVoucher.detail.code,
+                    expiredDate: redemption.redemptionVoucher.detail.expiredDate
                 } : null
             } : null,
-            productDetails: redemption.productRedemption ? {
-                catalog: redemption.productRedemption.catalog ? {
-                    id: redemption.productRedemption.catalog.id,
-                    name: redemption.productRedemption.catalog.name,
-                    image: redemption.productRedemption.catalog.image,
-                    category: redemption.productRedemption.catalog.category ? {
-                        id: redemption.productRedemption.catalog.category.id,
-                        name: redemption.productRedemption.catalog.category.name
+            productDetails: redemption.redemptionProduct ? {
+                catalog: redemption.redemptionProduct.catalog ? {
+                    id: redemption.redemptionProduct.catalog.id,
+                    name: redemption.redemptionProduct.catalog.name,
+                    image: redemption.redemptionProduct.catalog.image,
+                    category: redemption.redemptionProduct.catalog.category ? {
+                        id: redemption.redemptionProduct.catalog.category.id,
+                        name: redemption.redemptionProduct.catalog.category.name
                     } : null
                 } : null,
-                name: redemption.productRedemption.name,
-                email: redemption.productRedemption.email,
-                phone: redemption.productRedemption.phone,
-                address: redemption.productRedemption.address,
-                shipping: redemption.productRedemption.shipping ? {
-                    id: redemption.productRedemption.shipping.id,
-                    shipper: redemption.productRedemption.shipping.shipper,
-                    trackingNumber: redemption.productRedemption.shipping.trackingNumber,
-                    shippedAt: redemption.productRedemption.shipping.shippedAt
+                name: redemption.redemptionProduct.name,
+                email: redemption.redemptionProduct.email,
+                phone: redemption.redemptionProduct.phone,
+                address: redemption.redemptionProduct.address,
+                shipping: redemption.redemptionProduct.shipping ? {
+                    id: redemption.redemptionProduct.shipping.id,
+                    shipper: redemption.redemptionProduct.shipping.shipper,
+                    trackingNumber: redemption.redemptionProduct.shipping.trackingNumber,
+                    shippedAt: redemption.redemptionProduct.shipping.shippedAt
                 } : null
             } : null,
             createdAt: redemption.createdAt,

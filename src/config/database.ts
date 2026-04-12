@@ -10,11 +10,11 @@ import { Reward } from "../modules/reward/entities/reward.entity"
 import { Catalog } from "../modules/catalog/entities/catalog.entity"
 import { CatalogCategory } from "../modules/catalog-category/entities/catalog-category.entity"
 import { Redemption } from "../modules/redemption/entities/redemption.entity"
-import { WithdrawRedemption } from "../modules/redemption/entities/withdraw-redemption.entity"
-import { VoucherRedemption } from "../modules/redemption/entities/voucher-redemption.entity"
-import { ProductRedemption } from "../modules/redemption/entities/product-redemption.entity"
-import { ProductRedemptionShipping } from "../modules/redemption/entities/product-redemption-shipping.entity"
-import { VoucherRedemptionDetail } from "../modules/redemption/entities/voucher-redemption-detail.entity"
+import { RedemptionWithdraw } from "../modules/redemption/entities/redemption-withdraw.entity"
+import { RedemptionVoucher } from "../modules/redemption/entities/redemption-voucher.entity"
+import { RedemptionProduct } from "../modules/redemption/entities/redemption-product.entity"
+import { RedemptionProductShipping } from "../modules/redemption/entities/redemption-product-shipping.entity"
+import { RedemptionVoucherDetail } from "../modules/redemption/entities/redemption-voucher-detail.entity"
 import { config } from "./config"
 
 /**
@@ -29,7 +29,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, WithdrawRedemption, VoucherRedemption, ProductRedemption, ProductRedemptionShipping, VoucherRedemptionDetail],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

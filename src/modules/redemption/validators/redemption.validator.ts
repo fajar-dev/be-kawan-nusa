@@ -5,17 +5,17 @@ export const CreateCashRedemptionValidator = z.object({
     notes: z.string().optional()
 })
 
-export const CreateVoucherRedemptionValidator = z.object({
+export const CreateRedemptionVoucherValidator = z.object({
     catalogId: z.number(),
     notes: z.string().optional()
 })
 
-export const CreateProductRedemptionValidator = z.object({
+export const CreateRedemptionProductValidator = z.object({
     catalogId: z.number(),
     address: z.string().min(1, "Shipping address is required"),
     notes: z.string().optional()
 })
 
 export type CreateCashRedemptionValidator = z.infer<typeof CreateCashRedemptionValidator>
-export type CreateVoucherRedemptionValidator = z.infer<typeof CreateVoucherRedemptionValidator>
-export type CreateProductRedemptionValidator = z.infer<typeof CreateProductRedemptionValidator>
+export type CreateRedemptionVoucherValidator = z.infer<typeof CreateRedemptionVoucherValidator>
+export type CreateRedemptionProductValidator = z.infer<typeof CreateRedemptionProductValidator>

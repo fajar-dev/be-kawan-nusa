@@ -1,15 +1,15 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
-import { VoucherRedemption } from "./voucher-redemption.entity"
+import { RedemptionVoucher } from "./redemption-voucher.entity"
 
-@Entity("voucher_redemption_details")
-export class VoucherRedemptionDetail {
+@Entity("redemption_voucher_details")
+export class RedemptionVoucherDetail {
     @PrimaryGeneratedColumn()
     id!: number
 
     @Index()
-    @Column({ name: "voucher_redemption_id" })
-    voucherRedemptionId!: number
+    @Column({ name: "redemption_voucher_id" })
+    redemptionVoucherId!: number
 
     @Column({ name: "code" })
     code!: string
@@ -23,7 +23,7 @@ export class VoucherRedemptionDetail {
     @UpdateDateColumn({ name: "updated_at" })
     updatedAt!: Date
 
-    @OneToOne(() => VoucherRedemption)
-    @JoinColumn({ name: "voucher_redemption_id" })
-    voucherRedemption!: Relation<VoucherRedemption>
+    @OneToOne(() => RedemptionVoucher, (redemption) => redemption.detail)
+    @JoinColumn({ name: "redemption_voucher_id" })
+    redemptionVoucher!: Relation<RedemptionVoucher>
 }

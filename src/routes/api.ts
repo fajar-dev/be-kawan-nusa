@@ -15,7 +15,7 @@ import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, U
 import { PointController } from '../modules/point/point.controller'
 import { StatisticController } from '../modules/statistic/statistic.controller'
 import { RedemptionController } from '../modules/redemption/redemption.controller'
-import { CreateCashRedemptionValidator, CreateVoucherRedemptionValidator, CreateProductRedemptionValidator } from '../modules/redemption/validators/redemption.validator'
+import { CreateCashRedemptionValidator, CreateRedemptionVoucherValidator, CreateRedemptionProductValidator } from '../modules/redemption/validators/redemption.validator'
 import { AdditionalController } from '../modules/additional/additional.controller'
 import { CatalogCategoryController } from '../modules/catalog-category/catalog-category.controller'
 import { CatalogController } from '../modules/catalog/catalog.controller'
@@ -63,8 +63,8 @@ routes.get('/redemptions/:id', authMiddleware, (c) => redemptionController.show(
 routes.get('/redemptions/:id/receipt', tokenAuthMiddleware, (c) => redemptionController.previewReceipt(c))
 routes.get('/redemptions/:id/receipt/download', tokenAuthMiddleware, (c) => redemptionController.downloadReceipt(c))
 routes.post('/redemptions/cash', authMiddleware, zValidator('json', CreateCashRedemptionValidator, validationHook), (c) => redemptionController.storeCash(c))
-routes.post('/redemptions/voucher', authMiddleware, zValidator('json', CreateVoucherRedemptionValidator, validationHook), (c) => redemptionController.storeVoucher(c))
-routes.post('/redemptions/product', authMiddleware, zValidator('json', CreateProductRedemptionValidator, validationHook), (c) => redemptionController.storeProduct(c))
+routes.post('/redemptions/voucher', authMiddleware, zValidator('json', CreateRedemptionVoucherValidator, validationHook), (c) => redemptionController.storeVoucher(c))
+routes.post('/redemptions/product', authMiddleware, zValidator('json', CreateRedemptionProductValidator, validationHook), (c) => redemptionController.storeProduct(c))
 
 // Customer Routes
 routes.get('/customer', authMiddleware, (c) => customerController.index(c))

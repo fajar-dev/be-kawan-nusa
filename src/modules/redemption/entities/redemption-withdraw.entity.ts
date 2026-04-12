@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
 
-@Entity("withdraw_redemptions")
-export class WithdrawRedemption {
+@Entity("redemption_withdraws")
+export class RedemptionWithdraw {
     @PrimaryGeneratedColumn()
     id!: number
 
