@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from "typeorm"
-import { ServiceType } from "../service.enum"
+import { ServiceType, ServiceCategory, ServiceUnit } from "../service.enum"
 
 @Entity("services")
 export class Service {
@@ -11,6 +11,29 @@ export class Service {
 
     @Column()
     name!: string
+
+    @Column({ type: "decimal", precision: 12, scale: 2, default: 0 })
+    price!: number
+
+    @Column({
+        type: "set",
+        enum: ServiceUnit,
+        default: [ServiceUnit.MONTHLY]
+    })
+    unit!: ServiceUnit[]
+
+    @Column({
+        type: "enum",
+        enum: ServiceCategory,
+        default: ServiceCategory.ACCESS_BUSINESS
+    })
+    category!: ServiceCategory
+
+    @Column({ type: "json", nullable: true })
+    features?: any
+
+    @Column({ nullable: true })
+    url?: string
 
     @Column({ type: "text", nullable: true })
     description?: string

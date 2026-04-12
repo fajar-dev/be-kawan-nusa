@@ -7,6 +7,11 @@ export class ServiceSerializer {
             description: service.description,
             type: service.type,
             isActive: service.isActive,
+            price: service.price,
+            unit: service.unit,
+            category: service.category,
+            features: service.features,
+            url: service.url,
             lastReferanceDate: service.lastReferanceDate || null,
             totalCustomerServices: service.totalCustomerServices || 0,
             totalPoint: service.totalPoint || 0

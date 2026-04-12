@@ -20,8 +20,9 @@ export class ServiceController {
         const startDate = c.req.query('startDate')
         const endDate = c.req.query('endDate')
         const isActive = c.req.query('isActive')
+        const category = c.req.query('category')
         
-        const { data, total } = await this.service.getAll(user.id, page, limit, q, sort, order, { startDate, endDate, isActive })
+        const { data, total } = await this.service.getAll(user.id, page, limit, q, sort, order, { startDate, endDate, isActive, category })
         
         return ApiResponse.paginate(
             c, 

@@ -36,9 +36,9 @@ export class ServiceService {
         })
     }
 
-    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { startDate?: string, endDate?: string, isActive?: string } = {}) {
+    async getAll(userId: number, page: number, limit: number, q: string, sort: string, order: string, filters: { startDate?: string, endDate?: string, isActive?: string, category?: string } = {}) {
         const skip = (page - 1) * limit
-        const { startDate, endDate, isActive } = filters
+        const { startDate, endDate, isActive, category } = filters
         
         const query = this.repository.createQueryBuilder("service")
             .leftJoin("customer_services", "cs", "cs.service_code = service.code AND cs.user_id = :userId", { userId })
@@ -65,6 +65,9 @@ export class ServiceService {
         }
         if (isActive) {
             query.andWhere("service.isActive = :isActive", { isActive })
+        }
+        if (category) {
+            query.andWhere("service.category = :category", { category })
         }
 
         if (sort === "totalCustomerServices" || sort === "lastReferanceDate" || sort === "totalPoint") {
