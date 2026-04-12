@@ -19,6 +19,8 @@ import { CreateCashRedemptionValidator, CreateRedemptionVoucherValidator, Create
 import { AdditionalController } from '../modules/additional/additional.controller'
 import { CatalogCategoryController } from '../modules/catalog-category/catalog-category.controller'
 import { CatalogController } from '../modules/catalog/catalog.controller'
+import { EducationCategoryController } from '../modules/education-category/education-category.controller'
+import { EducationArticleController } from '../modules/education-article/education-article.controller'
 import { validationHook } from '../core/helpers/validator'
 
 const routes = new Hono()
@@ -34,6 +36,8 @@ const redemptionController = new RedemptionController()
 const additionalController = new AdditionalController()
 const catalogCategoryController = new CatalogCategoryController()
 const catalogController = new CatalogController()
+const educationCategoryController = new EducationCategoryController()
+const educationArticleController = new EducationArticleController()
 
 
 // Auth Routes
@@ -94,6 +98,11 @@ routes.get('/statistic/redemption-reward', authMiddleware, (c) => statisticContr
 routes.get('/catalog/category', authMiddleware, (c) => catalogCategoryController.index(c))
 routes.get('/catalog', authMiddleware, (c) => catalogController.index(c))
 routes.get('/catalog/:id', authMiddleware, (c) => catalogController.show(c))
+
+// Education Routes
+routes.get('/education/category', authMiddleware, (c) => educationCategoryController.index(c))
+routes.get('/education/article', authMiddleware, (c) => educationArticleController.index(c))
+routes.get('/education/article/:id', authMiddleware, (c) => educationArticleController.show(c))
 
 // Additional Routes
 routes.get('/additional/service', authMiddleware, (c) => additionalController.getServices(c))
