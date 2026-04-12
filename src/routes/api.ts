@@ -21,6 +21,7 @@ import { CatalogCategoryController } from '../modules/catalog-category/catalog-c
 import { CatalogController } from '../modules/catalog/catalog.controller'
 import { EducationCategoryController } from '../modules/education-category/education-category.controller'
 import { EducationArticleController } from '../modules/education-article/education-article.controller'
+import { EducationVideoController } from '../modules/education-video/education-video.controller'
 import { validationHook } from '../core/helpers/validator'
 
 const routes = new Hono()
@@ -38,6 +39,7 @@ const catalogCategoryController = new CatalogCategoryController()
 const catalogController = new CatalogController()
 const educationCategoryController = new EducationCategoryController()
 const educationArticleController = new EducationArticleController()
+const educationVideoController = new EducationVideoController()
 
 
 // Auth Routes
@@ -103,6 +105,8 @@ routes.get('/catalog/:id', authMiddleware, (c) => catalogController.show(c))
 routes.get('/education/category', authMiddleware, (c) => educationCategoryController.index(c))
 routes.get('/education/article', authMiddleware, (c) => educationArticleController.index(c))
 routes.get('/education/article/:id', authMiddleware, (c) => educationArticleController.show(c))
+routes.get('/education/video', authMiddleware, (c) => educationVideoController.index(c))
+routes.get('/education/video/:id', authMiddleware, (c) => educationVideoController.show(c))
 
 // Additional Routes
 routes.get('/additional/service', authMiddleware, (c) => additionalController.getServices(c))
