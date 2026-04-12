@@ -17,6 +17,7 @@ import { RedemptionProductShipping } from "../modules/redemption/entities/redemp
 import { RedemptionVoucherDetail } from "../modules/redemption/entities/redemption-voucher-detail.entity"
 import { EducationCategory } from "../modules/education-category/entities/education-category.entity"
 import { EducationArticle } from "../modules/education-article/entities/education-article.entity"
+import { EducationArticleView } from "../modules/education-article/entities/education-article-view.entity"
 import { EducationVideo } from "../modules/education-video/entities/education-video.entity"
 import { config } from "./config"
 
@@ -32,7 +33,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, EducationCategory, EducationArticle, EducationVideo],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, EducationCategory, EducationArticle, EducationArticleView, EducationVideo],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { EducationCategory } from "../../education-category/entities/education-category.entity"
+import { EducationArticleView } from "./education-article-view.entity"
 
 @Entity("education_articles")
 export class EducationArticle {
@@ -26,6 +27,12 @@ export class EducationArticle {
     @ManyToOne(() => EducationCategory, (category) => category.articles)
     @JoinColumn({ name: "category_id" })
     category!: Relation<EducationCategory>
+
+    @OneToMany(() => EducationArticleView, (view) => view.article)
+    views!: Relation<EducationArticleView[]>
+
+    // Virtual properties (populated via manual mapping)
+    isViewed?: boolean
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

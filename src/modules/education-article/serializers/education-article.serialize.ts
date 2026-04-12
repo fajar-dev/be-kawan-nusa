@@ -9,6 +9,7 @@ export class EducationArticleSerializer {
             image: item.image,
             author: item.author,
             readingTime: this.calculateReadingTime(item.content),
+            isView: !!item.isViewed,
             categoryId: item.categoryId,
             category: item.category ? {
                 id: item.category.id,
