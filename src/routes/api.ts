@@ -66,13 +66,13 @@ routes.post('/profile/photo', authMiddleware, zValidator('form', UpdatePhotoVali
 routes.get('/point', authMiddleware, (c) => pointController.show(c))
 
 // Redemption Routes
-routes.get('/redemptions', authMiddleware, (c) => redemptionController.index(c))
-routes.get('/redemptions/:id', authMiddleware, (c) => redemptionController.show(c))
-routes.get('/redemptions/:id/receipt', tokenAuthMiddleware, (c) => redemptionController.previewReceipt(c))
-routes.get('/redemptions/:id/receipt/download', tokenAuthMiddleware, (c) => redemptionController.downloadReceipt(c))
-routes.post('/redemptions/cash', authMiddleware, zValidator('json', CreateCashRedemptionValidator, validationHook), (c) => redemptionController.storeCash(c))
-routes.post('/redemptions/voucher', authMiddleware, zValidator('json', CreateRedemptionVoucherValidator, validationHook), (c) => redemptionController.storeVoucher(c))
-routes.post('/redemptions/product', authMiddleware, zValidator('json', CreateRedemptionProductValidator, validationHook), (c) => redemptionController.storeProduct(c))
+routes.get('/redemption', authMiddleware, (c) => redemptionController.index(c))
+routes.get('/redemption/:id', authMiddleware, (c) => redemptionController.show(c))
+routes.get('/redemption/:id/receipt', tokenAuthMiddleware, (c) => redemptionController.previewReceipt(c))
+routes.get('/redemption/:id/receipt/download', tokenAuthMiddleware, (c) => redemptionController.downloadReceipt(c))
+routes.post('/redemption/cash', authMiddleware, zValidator('json', CreateCashRedemptionValidator, validationHook), (c) => redemptionController.storeCash(c))
+routes.post('/redemption/voucher', authMiddleware, zValidator('json', CreateRedemptionVoucherValidator, validationHook), (c) => redemptionController.storeVoucher(c))
+routes.post('/redemption/product', authMiddleware, zValidator('json', CreateRedemptionProductValidator, validationHook), (c) => redemptionController.storeProduct(c))
 
 // Customer Routes
 routes.get('/customer', authMiddleware, (c) => customerController.index(c))
