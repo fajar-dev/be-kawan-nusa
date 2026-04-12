@@ -20,6 +20,7 @@ import { EducationArticle } from "../modules/education-article/entities/educatio
 import { EducationArticleView } from "../modules/education-article/entities/education-article-view.entity"
 import { EducationVideo } from "../modules/education-video/entities/education-video.entity"
 import { EducationVideoView } from "../modules/education-video/entities/education-video-view.entity"
+import { ServicePromotion } from "../modules/service-promotion/entities/service-promotion.entity"
 import { config } from "./config"
 
 /**
@@ -34,7 +35,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",
