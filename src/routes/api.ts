@@ -88,6 +88,7 @@ routes.get('/service/promotion', authMiddleware, (c) => servicePromotionControll
 // Template Routes
 routes.get('/template', authMiddleware, (c) => templateController.index(c))
 routes.get('/template/:id', authMiddleware, (c) => templateController.show(c))
+routes.get('/template/:id/download', authMiddleware, (c) => templateController.download(c))
 
 // Service Routes
 routes.get('/service', authMiddleware, (c) => serviceController.index(c))

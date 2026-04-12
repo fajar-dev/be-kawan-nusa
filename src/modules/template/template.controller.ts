@@ -35,4 +35,17 @@ export class TemplateController {
         
         return ApiResponse.success(c, TemplateSerializer.single(item), "Template details retrieved successfully")
     }
+
+    async download(c: Context) {
+        const id = Number(c.req.param('id'))
+        const type = c.req.query('type') as 'png' | 'jpg' | 'mp4' | 'psd'
+        const item = await this.service.getById(id)
+        
+        if (!item) throw new NotFoundException("Template not found")
+        
+        const fileUrl = item[type]
+        if (!fileUrl) throw new NotFoundException(`File for type ${type} not found`)
+
+        return c.redirect(fileUrl)
+    }
 }
