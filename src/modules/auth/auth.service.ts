@@ -66,10 +66,7 @@ export class AuthService {
             "HS256"
         )
 
-        user.refreshToken = refreshToken
-        await this.userService.save(user)
-
-        const { password, resetPasswordToken, resetPasswordExpires, refreshToken: rfToken, ...userWithoutSensitiveData } = user
+        const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitiveData } = user
 
         return { user: userWithoutSensitiveData, accessToken, refreshToken }
     }
@@ -78,10 +75,10 @@ export class AuthService {
         try {
             const decoded = await verify(data.refreshToken, config.app.jwtRefreshSecret, "HS256") as { sub: number }
             
-            const user = await this.userService.getByIdWithRefreshToken(decoded.sub)
+            const user = await this.userService.getById(decoded.sub)
             
-            if (!user || user.refreshToken !== data.refreshToken) {
-                throw new UnauthorizedException("Invalid refresh token")
+            if (!user) {
+                throw new UnauthorizedException("User not found")
             }
 
             const newToken = await sign(
@@ -103,10 +100,7 @@ export class AuthService {
                 "HS256"
             )
 
-            user.refreshToken = newRefreshToken
-            await this.userService.save(user)
-
-            const { password, resetPasswordToken, resetPasswordExpires, refreshToken: rfToken, ...userWithoutSensitiveData } = user
+            const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitiveData } = user
 
             return { user: userWithoutSensitiveData, accessToken: newToken, refreshToken: newRefreshToken }
         } catch (error) {
@@ -167,8 +161,8 @@ export class AuthService {
     }
 
     async logout(user: User) {
-        user.refreshToken = null as any
-        await this.userService.save(user)
+        // Since refresh token is not stored in DB, nothing to clear here.
+        // The client should just delete the token.
         return true
     }
 }

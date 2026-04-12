@@ -53,9 +53,6 @@ export class User {
     @Column({ name: "reset_password_expires", type: "timestamp", nullable: true })
     resetPasswordExpires?: Date
 
-    @Column({ name: "refresh_token", type: "text", nullable: true })
-    refreshToken?: string
-
     @CreateDateColumn({ name: "password_updated_at" })
     passwordUpdatedAt?: Date
 

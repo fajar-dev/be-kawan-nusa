@@ -29,13 +29,6 @@ export class UserService {
             .getOne()
     }
 
-    async getByIdWithRefreshToken(id: number) {
-        return await this.repository.createQueryBuilder("user")
-            .where("user.id = :id", { id })
-            .addSelect("user.refreshToken")
-            .getOne()
-    }
-
     async getByResetToken(token: string) {
         return await this.repository.createQueryBuilder("user")
             .where("user.reset_password_token = :token", { token })

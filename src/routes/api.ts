@@ -23,6 +23,7 @@ import { EducationCategoryController } from '../modules/education-category/educa
 import { EducationArticleController } from '../modules/education-article/education-article.controller'
 import { EducationVideoController } from '../modules/education-video/education-video.controller'
 import { ServicePromotionController } from '../modules/service-promotion/service-promotion.controller'
+import { TemplateController } from '../modules/template/template.controller'
 import { validationHook } from '../core/helpers/validator'
 
 const routes = new Hono()
@@ -42,6 +43,7 @@ const educationCategoryController = new EducationCategoryController()
 const educationArticleController = new EducationArticleController()
 const educationVideoController = new EducationVideoController()
 const servicePromotionController = new ServicePromotionController()
+const templateController = new TemplateController()
 
 
 // Auth Routes
@@ -82,6 +84,10 @@ routes.get('/customer/:id/reward', authMiddleware, (c) => rewardController.byCus
 
 // Service Promotion Routes
 routes.get('/service/promotion', authMiddleware, (c) => servicePromotionController.index(c))
+
+// Template Routes
+routes.get('/template', authMiddleware, (c) => templateController.index(c))
+routes.get('/template/:id', authMiddleware, (c) => templateController.show(c))
 
 // Service Routes
 routes.get('/service', authMiddleware, (c) => serviceController.index(c))
