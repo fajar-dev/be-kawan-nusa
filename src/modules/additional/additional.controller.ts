@@ -48,4 +48,13 @@ export class AdditionalController {
             "Additional reward point types list retrieved successfully"
         )
     }
+
+    async getServiceCategories(c: Context) {
+        const data = await this.additionalService.getServiceCategories()
+        return ApiResponse.success(
+            c, 
+            AdditionalSerializer.collection(data), 
+            "Additional service categories list retrieved successfully"
+        )
+    }
 }

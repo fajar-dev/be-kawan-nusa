@@ -2,8 +2,15 @@ import { Repository } from "typeorm"
 import { CustomerType } from "../customer/customer.enum"
 import { CustomerServiceStatus } from "../customer-service/customer-service.enum"
 import { RewardPointType } from "../reward/reward.enum"
+import { ServiceCategory } from "../service/service.enum"
 
 export class AdditionalService {
+    async getServiceCategories() {
+        return Object.entries(ServiceCategory).map(([key, value]) => ({
+            code: key,
+            name: value
+        }))
+    }
     async getCustomerTypes() {
         return Object.entries(CustomerType)
             .map(([key, value]) => ({
