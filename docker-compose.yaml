@@ -1,0 +1,58 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kawan-nusa-be
+    restart: always
+    ports:
+      - "${PORT:-4000}:4000"
+    environment:
+      - PORT=4000
+      - ENV=${ENV:-production}
+      - FE_URL=${FE_URL}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=${DB_USER:-root}
+      - DB_PASS=${DB_PASS:-root}
+      - DB_NAME=${DB_NAME:-kawan_nusa}
+      - DB_SYNC=${DB_SYNC:-true}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kawan-nusa-network
+
+  db:
+    image: mysql:8.0
+    container_name: kawan-nusa-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASS:-root}
+      - MYSQL_DATABASE=${DB_NAME:-kawan_nusa}
+      - MYSQL_USER=${DB_USER:-kawan_user}
+      - MYSQL_PASSWORD=${DB_PASS:-root}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+    networks:
+      - kawan-nusa-network
+
+networks:
+  kawan-nusa-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
