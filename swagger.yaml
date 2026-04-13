@@ -1,0 +1,2888 @@
+openapi: 3.0.0
+info:
+  title: Kawan Nusa API
+  description: Official API Documentation for Kawan Nusa Backend Service. Includes all endpoints for Authentication, Profile, Points, Customers, Rewards, Redemptions, Statistics, Education, Catalog, and more.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api
+    description: Local development server
+  - url: /api
+    description: Relative API server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "JWT access token. Expires in 15 minutes."
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: "Internal API key for server-to-server communication."
+
+  schemas:
+    # --- Base Wrapper Schemas ---
+    BaseResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        statusCode: { type: integer, example: 200 }
+        message: { type: string, example: "Operation successful" }
+
+    PaginationMeta:
+      type: object
+      properties:
+        total: { type: integer, example: 100 }
+        perPage: { type: integer, example: 10 }
+        currentPage: { type: integer, example: 1 }
+        lastPage: { type: integer, example: 10 }
+        from: { type: integer, example: 1 }
+        to: { type: integer, example: 10 }
+
+    ValidationError:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        statusCode: { type: integer, example: 422 }
+        message: { type: string, example: "Validation failed" }
+        errors:
+          type: object
+          example:
+            email: "Invalid email format"
+            password: "Password must be at least 6 characters"
+
+    # --- Auth Schemas ---
+    RegisterRequest:
+      type: object
+      required: [firstName, lastName, email, phone, password]
+      properties:
+        firstName: { type: string, example: "Budi" }
+        lastName: { type: string, example: "Santoso" }
+        company: { type: string, example: "PT Nusanet" }
+        jobPosition: { type: string, example: "Sales Manager" }
+        email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+        phone: { type: string, example: "081234567890" }
+        password: { type: string, minLength: 6, example: "secret123" }
+        accountHolderName: { type: string, example: "Budi Santoso" }
+        bankName: { type: string, example: "BCA" }
+        accountNumber: { type: string, example: "1234567890" }
+        isSubscribe: { type: boolean, default: false, example: true }
+        isAutoWithdraw: { type: boolean, default: false, example: false }
+
+    LoginRequest:
+      type: object
+      required: [identifier, password]
+      properties:
+        identifier:
+          type: string
+          description: "Email address or phone number"
+          example: "budi.santoso@nusanet.id"
+        password: { type: string, example: "secret123" }
+
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+
+    ResetPasswordRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: { type: string, example: "a3f8c2d1e9b4..." }
+        newPassword: { type: string, minLength: 6, example: "newSecret123" }
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken: { type: string, example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+
+    # --- User / Profile Schemas ---
+    User:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        firstName: { type: string, example: "Budi" }
+        lastName: { type: string, example: "Santoso" }
+        photo: { type: string, nullable: true, example: "https://cdn.example.com/photo.jpg" }
+        email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+        phone: { type: string, example: "081234567890" }
+        company: { type: string, example: "PT Nusanet" }
+        jobPosition: { type: string, example: "Sales Manager" }
+        bankDetails:
+          type: object
+          properties:
+            holderName: { type: string, nullable: true, example: "Budi Santoso" }
+            name: { type: string, nullable: true, example: "BCA" }
+            number: { type: string, nullable: true, example: "1234567890" }
+        settings:
+          type: object
+          properties:
+            isSubscribe: { type: boolean, example: true }
+            isAutoWithdraw: { type: boolean, example: false }
+        passwordUpdatedAt: { type: string, format: date-time, nullable: true, example: "2025-01-15T10:30:00.000Z" }
+        createdAt: { type: string, format: date-time, example: "2024-06-01T08:00:00.000Z" }
+
+    AuthResponse:
+      type: object
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        accessToken:
+          type: string
+          description: "JWT access token, expires in 15 minutes"
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiYnVkaUBleGFtcGxlLmNvbSJ9..."
+        refreshToken:
+          type: string
+          description: "JWT refresh token, expires in 7 days"
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjF9..."
+
+    UpdateAccountRequest:
+      type: object
+      required: [firstName, lastName, email, phone]
+      properties:
+        firstName: { type: string, example: "Budi" }
+        lastName: { type: string, example: "Santoso" }
+        email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+        phone: { type: string, example: "081234567890" }
+        company: { type: string, example: "PT Nusanet" }
+        jobPosition: { type: string, example: "Sales Manager" }
+
+    UpdateBankRequest:
+      type: object
+      required: [accountHolderName, bankName, accountNumber]
+      properties:
+        accountHolderName: { type: string, example: "Budi Santoso" }
+        bankName: { type: string, example: "BCA" }
+        accountNumber: { type: string, example: "1234567890" }
+
+    UpdatePasswordRequest:
+      type: object
+      required: [oldPassword, newPassword]
+      properties:
+        oldPassword: { type: string, example: "oldSecret123" }
+        newPassword: { type: string, minLength: 6, example: "newSecret456" }
+
+    UpdatePreferenceRequest:
+      type: object
+      properties:
+        isSubscribe: { type: boolean, example: true }
+        isAutoWithdraw: { type: boolean, example: false }
+
+    # --- Customer Schemas ---
+    Customer:
+      type: object
+      properties:
+        id: { type: string, example: "CUST-0001" }
+        name: { type: string, example: "Warnet Jaya" }
+        company: { type: string, example: "CV Jaya Abadi" }
+        type: { type: string, example: "Warnet" }
+        registrationDate: { type: string, format: date, example: "2024-01-15" }
+        isActive: { type: boolean, example: true }
+        phones:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer, example: 1 }
+              phone: { type: string, example: "081234567890" }
+              label: { type: string, example: "Primary" }
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer, example: 1 }
+              email: { type: string, example: "warnet.jaya@example.com" }
+              label: { type: string, example: "Primary" }
+
+    CustomerDetail:
+      allOf:
+        - $ref: '#/components/schemas/Customer'
+        - type: object
+          properties:
+            totalCustomerServices: { type: integer, example: 3 }
+            latestCustomerService:
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/CustomerServiceItem'
+
+    CustomerServiceItem:
+      type: object
+      properties:
+        id: { type: integer, example: 42 }
+        customerId: { type: string, example: "CUST-0001" }
+        serviceCode: { type: string, example: "SVC-FIBER-001" }
+        registrationDate: { type: string, format: date, nullable: true, example: "2024-01-10" }
+        activationDate: { type: string, format: date, nullable: true, example: "2024-01-15" }
+        address: { type: string, nullable: true, example: "Jl. Raya No.10, Surabaya" }
+        startDate: { type: string, format: date, nullable: true, example: "2024-01-15" }
+        endDate: { type: string, format: date, nullable: true, example: "2025-01-15" }
+        status: { type: string, example: "AC" }
+        referenceDate: { type: string, format: date, nullable: true, example: "2024-03-01" }
+        salesName: { type: string, nullable: true, example: "Andi" }
+        service:
+          nullable: true
+          type: object
+          properties:
+            code: { type: string, example: "SVC-FIBER-001" }
+            name: { type: string, example: "Fiber Home 20 Mbps" }
+            type: { type: string, example: "Internet" }
+        totalPoint: { type: number, example: 1500 }
+        latestReward:
+          nullable: true
+          type: object
+          properties:
+            point: { type: number, example: 500 }
+            type: { type: string, example: "OTP" }
+            createdAt: { type: string, format: date-time, example: "2024-03-01T09:00:00.000Z" }
+
+    # --- Service Schemas ---
+    Service:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        code: { type: string, example: "SVC-FIBER-001" }
+        name: { type: string, example: "Fiber Home 20 Mbps" }
+        description: { type: string, example: "Internet fiber optic untuk rumahan, kecepatan 20 Mbps" }
+        type: { type: string, example: "Internet" }
+        isActive: { type: boolean, example: true }
+        price: { type: number, example: 250000 }
+        unit: { type: string, example: "Monthly" }
+        category: { type: string, example: "Access Home" }
+        features:
+          type: array
+          items: { type: string }
+          example: ["Speed 20 Mbps", "Unlimited Quota", "24/7 Support"]
+        url: { type: string, nullable: true, example: "https://nusanet.id/products/fiber-home-20" }
+        lastReferanceDate: { type: string, format: date, nullable: true, example: "2024-03-15" }
+        totalCustomerServices: { type: integer, example: 25 }
+        totalPoint: { type: number, example: 12500 }
+
+    # --- Reward Schemas ---
+    Reward:
+      type: object
+      properties:
+        id: { type: integer, example: 101 }
+        customerServiceId: { type: integer, example: 42 }
+        price: { type: number, example: 250000 }
+        expiredDate: { type: string, format: date, example: "2025-03-01" }
+        point: { type: number, example: 500 }
+        remainingPoint: { type: number, example: 500 }
+        isExpired: { type: boolean, example: false }
+        type: { type: string, enum: ["OTP", "Bulanan", "Cashback"], example: "OTP" }
+        customerService:
+          nullable: true
+          type: object
+          properties:
+            id: { type: integer, example: 42 }
+            serviceCode: { type: string, example: "SVC-FIBER-001" }
+            activationDate: { type: string, format: date, nullable: true, example: "2024-01-15" }
+            startDate: { type: string, format: date, nullable: true, example: "2024-01-15" }
+            endDate: { type: string, format: date, nullable: true, example: "2025-01-15" }
+        service:
+          nullable: true
+          type: object
+          properties:
+            code: { type: string, example: "SVC-FIBER-001" }
+            name: { type: string, example: "Fiber Home 20 Mbps" }
+        customer:
+          nullable: true
+          type: object
+          properties:
+            id: { type: string, example: "CUST-0001" }
+            name: { type: string, example: "Warnet Jaya" }
+        createdAt: { type: string, format: date-time, example: "2024-03-01T09:00:00.000Z" }
+
+    CreateRewardRequest:
+      type: object
+      required: [customerServiceId, price, point, type]
+      properties:
+        customerServiceId: { type: integer, minimum: 1, example: 42 }
+        price: { type: number, minimum: 0, example: 250000 }
+        point: { type: number, minimum: 0, example: 500 }
+        type:
+          type: string
+          enum: ["OTP", "Bulanan", "Cashback"]
+          example: "OTP"
+
+    # --- Redemption Schemas ---
+    Redemption:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        redempNo: { type: string, example: "RED-20240301-0001" }
+        pointsUsed: { type: number, example: 1000 }
+        type: { type: string, enum: ["cash", "voucher", "product"], example: "cash" }
+        status: { type: string, enum: ["pending", "processing", "completed", "cancelled"], example: "pending" }
+        notes: { type: string, nullable: true, example: "Mohon segera diproses" }
+        withdrawDetails:
+          nullable: true
+          type: object
+          properties:
+            bankName: { type: string, example: "BCA" }
+            accountNumber: { type: string, example: "1234567890" }
+            accountHolderName: { type: string, example: "Budi Santoso" }
+            payout: { type: number, example: 95000 }
+            tax: { type: number, example: 5000 }
+        voucherDetails:
+          nullable: true
+          type: object
+          properties:
+            catalog:
+              nullable: true
+              type: object
+              properties:
+                id: { type: integer, example: 5 }
+                name: { type: string, example: "Voucher Tokopedia 50K" }
+                image: { type: string, example: "https://cdn.example.com/voucher.jpg" }
+                category:
+                  nullable: true
+                  type: object
+                  properties:
+                    id: { type: integer, example: 2 }
+                    name: { type: string, example: "E-Commerce" }
+            name: { type: string, example: "Budi Santoso" }
+            email: { type: string, example: "budi.santoso@nusanet.id" }
+            detail:
+              nullable: true
+              type: object
+              properties:
+                id: { type: integer, example: 10 }
+                code: { type: string, example: "VCHRTOKO50K-ABCDE" }
+                expiredDate: { type: string, format: date, example: "2024-12-31" }
+        productDetails:
+          nullable: true
+          type: object
+          properties:
+            catalog:
+              nullable: true
+              type: object
+              properties:
+                id: { type: integer, example: 7 }
+                name: { type: string, example: "Mug Kawan Nusa" }
+                image: { type: string, example: "https://cdn.example.com/mug.jpg" }
+                category:
+                  nullable: true
+                  type: object
+                  properties:
+                    id: { type: integer, example: 3 }
+                    name: { type: string, example: "Merchandise" }
+            name: { type: string, example: "Budi Santoso" }
+            email: { type: string, example: "budi.santoso@nusanet.id" }
+            phone: { type: string, example: "081234567890" }
+            address: { type: string, example: "Jl. Raya No.10, Surabaya 60111" }
+            shipping:
+              nullable: true
+              type: object
+              properties:
+                id: { type: integer, example: 3 }
+                shipper: { type: string, example: "jne" }
+                trackingNumber: { type: string, example: "JNE001234567890" }
+                shippedAt: { type: string, format: date-time, example: "2024-03-05T14:00:00.000Z" }
+        createdAt: { type: string, format: date-time, example: "2024-03-01T09:00:00.000Z" }
+
+    CreateCashRedemptionRequest:
+      type: object
+      required: [pointsUsed]
+      properties:
+        pointsUsed: { type: number, minimum: 1, example: 1000 }
+        notes: { type: string, example: "Mohon segera diproses" }
+
+    CreateRedemptionVoucherRequest:
+      type: object
+      required: [catalogId]
+      properties:
+        catalogId: { type: integer, example: 5 }
+        notes: { type: string, example: "Voucher untuk hadiah" }
+
+    CreateRedemptionProductRequest:
+      type: object
+      required: [catalogId, address]
+      properties:
+        catalogId: { type: integer, example: 7 }
+        address: { type: string, example: "Jl. Raya No.10 RT 01/02, Kel. Tegalsari, Kec. Tegalsari, Surabaya 60111" }
+        notes: { type: string, example: "Tolong dikirim pagi hari" }
+
+    # --- Catalog Schemas ---
+    Catalog:
+      type: object
+      properties:
+        id: { type: integer, example: 5 }
+        name: { type: string, example: "Voucher Tokopedia 50K" }
+        description: { type: string, example: "Voucher belanja Tokopedia senilai Rp 50.000" }
+        point: { type: number, example: 500 }
+        image: { type: string, example: "https://cdn.example.com/voucher-tokopedia.jpg" }
+        type: { type: string, example: "voucher" }
+        category:
+          type: object
+          properties:
+            id: { type: integer, example: 2 }
+            name: { type: string, example: "E-Commerce" }
+
+    # --- Education Schemas ---
+    EducationArticle:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, example: "Tips Memaksimalkan Koneksi Internet Fiber" }
+        content: { type: string, example: "Internet fiber optik adalah teknologi koneksi..." }
+        image: { type: string, example: "https://cdn.example.com/article-fiber.jpg" }
+        author: { type: string, example: "Tim Nusanet" }
+        readingTime: { type: string, example: "3 menit baca" }
+        isView: { type: boolean, example: false }
+        categoryId: { type: integer, example: 1 }
+        category:
+          nullable: true
+          type: object
+          properties:
+            id: { type: integer, example: 1 }
+            name: { type: string, example: "Tips & Trik" }
+        createdAt: { type: string, format: date-time, example: "2024-02-10T08:00:00.000Z" }
+
+    EducationVideo:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, example: "Cara Menggunakan Dashboard Kawan Nusa" }
+        url: { type: string, example: "https://www.youtube.com/watch?v=example" }
+        thumbnail: { type: string, example: "https://cdn.example.com/video-thumb.jpg" }
+        description: { type: string, example: "Tutorial lengkap menggunakan fitur-fitur dashboard Kawan Nusa" }
+        author: { type: string, example: "Tim Nusanet" }
+        isView: { type: boolean, example: true }
+        categoryId: { type: integer, example: 2 }
+        category:
+          nullable: true
+          type: object
+          properties:
+            id: { type: integer, example: 2 }
+            name: { type: string, example: "Tutorial" }
+        createdAt: { type: string, format: date-time, example: "2024-02-15T08:00:00.000Z" }
+
+    # --- Template Schemas ---
+    Template:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Banner Promo Lebaran 2024" }
+        description: { type: string, nullable: true, example: "Template banner untuk promosi Hari Raya Lebaran" }
+        thumbnail: { type: string, nullable: true, example: "https://cdn.example.com/template-thumb.jpg" }
+        png: { type: string, nullable: true, example: "https://cdn.example.com/template.png" }
+        jpg: { type: string, nullable: true, example: "https://cdn.example.com/template.jpg" }
+        psd: { type: string, nullable: true, example: "https://cdn.example.com/template.psd" }
+        mp4: { type: string, nullable: true, example: "https://cdn.example.com/template.mp4" }
+        isActive: { type: boolean, example: true }
+        createdAt: { type: string, format: date-time, example: "2024-01-20T08:00:00.000Z" }
+
+    # --- Service Promotion Schemas ---
+    ServicePromotion:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, example: "Promo Double Speed Februari 2024" }
+        description: { type: string, example: "Upgrade kecepatan internet Anda 2x lipat tanpa biaya tambahan" }
+        image: { type: string, example: "https://cdn.example.com/promo-feb.jpg" }
+        url: { type: string, nullable: true, example: "https://nusanet.id/promo/double-speed" }
+        startPeriod: { type: string, format: date, example: "2024-02-01" }
+        endPeriod: { type: string, format: date, example: "2024-02-29" }
+        createdAt: { type: string, format: date-time, example: "2024-01-25T08:00:00.000Z" }
+
+    # --- Statistics Schemas ---
+    Achievement:
+      type: object
+      properties:
+        percentage: { type: integer, example: 12 }
+        isUp: { type: boolean, example: true }
+
+    StatisticCount:
+      type: object
+      properties:
+        customer:
+          type: object
+          properties:
+            value: { type: integer, example: 148 }
+            achievement: { $ref: '#/components/schemas/Achievement' }
+        customerService:
+          type: object
+          properties:
+            value: { type: integer, example: 215 }
+            achievement: { $ref: '#/components/schemas/Achievement' }
+        point:
+          type: object
+          properties:
+            value: { type: integer, example: 25500 }
+            achievement: { $ref: '#/components/schemas/Achievement' }
+
+    # --- Additional Schemas ---
+    AdditionalItem:
+      type: object
+      properties:
+        code: { type: string, example: "WARNET" }
+        name: { type: string, example: "Warnet" }
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number (default 1)
+      schema: { type: integer, default: 1, example: 1 }
+    LimitParam:
+      name: limit
+      in: query
+      description: Items per page (default 10)
+      schema: { type: integer, default: 10, example: 10 }
+    SearchParam:
+      name: q
+      in: query
+      description: Search keyword
+      schema: { type: string, example: "nusanet" }
+    SortParam:
+      name: sort
+      in: query
+      description: Sort field name
+      schema: { type: string }
+    OrderParam:
+      name: order
+      in: query
+      description: Sort direction
+      schema: { type: string, enum: [ASC, DESC], default: DESC }
+    StartDateParam:
+      name: startDate
+      in: query
+      description: Filter from date (YYYY-MM-DD)
+      schema: { type: string, format: date, example: "2024-01-01" }
+    EndDateParam:
+      name: endDate
+      in: query
+      description: Filter to date (YYYY-MM-DD)
+      schema: { type: string, format: date, example: "2024-12-31" }
+
+  responses:
+    UnauthorizedResponse:
+      description: Unauthorized - missing or invalid token
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/BaseResponse'
+            example:
+              success: false
+              statusCode: 401
+              message: "Unauthorized"
+
+    NotFoundResponse:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/BaseResponse'
+            example:
+              success: false
+              statusCode: 404
+              message: "Resource not found"
+
+    ValidationErrorResponse:
+      description: Validation Error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+
+paths:
+  # =============================================
+  # AUTH ROUTES
+  # =============================================
+  /auth/register:
+    post:
+      summary: Register new partner account
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+            example:
+              firstName: "Budi"
+              lastName: "Santoso"
+              email: "budi.santoso@nusanet.id"
+              phone: "081234567890"
+              password: "secret123"
+              company: "PT Nusanet"
+              jobPosition: "Sales Manager"
+              accountHolderName: "Budi Santoso"
+              bankName: "BCA"
+              accountNumber: "1234567890"
+              isSubscribe: true
+              isAutoWithdraw: false
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/User' }
+              example:
+                success: true
+                statusCode: 201
+                message: "User registered successfully"
+                data:
+                  id: 1
+                  firstName: "Budi"
+                  lastName: "Santoso"
+                  email: "budi.santoso@nusanet.id"
+                  phone: "081234567890"
+                  company: "PT Nusanet"
+                  jobPosition: "Sales Manager"
+                  photo: null
+                  bankDetails:
+                    holderName: "Budi Santoso"
+                    name: "BCA"
+                    number: "1234567890"
+                  settings:
+                    isSubscribe: true
+                    isAutoWithdraw: false
+                  passwordUpdatedAt: null
+                  createdAt: "2024-06-01T08:00:00.000Z"
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /auth/login:
+    post:
+      summary: Login to partner account
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+            example:
+              identifier: "budi.santoso@nusanet.id"
+              password: "secret123"
+      responses:
+        "200":
+          description: Logged in successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/AuthResponse' }
+              example:
+                success: true
+                statusCode: 200
+                message: "Logged in successfully"
+                data:
+                  user:
+                    id: 1
+                    firstName: "Budi"
+                    lastName: "Santoso"
+                    email: "budi.santoso@nusanet.id"
+                    phone: "081234567890"
+                    company: "PT Nusanet"
+                    jobPosition: "Sales Manager"
+                    photo: null
+                    bankDetails:
+                      holderName: "Budi Santoso"
+                      name: "BCA"
+                      number: "1234567890"
+                    settings:
+                      isSubscribe: true
+                      isAutoWithdraw: false
+                    createdAt: "2024-06-01T08:00:00.000Z"
+                  accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 401
+                message: "Invalid credentials"
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /auth/forgot-password:
+    post:
+      summary: Request password reset link via email
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ForgotPasswordRequest' }
+            example:
+              email: "budi.santoso@nusanet.id"
+      responses:
+        "200":
+          description: Reset instructions sent to email
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Password reset instructions have been sent to your email"
+                data: null
+        "400":
+          description: Email not found
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Email not found"
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /auth/validate-reset-token:
+    get:
+      summary: Validate a password reset token
+      tags: [Auth]
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema: { type: string, format: email }
+          example: "budi.santoso@nusanet.id"
+        - name: token
+          in: query
+          required: true
+          description: Reset token received via email
+          schema: { type: string }
+          example: "a3f8c2d1e9b4..."
+      responses:
+        "200":
+          description: Token is valid
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Token is valid"
+                data: null
+        "400":
+          description: Invalid or expired token
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Invalid or expired reset token"
+
+  /auth/reset-password:
+    post:
+      summary: Reset password using token from email
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ResetPasswordRequest' }
+            example:
+              token: "a3f8c2d1e9b4..."
+              newPassword: "newSecret123"
+      responses:
+        "200":
+          description: Password reset successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Password has been successfully reset"
+                data: null
+        "400":
+          description: Invalid or expired token
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Invalid or expired reset token"
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token using refresh token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshTokenRequest' }
+            example:
+              refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        "200":
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/AuthResponse' }
+              example:
+                success: true
+                statusCode: 200
+                message: "Token refreshed successfully"
+                data:
+                  user:
+                    id: 1
+                    firstName: "Budi"
+                    lastName: "Santoso"
+                    email: "budi.santoso@nusanet.id"
+                  accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new..."
+                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new..."
+        "401":
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 401
+                message: "Invalid or expired refresh token"
+
+  /auth/me:
+    get:
+      summary: Get authenticated user details
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/User' }
+              example:
+                success: true
+                statusCode: 200
+                message: "User profile retrieved successfully"
+                data:
+                  id: 1
+                  firstName: "Budi"
+                  lastName: "Santoso"
+                  email: "budi.santoso@nusanet.id"
+                  phone: "081234567890"
+                  company: "PT Nusanet"
+                  jobPosition: "Sales Manager"
+                  photo: null
+                  bankDetails:
+                    holderName: "Budi Santoso"
+                    name: "BCA"
+                    number: "1234567890"
+                  settings:
+                    isSubscribe: true
+                    isAutoWithdraw: false
+                  createdAt: "2024-06-01T08:00:00.000Z"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /auth/logout:
+    post:
+      summary: Logout (client should discard tokens)
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Logged out successfully"
+                data: null
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  # =============================================
+  # PROFILE ROUTES
+  # =============================================
+  /profile:
+    get:
+      summary: Get current user profile
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/User' }
+              example:
+                success: true
+                statusCode: 200
+                message: "User profile retrieved successfully"
+                data:
+                  id: 1
+                  firstName: "Budi"
+                  lastName: "Santoso"
+                  email: "budi.santoso@nusanet.id"
+                  phone: "081234567890"
+                  company: "PT Nusanet"
+                  jobPosition: "Sales Manager"
+                  photo: "https://cdn.example.com/photo.jpg"
+                  bankDetails:
+                    holderName: "Budi Santoso"
+                    name: "BCA"
+                    number: "1234567890"
+                  settings:
+                    isSubscribe: true
+                    isAutoWithdraw: false
+                  createdAt: "2024-06-01T08:00:00.000Z"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /profile/account:
+    put:
+      summary: Update basic account information
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateAccountRequest' }
+            example:
+              firstName: "Budi"
+              lastName: "Wijaya"
+              email: "budi.wijaya@nusanet.id"
+              phone: "089876543210"
+              company: "PT Nusanet Indonesia"
+              jobPosition: "Senior Sales Manager"
+      responses:
+        "200":
+          description: Account updated successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Account updated successfully"
+                data: null
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /profile/bank:
+    put:
+      summary: Update bank account information
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateBankRequest' }
+            example:
+              accountHolderName: "Budi Santoso"
+              bankName: "Mandiri"
+              accountNumber: "9876543210"
+      responses:
+        "200":
+          description: Bank details updated successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Bank details updated successfully"
+                data: null
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /profile/preference:
+    put:
+      summary: Update notification and auto-withdraw preferences
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdatePreferenceRequest' }
+            example:
+              isSubscribe: true
+              isAutoWithdraw: false
+      responses:
+        "200":
+          description: Preferences updated successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Preferences updated successfully"
+                data: null
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /profile/password:
+    put:
+      summary: Change account password
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdatePasswordRequest' }
+            example:
+              oldPassword: "secret123"
+              newPassword: "newSecret456"
+      responses:
+        "200":
+          description: Password changed successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Password changed successfully"
+                data: null
+        "400":
+          description: Old password is incorrect
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Old password is incorrect"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /profile/photo:
+    post:
+      summary: Upload profile photo
+      description: "Accepted formats: JPG, PNG, GIF. Max size: 5MB."
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [photo]
+              properties:
+                photo:
+                  type: string
+                  format: binary
+                  description: "Image file (JPG, PNG, GIF). Max 5MB."
+      responses:
+        "200":
+          description: Photo uploaded successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Photo updated successfully"
+                data: null
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  # =============================================
+  # POINT ROUTES
+  # =============================================
+  /point:
+    get:
+      summary: Get current point balance
+      description: "Returns the current available point balance calculated using FIFO logic (expired points are excluded)."
+      tags: [Point]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Point balance retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Point balance retrieved successfully"
+                data:
+                  value: 25500
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  # =============================================
+  # REWARD ROUTES
+  # =============================================
+  /reward:
+    get:
+      summary: List reward transactions (paginated)
+      tags: [Reward]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: sort
+          in: query
+          description: "Sort field (e.g. createdAt, point, price)"
+          schema: { type: string, default: "createdAt" }
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+        - name: "type[]"
+          in: query
+          description: "Filter by reward type (repeatable)"
+          schema:
+            type: array
+            items: { type: string, enum: ["OTP", "Bulanan", "Cashback"] }
+          style: form
+          explode: true
+          example: ["OTP", "Bulanan"]
+      responses:
+        "200":
+          description: Rewards retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Rewards retrieved successfully"
+                data:
+                  - id: 101
+                    customerServiceId: 42
+                    price: 250000
+                    expiredDate: "2025-03-01"
+                    point: 500
+                    remainingPoint: 500
+                    isExpired: false
+                    type: "OTP"
+                    customerService:
+                      id: 42
+                      serviceCode: "SVC-FIBER-001"
+                      activationDate: "2024-01-15"
+                      startDate: "2024-01-15"
+                      endDate: "2025-01-15"
+                    service:
+                      code: "SVC-FIBER-001"
+                      name: "Fiber Home 20 Mbps"
+                    customer:
+                      id: "CUST-0001"
+                      name: "Warnet Jaya"
+                    createdAt: "2024-03-01T09:00:00.000Z"
+                meta:
+                  total: 50
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 5
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+    post:
+      summary: Create a new reward (Internal use only)
+      description: "Requires API Key authentication via `X-API-KEY` header. Used by internal systems to register reward points when a customer pays their bill."
+      tags: [Reward]
+      security: [{ apiKeyAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateRewardRequest' }
+            example:
+              customerServiceId: 42
+              price: 250000
+              point: 500
+              type: "OTP"
+      responses:
+        "200":
+          description: Reward created successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Reward created successfully"
+                data:
+                  id: 101
+                  customerServiceId: 42
+                  price: 250000
+                  expiredDate: "2025-03-01"
+                  point: 500
+                  remainingPoint: 500
+                  isExpired: false
+                  type: "OTP"
+                  createdAt: "2024-03-01T09:00:00.000Z"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "404":
+          description: Customer service not found
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 404
+                message: "Customer service not found"
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  # =============================================
+  # REDEMPTION ROUTES
+  # =============================================
+  /redemption:
+    get:
+      summary: List redemption transactions (paginated)
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: sort
+          in: query
+          description: "Sort field (e.g. createdAt, pointsUsed)"
+          schema: { type: string, default: "createdAt" }
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+        - name: "status[]"
+          in: query
+          description: "Filter by redemption status (repeatable)"
+          schema:
+            type: array
+            items: { type: string, enum: ["pending", "processing", "completed", "cancelled"] }
+          style: form
+          explode: true
+        - name: "type[]"
+          in: query
+          description: "Filter by redemption type (repeatable)"
+          schema:
+            type: array
+            items: { type: string, enum: ["cash", "voucher", "product"] }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Redemptions retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Redemptions retrieved successfully"
+                data:
+                  - id: 1
+                    redempNo: "RED-20240301-0001"
+                    pointsUsed: 1000
+                    type: "cash"
+                    status: "pending"
+                    notes: null
+                    withdrawDetails:
+                      bankName: "BCA"
+                      accountNumber: "1234567890"
+                      accountHolderName: "Budi Santoso"
+                      payout: 95000
+                      tax: 5000
+                    voucherDetails: null
+                    productDetails: null
+                    createdAt: "2024-03-01T09:00:00.000Z"
+                meta:
+                  total: 20
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 2
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /redemption/cash:
+    post:
+      summary: Create a cash (withdraw) redemption request
+      description: "Converts points to cash payout. Points are deducted using FIFO logic. Tax is automatically calculated."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCashRedemptionRequest' }
+            example:
+              pointsUsed: 1000
+              notes: "Mohon segera diproses"
+      responses:
+        "200":
+          description: Cash redemption created successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Cash redemption created successfully"
+                data:
+                  id: 1
+                  redempNo: "RED-20240301-0001"
+                  pointsUsed: 1000
+                  type: "cash"
+                  status: "pending"
+                  notes: "Mohon segera diproses"
+                  withdrawDetails:
+                    bankName: "BCA"
+                    accountNumber: "1234567890"
+                    accountHolderName: "Budi Santoso"
+                    payout: 95000
+                    tax: 5000
+                  voucherDetails: null
+                  productDetails: null
+                  createdAt: "2024-03-01T09:00:00.000Z"
+        "400":
+          description: Insufficient point balance
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Insufficient point balance. Available: 800, Required: 1000"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /redemption/voucher:
+    post:
+      summary: Create a voucher redemption request
+      description: "Redeems points for a catalog voucher. Point cost is taken from the catalog item's point value."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateRedemptionVoucherRequest' }
+            example:
+              catalogId: 5
+              notes: "Voucher untuk hadiah"
+      responses:
+        "200":
+          description: Voucher redemption created successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Voucher redemption created successfully"
+                data:
+                  id: 2
+                  redempNo: "RED-20240301-0002"
+                  pointsUsed: 500
+                  type: "voucher"
+                  status: "pending"
+                  notes: "Voucher untuk hadiah"
+                  withdrawDetails: null
+                  voucherDetails:
+                    catalog:
+                      id: 5
+                      name: "Voucher Tokopedia 50K"
+                      image: "https://cdn.example.com/voucher.jpg"
+                      category:
+                        id: 2
+                        name: "E-Commerce"
+                    name: "Budi Santoso"
+                    email: "budi.santoso@nusanet.id"
+                    detail: null
+                  productDetails: null
+                  createdAt: "2024-03-01T09:15:00.000Z"
+        "400":
+          description: Insufficient points or catalog not found
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Insufficient point balance. Available: 400, Required: 500"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /redemption/product:
+    post:
+      summary: Create a physical product redemption request
+      description: "Redeems points for a physical product from the catalog. Shipping address is required."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateRedemptionProductRequest' }
+            example:
+              catalogId: 7
+              address: "Jl. Raya No.10 RT 01/02, Kel. Tegalsari, Kec. Tegalsari, Surabaya 60111"
+              notes: "Tolong dikirim pagi hari"
+      responses:
+        "200":
+          description: Product redemption created successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Product redemption created successfully"
+                data:
+                  id: 3
+                  redempNo: "RED-20240301-0003"
+                  pointsUsed: 750
+                  type: "product"
+                  status: "pending"
+                  notes: "Tolong dikirim pagi hari"
+                  withdrawDetails: null
+                  voucherDetails: null
+                  productDetails:
+                    catalog:
+                      id: 7
+                      name: "Mug Kawan Nusa"
+                      image: "https://cdn.example.com/mug.jpg"
+                      category:
+                        id: 3
+                        name: "Merchandise"
+                    name: "Budi Santoso"
+                    email: "budi.santoso@nusanet.id"
+                    phone: "081234567890"
+                    address: "Jl. Raya No.10 RT 01/02, Kel. Tegalsari, Kec. Tegalsari, Surabaya 60111"
+                    shipping: null
+                  createdAt: "2024-03-01T09:30:00.000Z"
+        "400":
+          description: Insufficient points or catalog not found
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Catalog item not found"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "422":
+          $ref: '#/components/responses/ValidationErrorResponse'
+
+  /redemption/{id}:
+    get:
+      summary: Get redemption detail by ID
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Redemption ID
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Redemption details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Redemption' }
+              example:
+                success: true
+                statusCode: 200
+                message: "Redemption details retrieved successfully"
+                data:
+                  id: 1
+                  redempNo: "RED-20240301-0001"
+                  pointsUsed: 1000
+                  type: "cash"
+                  status: "completed"
+                  notes: null
+                  withdrawDetails:
+                    bankName: "BCA"
+                    accountNumber: "1234567890"
+                    accountHolderName: "Budi Santoso"
+                    payout: 95000
+                    tax: 5000
+                  voucherDetails: null
+                  productDetails: null
+                  createdAt: "2024-03-01T09:00:00.000Z"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "404":
+          $ref: '#/components/responses/NotFoundResponse'
+
+  /redemption/{id}/receipt:
+    get:
+      summary: Preview redemption receipt as PDF (inline)
+      description: "Returns a PDF file for cash redemptions. Uses token-based authentication via query string."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Redemption ID (must be a CASH type redemption)
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: PDF receipt (inline display)
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Not a cash redemption or not found
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Redemption record not found"
+
+  /redemption/{id}/receipt/download:
+    get:
+      summary: Download redemption receipt as PDF attachment
+      description: "Returns a PDF file as attachment for cash redemptions."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Redemption ID (must be a CASH type redemption)
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: PDF receipt (download attachment)
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Not a cash redemption or not found
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Redemption record not found"
+
+  # =============================================
+  # CUSTOMER ROUTES
+  # =============================================
+  /customer:
+    get:
+      summary: List all customers (paginated)
+      tags: [Customer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: q
+          in: query
+          description: "Search by customer ID, name, or company"
+          schema: { type: string, example: "Warnet" }
+        - name: sort
+          in: query
+          description: "Sort field (id, name, company, registrationDate, isActive, createdAt, updatedAt)"
+          schema: { type: string, default: "registrationDate" }
+        - $ref: '#/components/parameters/OrderParam'
+        - name: isActive
+          in: query
+          description: "Filter by active status (1 = active, 0 = inactive)"
+          schema: { type: string, enum: ["0", "1"] }
+        - name: "type[]"
+          in: query
+          description: "Filter by customer type (repeatable)"
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+          example: ["Warnet", "Hotel"]
+        - name: "serviceCode[]"
+          in: query
+          description: "Filter by service code (repeatable)"
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+          example: ["SVC-FIBER-001"]
+      responses:
+        "200":
+          description: Customer list retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Customer list retrieved successfully"
+                data:
+                  - id: "CUST-0001"
+                    name: "Warnet Jaya"
+                    company: "CV Jaya Abadi"
+                    type: "Warnet"
+                    registrationDate: "2024-01-15"
+                    isActive: true
+                    phones:
+                      - id: 1
+                        phone: "081234567890"
+                        label: "Primary"
+                    emails:
+                      - id: 1
+                        email: "warnet.jaya@example.com"
+                        label: "Primary"
+                meta:
+                  total: 148
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 15
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /customer/{id}:
+    get:
+      summary: Get customer detail by ID
+      tags: [Customer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer ID
+          schema: { type: string }
+          example: "CUST-0001"
+      responses:
+        "200":
+          description: Customer retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponse'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/CustomerDetail' }
+              example:
+                success: true
+                statusCode: 200
+                message: "Customer retrieved successfully"
+                data:
+                  id: "CUST-0001"
+                  name: "Warnet Jaya"
+                  company: "CV Jaya Abadi"
+                  type: "Warnet"
+                  registrationDate: "2024-01-15"
+                  isActive: true
+                  phones:
+                    - id: 1
+                      phone: "081234567890"
+                      label: "Primary"
+                  emails:
+                    - id: 1
+                      email: "warnet.jaya@example.com"
+                      label: "Primary"
+                  totalCustomerServices: 3
+                  latestCustomerService:
+                    id: 42
+                    customerId: "CUST-0001"
+                    serviceCode: "SVC-FIBER-001"
+                    status: "AC"
+                    activationDate: "2024-01-15"
+                    referenceDate: "2024-03-01"
+                    service:
+                      code: "SVC-FIBER-001"
+                      name: "Fiber Home 20 Mbps"
+                      type: "Internet"
+                    totalPoint: 1500
+                    latestReward:
+                      point: 500
+                      type: "OTP"
+                      createdAt: "2024-03-01T09:00:00.000Z"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "404":
+          $ref: '#/components/responses/NotFoundResponse'
+
+  /customer/{id}/service:
+    get:
+      summary: Get services subscribed by a specific customer (paginated)
+      tags: [Customer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer ID
+          schema: { type: string }
+          example: "CUST-0001"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: sort
+          in: query
+          description: "Sort field (e.g. referenceDate, registrationDate, activationDate, totalPoint, latestReward.point)"
+          schema: { type: string, default: "referenceDate" }
+        - $ref: '#/components/parameters/OrderParam'
+        - name: startRegistration
+          in: query
+          description: Filter by registration date from (YYYY-MM-DD)
+          schema: { type: string, format: date, example: "2024-01-01" }
+        - name: endRegistration
+          in: query
+          description: Filter by registration date to (YYYY-MM-DD)
+          schema: { type: string, format: date, example: "2024-12-31" }
+        - name: startActivation
+          in: query
+          description: Filter by activation date from (YYYY-MM-DD)
+          schema: { type: string, format: date, example: "2024-01-01" }
+        - name: endActivation
+          in: query
+          description: Filter by activation date to (YYYY-MM-DD)
+          schema: { type: string, format: date, example: "2024-12-31" }
+        - name: "status[]"
+          in: query
+          description: "Filter by service status (AC, NA, BL, FR). Repeatable."
+          schema:
+            type: array
+            items: { type: string, enum: ["AC", "NA", "BL", "FR"] }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Customer services retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Customer services retrieved successfully"
+                data:
+                  - id: 42
+                    customerId: "CUST-0001"
+                    serviceCode: "SVC-FIBER-001"
+                    registrationDate: "2024-01-10"
+                    activationDate: "2024-01-15"
+                    address: "Jl. Raya No.10, Surabaya"
+                    startDate: "2024-01-15"
+                    endDate: "2025-01-15"
+                    status: "AC"
+                    referenceDate: "2024-03-01"
+                    salesName: "Andi"
+                    service:
+                      code: "SVC-FIBER-001"
+                      name: "Fiber Home 20 Mbps"
+                      type: "Internet"
+                    totalPoint: 1500
+                    latestReward:
+                      point: 500
+                      type: "OTP"
+                      createdAt: "2024-03-01T09:00:00.000Z"
+                meta:
+                  total: 3
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 1
+                  from: 1
+                  to: 3
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "404":
+          $ref: '#/components/responses/NotFoundResponse'
+
+  /customer/{id}/reward:
+    get:
+      summary: Get reward transactions for a specific customer (paginated)
+      tags: [Customer]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer ID
+          schema: { type: string }
+          example: "CUST-0001"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: sort
+          in: query
+          schema: { type: string, default: "createdAt" }
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+        - name: "type[]"
+          in: query
+          description: "Filter by reward type (repeatable)"
+          schema:
+            type: array
+            items: { type: string, enum: ["OTP", "Bulanan", "Cashback"] }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Customer rewards retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Customer rewards retrieved successfully"
+                data:
+                  - id: 101
+                    customerServiceId: 42
+                    price: 250000
+                    expiredDate: "2025-03-01"
+                    point: 500
+                    remainingPoint: 500
+                    isExpired: false
+                    type: "OTP"
+                    service:
+                      code: "SVC-FIBER-001"
+                      name: "Fiber Home 20 Mbps"
+                    customer:
+                      id: "CUST-0001"
+                      name: "Warnet Jaya"
+                    createdAt: "2024-03-01T09:00:00.000Z"
+                meta:
+                  total: 8
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 1
+                  from: 1
+                  to: 8
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  # =============================================
+  # SERVICE ROUTES
+  # =============================================
+  /service:
+    get:
+      summary: List all services (paginated)
+      tags: [Service]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: sort
+          in: query
+          description: "Sort field (name, code, totalCustomerServices, lastReferanceDate, totalPoint)"
+          schema: { type: string, default: "name" }
+        - name: order
+          in: query
+          schema: { type: string, enum: [ASC, DESC], default: ASC }
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+        - name: isActive
+          in: query
+          description: Filter by active status (1 or 0)
+          schema: { type: string, enum: ["0", "1"] }
+        - name: category
+          in: query
+          description: "Filter by service category"
+          schema: { type: string, enum: ["Access Business", "Access Home", "Digital Business"] }
+      responses:
+        "200":
+          description: Service list retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Service list retrieved successfully"
+                data:
+                  - id: 1
+                    code: "SVC-FIBER-001"
+                    name: "Fiber Home 20 Mbps"
+                    description: "Internet fiber optic untuk rumahan"
+                    type: "Internet"
+                    isActive: true
+                    price: 250000
+                    unit: "Monthly"
+                    category: "Access Home"
+                    features: ["Speed 20 Mbps", "Unlimited Quota"]
+                    url: "https://nusanet.id/products/fiber-home-20"
+                    lastReferanceDate: "2024-03-15"
+                    totalCustomerServices: 25
+                    totalPoint: 12500
+                meta:
+                  total: 15
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 2
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /service/{code}:
+    get:
+      summary: Get service detail by code
+      tags: [Service]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Service code
+          schema: { type: string }
+          example: "SVC-FIBER-001"
+      responses:
+        "200":
+          description: Service retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Service retrieved successfully"
+                data:
+                  id: 1
+                  code: "SVC-FIBER-001"
+                  name: "Fiber Home 20 Mbps"
+                  description: "Internet fiber optic untuk rumahan, kecepatan 20 Mbps"
+                  type: "Internet"
+                  isActive: true
+                  price: 250000
+                  unit: "Monthly"
+                  category: "Access Home"
+                  features: ["Speed 20 Mbps", "Unlimited Quota", "24/7 Support"]
+                  url: "https://nusanet.id/products/fiber-home-20"
+                  lastReferanceDate: "2024-03-15"
+                  totalCustomerServices: 25
+                  totalPoint: 12500
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "404":
+          $ref: '#/components/responses/NotFoundResponse'
+
+  /service/{code}/customer:
+    get:
+      summary: Get customers subscribed to a specific service (paginated)
+      tags: [Service]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Service code
+          schema: { type: string }
+          example: "SVC-FIBER-001"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: sort
+          in: query
+          schema: { type: string, default: "referenceDate" }
+        - $ref: '#/components/parameters/OrderParam'
+        - name: startRegistration
+          in: query
+          schema: { type: string, format: date, example: "2024-01-01" }
+        - name: endRegistration
+          in: query
+          schema: { type: string, format: date, example: "2024-12-31" }
+        - name: startActivation
+          in: query
+          schema: { type: string, format: date, example: "2024-01-01" }
+        - name: endActivation
+          in: query
+          schema: { type: string, format: date, example: "2024-12-31" }
+        - name: "status[]"
+          in: query
+          description: "Filter by status (AC, NA, BL, FR). Repeatable."
+          schema:
+            type: array
+            items: { type: string, enum: ["AC", "NA", "BL", "FR"] }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Customer services retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Customer services retrieved successfully"
+                data:
+                  - id: 42
+                    customerId: "CUST-0001"
+                    serviceCode: "SVC-FIBER-001"
+                    status: "AC"
+                    referenceDate: "2024-03-01"
+                    totalPoint: 1500
+                meta:
+                  total: 25
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 3
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /service/promotion:
+    get:
+      summary: List service promotions (paginated)
+      tags: [Service]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+      responses:
+        "200":
+          description: Service promotions retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Service promotions retrieved successfully"
+                data:
+                  - id: 1
+                    title: "Promo Double Speed Februari 2024"
+                    description: "Upgrade kecepatan internet Anda 2x lipat tanpa biaya tambahan"
+                    image: "https://cdn.example.com/promo-feb.jpg"
+                    url: "https://nusanet.id/promo/double-speed"
+                    startPeriod: "2024-02-01"
+                    endPeriod: "2024-02-29"
+                    createdAt: "2024-01-25T08:00:00.000Z"
+                meta:
+                  total: 5
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 1
+                  from: 1
+                  to: 5
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  # =============================================
+  # CUSTOMER SERVICE ROUTES
+  # =============================================
+  /customer-service:
+    get:
+      summary: List all customer services (paginated)
+      tags: [CustomerService]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: sort
+          in: query
+          description: "Sort field (e.g. referenceDate, registrationDate, totalPoint, latestReward.point, latestReward.type)"
+          schema: { type: string, default: "referenceDate" }
+        - $ref: '#/components/parameters/OrderParam'
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+        - name: "type[]"
+          in: query
+          description: "Filter by latest reward type (repeatable)"
+          schema:
+            type: array
+            items: { type: string, enum: ["OTP", "Bulanan", "Cashback"] }
+          style: form
+          explode: true
+        - name: "serviceCode[]"
+          in: query
+          description: "Filter by service code (repeatable)"
+          schema:
+            type: array
+            items: { type: string }
+          style: form
+          explode: true
+          example: ["SVC-FIBER-001"]
+      responses:
+        "200":
+          description: Customer services retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Customer services retrieved successfully"
+                data:
+                  - id: 42
+                    customerId: "CUST-0001"
+                    serviceCode: "SVC-FIBER-001"
+                    registrationDate: "2024-01-10"
+                    activationDate: "2024-01-15"
+                    address: "Jl. Raya No.10, Surabaya"
+                    startDate: "2024-01-15"
+                    endDate: "2025-01-15"
+                    status: "AC"
+                    referenceDate: "2024-03-01"
+                    salesName: "Andi"
+                    service:
+                      code: "SVC-FIBER-001"
+                      name: "Fiber Home 20 Mbps"
+                      type: "Internet"
+                    totalPoint: 1500
+                    latestReward:
+                      point: 500
+                      type: "OTP"
+                      createdAt: "2024-03-01T09:00:00.000Z"
+                meta:
+                  total: 215
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 22
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  # =============================================
+  # TEMPLATE ROUTES
+  # =============================================
+  /template:
+    get:
+      summary: List shareable marketing templates (paginated)
+      tags: [Template]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+      responses:
+        "200":
+          description: Templates retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Templates retrieved successfully"
+                data:
+                  - id: 1
+                    name: "Banner Promo Lebaran 2024"
+                    description: "Template banner untuk promosi Hari Raya Lebaran"
+                    thumbnail: "https://cdn.example.com/template-thumb.jpg"
+                    png: "https://cdn.example.com/template.png"
+                    jpg: "https://cdn.example.com/template.jpg"
+                    psd: "https://cdn.example.com/template.psd"
+                    mp4: null
+                    isActive: true
+                    createdAt: "2024-01-20T08:00:00.000Z"
+                meta:
+                  total: 12
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 2
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /template/{id}:
+    get:
+      summary: Get template detail by ID
+      tags: [Template]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Template details retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Template details retrieved successfully"
+                data:
+                  id: 1
+                  name: "Banner Promo Lebaran 2024"
+                  description: "Template banner untuk promosi Hari Raya Lebaran"
+                  thumbnail: "https://cdn.example.com/template-thumb.jpg"
+                  png: "https://cdn.example.com/template.png"
+                  jpg: "https://cdn.example.com/template.jpg"
+                  psd: "https://cdn.example.com/template.psd"
+                  mp4: null
+                  isActive: true
+                  createdAt: "2024-01-20T08:00:00.000Z"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "404":
+          $ref: '#/components/responses/NotFoundResponse'
+
+  /template/{id}/download:
+    get:
+      summary: Download or redirect to a template file
+      description: "Redirects (302) to the actual file URL for the requested type."
+      tags: [Template]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+        - name: type
+          in: query
+          required: true
+          description: File format to download
+          schema: { type: string, enum: [png, jpg, psd, mp4] }
+          example: "jpg"
+      responses:
+        "302":
+          description: Redirect to the file source URL
+        "404":
+          description: Template or file type not found
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 404
+                message: "File for type psd not found"
+
+  # =============================================
+  # CATALOG ROUTES
+  # =============================================
+  /catalog:
+    get:
+      summary: List all redemption catalog items (paginated)
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: categoryId
+          in: query
+          description: Filter by category ID
+          schema: { type: integer, example: 2 }
+      responses:
+        "200":
+          description: Catalog retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Catalog retrieved successfully"
+                data:
+                  - id: 5
+                    name: "Voucher Tokopedia 50K"
+                    description: "Voucher belanja Tokopedia senilai Rp 50.000"
+                    point: 500
+                    image: "https://cdn.example.com/voucher-tokopedia.jpg"
+                    type: "voucher"
+                    category:
+                      id: 2
+                      name: "E-Commerce"
+                  - id: 7
+                    name: "Mug Kawan Nusa"
+                    description: "Mug eksklusif berlogo Kawan Nusa"
+                    point: 750
+                    image: "https://cdn.example.com/mug.jpg"
+                    type: "product"
+                    category:
+                      id: 3
+                      name: "Merchandise"
+                meta:
+                  total: 20
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 2
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /catalog/{id}:
+    get:
+      summary: Get catalog item detail by ID
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 5
+      responses:
+        "200":
+          description: Catalog item retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Catalog item retrieved successfully"
+                data:
+                  id: 5
+                  name: "Voucher Tokopedia 50K"
+                  description: "Voucher belanja Tokopedia senilai Rp 50.000"
+                  point: 500
+                  image: "https://cdn.example.com/voucher-tokopedia.jpg"
+                  type: "voucher"
+                  category:
+                    id: 2
+                    name: "E-Commerce"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "404":
+          $ref: '#/components/responses/NotFoundResponse'
+
+  /catalog/category:
+    get:
+      summary: List all catalog categories
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Catalog categories retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Catalog categories retrieved successfully"
+                data:
+                  - id: 1
+                    name: "Pulsa & Token"
+                  - id: 2
+                    name: "E-Commerce"
+                  - id: 3
+                    name: "Merchandise"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  # =============================================
+  # EDUCATION ROUTES
+  # =============================================
+  /education/article:
+    get:
+      summary: List education articles (paginated)
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: categoryId
+          in: query
+          description: Filter by education category ID
+          schema: { type: integer, example: 1 }
+        - name: isView
+          in: query
+          description: Filter by viewed status (true = viewed, false = not viewed)
+          schema: { type: string, enum: ["true", "false"] }
+      responses:
+        "200":
+          description: Education articles retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Education articles retrieved successfully"
+                data:
+                  - id: 1
+                    title: "Tips Memaksimalkan Koneksi Internet Fiber"
+                    content: "Internet fiber optik adalah teknologi koneksi..."
+                    image: "https://cdn.example.com/article-fiber.jpg"
+                    author: "Tim Nusanet"
+                    readingTime: "3 menit baca"
+                    isView: false
+                    categoryId: 1
+                    category:
+                      id: 1
+                      name: "Tips & Trik"
+                    createdAt: "2024-02-10T08:00:00.000Z"
+                meta:
+                  total: 30
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 3
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /education/article/{id}:
+    get:
+      summary: Get education article detail by ID (marks as viewed)
+      description: "Retrieves the article and marks it as viewed by the authenticated user."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Education article retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Education article details retrieved successfully"
+                data:
+                  id: 1
+                  title: "Tips Memaksimalkan Koneksi Internet Fiber"
+                  content: "Internet fiber optik adalah teknologi koneksi yang menggunakan serat kaca..."
+                  image: "https://cdn.example.com/article-fiber.jpg"
+                  author: "Tim Nusanet"
+                  readingTime: "3 menit baca"
+                  isView: true
+                  categoryId: 1
+                  category:
+                    id: 1
+                    name: "Tips & Trik"
+                  createdAt: "2024-02-10T08:00:00.000Z"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "404":
+          $ref: '#/components/responses/NotFoundResponse'
+
+  /education/video:
+    get:
+      summary: List education videos (paginated)
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: categoryId
+          in: query
+          description: Filter by education category ID
+          schema: { type: integer, example: 2 }
+        - name: isView
+          in: query
+          description: Filter by viewed status (true = viewed, false = not viewed)
+          schema: { type: string, enum: ["true", "false"] }
+      responses:
+        "200":
+          description: Education videos retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Education videos retrieved successfully"
+                data:
+                  - id: 1
+                    title: "Cara Menggunakan Dashboard Kawan Nusa"
+                    url: "https://www.youtube.com/watch?v=example"
+                    thumbnail: "https://cdn.example.com/video-thumb.jpg"
+                    description: "Tutorial lengkap menggunakan fitur-fitur dashboard Kawan Nusa"
+                    author: "Tim Nusanet"
+                    isView: false
+                    categoryId: 2
+                    category:
+                      id: 2
+                      name: "Tutorial"
+                    createdAt: "2024-02-15T08:00:00.000Z"
+                meta:
+                  total: 15
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 2
+                  from: 1
+                  to: 10
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /education/video/{id}:
+    get:
+      summary: Get education video detail by ID (marks as viewed)
+      description: "Retrieves the video and marks it as viewed by the authenticated user."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Education video retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Education video details retrieved successfully"
+                data:
+                  id: 1
+                  title: "Cara Menggunakan Dashboard Kawan Nusa"
+                  url: "https://www.youtube.com/watch?v=example"
+                  thumbnail: "https://cdn.example.com/video-thumb.jpg"
+                  description: "Tutorial lengkap menggunakan fitur-fitur dashboard Kawan Nusa"
+                  author: "Tim Nusanet"
+                  isView: true
+                  categoryId: 2
+                  category:
+                    id: 2
+                    name: "Tutorial"
+                  createdAt: "2024-02-15T08:00:00.000Z"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+        "404":
+          $ref: '#/components/responses/NotFoundResponse'
+
+  /education/category:
+    get:
+      summary: List all education categories
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Education categories retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Education categories retrieved successfully"
+                data:
+                  - id: 1
+                    name: "Tips & Trik"
+                  - id: 2
+                    name: "Tutorial"
+                  - id: 3
+                    name: "Berita"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  # =============================================
+  # STATISTIC ROUTES
+  # =============================================
+  /statistic/count:
+    get:
+      summary: Get dashboard summary counts with achievement comparison
+      description: "Returns total customers, customer services, and available points with month-over-month percentage achievement."
+      tags: [Statistic]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Statistic count retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Statistic count retrieved successfully"
+                data:
+                  customer:
+                    value: 148
+                    achievement:
+                      percentage: 12
+                      isUp: true
+                  customerService:
+                    value: 215
+                    achievement:
+                      percentage: 8
+                      isUp: true
+                  point:
+                    value: 25500
+                    achievement:
+                      percentage: 5
+                      isUp: false
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /statistic/point:
+    get:
+      summary: Get monthly point accumulation chart data for current year
+      tags: [Statistic]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Monthly point statistics retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Monthly point statistics retrieved successfully"
+                data:
+                  - label: "Januari"
+                    total: 2500
+                  - label: "Februari"
+                    total: 3100
+                  - label: "Maret"
+                    total: 2800
+                  - label: "April"
+                    total: 0
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /statistic/customer:
+    get:
+      summary: Get customer growth chart data
+      description: "Returns customer growth statistics. Use `type=yearly` for monthly breakdown, or `type=monthly` for daily breakdown of current month."
+      tags: [Statistic]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: type
+          in: query
+          description: "Chart granularity. `yearly` = per month for current year, `monthly` = per day for current month"
+          schema:
+            type: string
+            enum: [yearly, monthly]
+            default: yearly
+      responses:
+        "200":
+          description: Customer statistics retrieved
+          content:
+            application/json:
+              examples:
+                yearly:
+                  summary: Yearly view (per month)
+                  value:
+                    success: true
+                    statusCode: 200
+                    message: "Customer yearly statistics retrieved successfully"
+                    data:
+                      - label: "Januari"
+                        count: 12
+                      - label: "Februari"
+                        count: 18
+                      - label: "Maret"
+                        count: 9
+                monthly:
+                  summary: Monthly view (per day)
+                  value:
+                    success: true
+                    statusCode: 200
+                    message: "Customer monthly statistics retrieved successfully"
+                    data:
+                      - label: "1 Maret"
+                        count: 2
+                      - label: "2 Maret"
+                        count: 0
+                      - label: "3 Maret"
+                        count: 1
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /statistic/redemption-reward:
+    get:
+      summary: Get redemption status breakdown for voucher and product redemptions
+      tags: [Statistic]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Redemption reward statistics retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Redemption reward statistics retrieved successfully"
+                data:
+                  - status: "pending"
+                    count: 5
+                  - status: "processing"
+                    count: 2
+                  - status: "completed"
+                    count: 30
+                  - status: "cancelled"
+                    count: 3
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  # =============================================
+  # ADDITIONAL / LOOKUP ROUTES
+  # =============================================
+  /additional/service:
+    get:
+      summary: List all available services (for dropdowns/filters)
+      tags: [Additional]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Additional services list retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Additional services list retrieved successfully"
+                data:
+                  - code: "SVC-FIBER-001"
+                    name: "Fiber Home 20 Mbps"
+                  - code: "SVC-FIBER-002"
+                    name: "Fiber Home 50 Mbps"
+                  - code: "SVC-BIZ-001"
+                    name: "Business Fiber 100 Mbps"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /additional/customer-type:
+    get:
+      summary: List all customer types (for dropdowns/filters)
+      tags: [Additional]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Customer types retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Additional customer types list retrieved successfully"
+                data:
+                  - code: "AGRICULTURE_PLANTATION"
+                    name: "Agriculture / Plantation"
+                  - code: "AUTOMOTIVE"
+                    name: "Automotive"
+                  - code: "CAFE_RESTAURANT"
+                    name: "Cafe / Restaurant"
+                  - code: "EDUCATION_SCHOOL_UNIVERSITY"
+                    name: "Education / School / University"
+                  - code: "WARNET"
+                    name: "Warnet"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /additional/customer-service-status:
+    get:
+      summary: List all customer service statuses (for dropdowns/filters)
+      tags: [Additional]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Customer service statuses retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Additional customer service statuses list retrieved successfully"
+                data:
+                  - code: "AC"
+                    name: "Active"
+                  - code: "NA"
+                    name: "Non Active"
+                  - code: "BL"
+                    name: "Block"
+                  - code: "FR"
+                    name: "Free"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /additional/reward-point-type:
+    get:
+      summary: List all reward point types (for dropdowns/filters)
+      tags: [Additional]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Reward point types retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Additional reward point types list retrieved successfully"
+                data:
+                  - code: "OTP"
+                    name: "OTP"
+                  - code: "BULANAN"
+                    name: "Bulanan"
+                  - code: "CASHBACK"
+                    name: "Cashback"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+  /additional/service-category:
+    get:
+      summary: List all service categories (for dropdowns/filters)
+      tags: [Additional]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Service categories retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Additional service categories list retrieved successfully"
+                data:
+                  - code: "ACCESS_BUSINESS"
+                    name: "Access Business"
+                  - code: "ACCESS_HOME"
+                    name: "Access Home"
+                  - code: "DIGITAL_BUSINESS"
+                    name: "Digital Business"
+        "401":
+          $ref: '#/components/responses/UnauthorizedResponse'
+
+tags:
+  - name: Auth
+    description: Authentication — register, login, logout, token refresh, and password reset
+  - name: Profile
+    description: Manage authenticated user's profile, bank info, and preferences
+  - name: Point
+    description: View current point balance
+  - name: Reward
+    description: View and create reward point transactions
+  - name: Redemption
+    description: Create and view redemption requests (cash, voucher, product)
+  - name: Customer
+    description: View customers associated with the authenticated partner
+  - name: CustomerService
+    description: View customer service subscriptions
+  - name: Service
+    description: Browse internet/service packages offered by Nusanet
+  - name: Template
+    description: Download marketing template assets (PNG, JPG, PSD, MP4)
+  - name: Catalog
+    description: Browse items available for point redemption
+  - name: Education
+    description: Browse educational articles and videos
+  - name: Statistic
+    description: Dashboard statistics and chart data
+  - name: Additional
+    description: Lookup/reference data for dropdowns and filters

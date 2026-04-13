@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { AppDataSource } from './config/database'
 import { serveStatic } from 'hono/bun'
+import { swaggerUI } from '@hono/swagger-ui'
 import api from './routes/api'
 import { ApiResponse } from './core/helpers/response'
 import { BaseException } from './core/exceptions/base'
@@ -22,6 +23,10 @@ AppDataSource.initialize()
 
 // Application Routes
 app.route('/api', api)
+
+// Swagger UI
+app.get('/api/swagger.yaml', serveStatic({ path: './swagger.yaml' }))
+app.get('/api/docs', swaggerUI({ url: '/api/swagger.yaml' }))
 
 // Static Files
 app.get('/api/uploads/*', (c, next) => {
