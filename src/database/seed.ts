@@ -4,14 +4,12 @@ import path from "path";
 
 async function seed() {
     try {
-        console.log("🌱 Starting database seeding...");
+        console.log("Starting database seeding...");
         
         await AppDataSource.initialize();
-        console.log("✅ Database connected.");
+        console.log("Database connected successfully.");
 
         const seedersDir = path.join(process.cwd(), "database/seeders");
-        
-        // Define order (same as master_seeder.sql)
         const seedFiles = [
             "users_seeder.sql",
             "catalog_seeder.sql",
@@ -22,30 +20,25 @@ async function seed() {
         ];
 
         for (const file of seedFiles) {
-            console.log(`⏳ Seeding ${file}...`);
             const filePath = path.join(seedersDir, file);
             
             if (!fs.existsSync(filePath)) {
-                console.warn(`⚠️  File ${file} not found, skipping.`);
+                console.warn(`Warning: File ${file} not found, skipping.`);
                 continue;
             }
 
+            console.log(`Executing ${file}...`);
             const sql = fs.readFileSync(filePath, "utf8");
             
-            // Remove SOURCE lines if any (though they shouldn't be in the individual files)
-            // Divide by semicolon but be careful with multi-line strings
-            // A simpler way for Bun is to just execute the whole thing if the driver supports it
-            // mysql2 supports multiple statements if enabled in connection options
-            
             await AppDataSource.query(sql);
-            console.log(`✅ ${file} completed.`);
+            console.log(`Completed ${file}.`);
         }
 
-        console.log("✨ Seeding finished successfully!");
+        console.log("Database seeding completed successfully.");
         await AppDataSource.destroy();
         process.exit(0);
     } catch (error) {
-        console.error("❌ Seeding failed:");
+        console.error("Database seeding failed:");
         console.error(error);
         process.exit(1);
     }

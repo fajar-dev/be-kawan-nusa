@@ -62,7 +62,8 @@ components:
         lastName: { type: string, example: "Santoso" }
         company: { type: string, example: "PT Nusanet" }
         jobPosition: { type: string, example: "Sales Manager" }
-        email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+        email:
+          { type: string, format: email, example: "budi.santoso@nusanet.id" }
         phone: { type: string, example: "081234567890" }
         password: { type: string, minLength: 6, example: "secret123" }
         accountHolderName: { type: string, example: "Budi Santoso" }
@@ -85,7 +86,8 @@ components:
       type: object
       required: [email]
       properties:
-        email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+        email:
+          { type: string, format: email, example: "budi.santoso@nusanet.id" }
 
     ResetPasswordRequest:
       type: object
@@ -98,7 +100,8 @@ components:
       type: object
       required: [refreshToken]
       properties:
-        refreshToken: { type: string, example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+        refreshToken:
+          { type: string, example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
 
     # --- User / Profile Schemas ---
     User:
@@ -107,15 +110,22 @@ components:
         id: { type: integer, example: 1 }
         firstName: { type: string, example: "Budi" }
         lastName: { type: string, example: "Santoso" }
-        photo: { type: string, nullable: true, example: "https://cdn.example.com/photo.jpg" }
-        email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+        photo:
+          {
+            type: string,
+            nullable: true,
+            example: "https://cdn.example.com/photo.jpg",
+          }
+        email:
+          { type: string, format: email, example: "budi.santoso@nusanet.id" }
         phone: { type: string, example: "081234567890" }
         company: { type: string, example: "PT Nusanet" }
         jobPosition: { type: string, example: "Sales Manager" }
         bankDetails:
           type: object
           properties:
-            holderName: { type: string, nullable: true, example: "Budi Santoso" }
+            holderName:
+              { type: string, nullable: true, example: "Budi Santoso" }
             name: { type: string, nullable: true, example: "BCA" }
             number: { type: string, nullable: true, example: "1234567890" }
         settings:
@@ -123,13 +133,24 @@ components:
           properties:
             isSubscribe: { type: boolean, example: true }
             isAutoWithdraw: { type: boolean, example: false }
-        passwordUpdatedAt: { type: string, format: date-time, nullable: true, example: "2025-01-15T10:30:00.000Z" }
-        createdAt: { type: string, format: date-time, example: "2024-06-01T08:00:00.000Z" }
+        passwordUpdatedAt:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            example: "2025-01-15T10:30:00.000Z",
+          }
+        createdAt:
+          {
+            type: string,
+            format: date-time,
+            example: "2024-06-01T08:00:00.000Z",
+          }
 
     AuthResponse:
       type: object
       properties:
-        user: { $ref: '#/components/schemas/User' }
+        user: { $ref: "#/components/schemas/User" }
         accessToken:
           type: string
           description: "JWT access token, expires in 15 minutes"
@@ -145,7 +166,8 @@ components:
       properties:
         firstName: { type: string, example: "Budi" }
         lastName: { type: string, example: "Santoso" }
-        email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+        email:
+          { type: string, format: email, example: "budi.santoso@nusanet.id" }
         phone: { type: string, example: "081234567890" }
         company: { type: string, example: "PT Nusanet" }
         jobPosition: { type: string, example: "Sales Manager" }
@@ -200,14 +222,14 @@ components:
 
     CustomerDetail:
       allOf:
-        - $ref: '#/components/schemas/Customer'
+        - $ref: "#/components/schemas/Customer"
         - type: object
           properties:
             totalCustomerServices: { type: integer, example: 3 }
             latestCustomerService:
               nullable: true
               allOf:
-                - $ref: '#/components/schemas/CustomerServiceItem'
+                - $ref: "#/components/schemas/CustomerServiceItem"
 
     CustomerServiceItem:
       type: object
@@ -215,13 +237,19 @@ components:
         id: { type: integer, example: 42 }
         customerId: { type: string, example: "CUST-0001" }
         serviceCode: { type: string, example: "SVC-FIBER-001" }
-        registrationDate: { type: string, format: date, nullable: true, example: "2024-01-10" }
-        activationDate: { type: string, format: date, nullable: true, example: "2024-01-15" }
-        address: { type: string, nullable: true, example: "Jl. Raya No.10, Surabaya" }
-        startDate: { type: string, format: date, nullable: true, example: "2024-01-15" }
-        endDate: { type: string, format: date, nullable: true, example: "2025-01-15" }
+        registrationDate:
+          { type: string, format: date, nullable: true, example: "2024-01-10" }
+        activationDate:
+          { type: string, format: date, nullable: true, example: "2024-01-15" }
+        address:
+          { type: string, nullable: true, example: "Jl. Raya No.10, Surabaya" }
+        startDate:
+          { type: string, format: date, nullable: true, example: "2024-01-15" }
+        endDate:
+          { type: string, format: date, nullable: true, example: "2025-01-15" }
         status: { type: string, example: "AC" }
-        referenceDate: { type: string, format: date, nullable: true, example: "2024-03-01" }
+        referenceDate:
+          { type: string, format: date, nullable: true, example: "2024-03-01" }
         salesName: { type: string, nullable: true, example: "Andi" }
         service:
           nullable: true
@@ -237,7 +265,12 @@ components:
           properties:
             point: { type: number, example: 500 }
             type: { type: string, example: "OTP" }
-            createdAt: { type: string, format: date-time, example: "2024-03-01T09:00:00.000Z" }
+            createdAt:
+              {
+                type: string,
+                format: date-time,
+                example: "2024-03-01T09:00:00.000Z",
+              }
 
     # --- Service Schemas ---
     Service:
@@ -246,7 +279,11 @@ components:
         id: { type: integer, example: 1 }
         code: { type: string, example: "SVC-FIBER-001" }
         name: { type: string, example: "Fiber Home 20 Mbps" }
-        description: { type: string, example: "Internet fiber optic untuk rumahan, kecepatan 20 Mbps" }
+        description:
+          {
+            type: string,
+            example: "Internet fiber optic untuk rumahan, kecepatan 20 Mbps",
+          }
         type: { type: string, example: "Internet" }
         isActive: { type: boolean, example: true }
         price: { type: number, example: 250000 }
@@ -256,8 +293,14 @@ components:
           type: array
           items: { type: string }
           example: ["Speed 20 Mbps", "Unlimited Quota", "24/7 Support"]
-        url: { type: string, nullable: true, example: "https://nusanet.id/products/fiber-home-20" }
-        lastReferanceDate: { type: string, format: date, nullable: true, example: "2024-03-15" }
+        url:
+          {
+            type: string,
+            nullable: true,
+            example: "https://nusanet.id/products/fiber-home-20",
+          }
+        lastReferanceDate:
+          { type: string, format: date, nullable: true, example: "2024-03-15" }
         totalCustomerServices: { type: integer, example: 25 }
         totalPoint: { type: number, example: 12500 }
 
@@ -272,16 +315,35 @@ components:
         point: { type: number, example: 500 }
         remainingPoint: { type: number, example: 500 }
         isExpired: { type: boolean, example: false }
-        type: { type: string, enum: ["OTP", "Bulanan", "Cashback"], example: "OTP" }
+        type:
+          { type: string, enum: ["OTP", "Bulanan", "Cashback"], example: "OTP" }
         customerService:
           nullable: true
           type: object
           properties:
             id: { type: integer, example: 42 }
             serviceCode: { type: string, example: "SVC-FIBER-001" }
-            activationDate: { type: string, format: date, nullable: true, example: "2024-01-15" }
-            startDate: { type: string, format: date, nullable: true, example: "2024-01-15" }
-            endDate: { type: string, format: date, nullable: true, example: "2025-01-15" }
+            activationDate:
+              {
+                type: string,
+                format: date,
+                nullable: true,
+                example: "2024-01-15",
+              }
+            startDate:
+              {
+                type: string,
+                format: date,
+                nullable: true,
+                example: "2024-01-15",
+              }
+            endDate:
+              {
+                type: string,
+                format: date,
+                nullable: true,
+                example: "2025-01-15",
+              }
         service:
           nullable: true
           type: object
@@ -294,7 +356,12 @@ components:
           properties:
             id: { type: string, example: "CUST-0001" }
             name: { type: string, example: "Warnet Jaya" }
-        createdAt: { type: string, format: date-time, example: "2024-03-01T09:00:00.000Z" }
+        createdAt:
+          {
+            type: string,
+            format: date-time,
+            example: "2024-03-01T09:00:00.000Z",
+          }
 
     CreateRewardRequest:
       type: object
@@ -315,9 +382,20 @@ components:
         id: { type: integer, example: 1 }
         redempNo: { type: string, example: "RED-20240301-0001" }
         pointsUsed: { type: number, example: 1000 }
-        type: { type: string, enum: ["cash", "voucher", "product"], example: "cash" }
-        status: { type: string, enum: ["pending", "processing", "completed", "cancelled"], example: "pending" }
-        notes: { type: string, nullable: true, example: "Mohon segera diproses" }
+        type:
+          {
+            type: string,
+            enum: ["cash", "voucher", "product"],
+            example: "cash",
+          }
+        status:
+          {
+            type: string,
+            enum: ["pending", "processing", "completed", "cancelled"],
+            example: "pending",
+          }
+        notes:
+          { type: string, nullable: true, example: "Mohon segera diproses" }
         withdrawDetails:
           nullable: true
           type: object
@@ -337,7 +415,11 @@ components:
               properties:
                 id: { type: integer, example: 5 }
                 name: { type: string, example: "Voucher Tokopedia 50K" }
-                image: { type: string, example: "https://cdn.example.com/voucher.jpg" }
+                image:
+                  {
+                    type: string,
+                    example: "https://cdn.example.com/voucher.jpg",
+                  }
                 category:
                   nullable: true
                   type: object
@@ -352,7 +434,8 @@ components:
               properties:
                 id: { type: integer, example: 10 }
                 code: { type: string, example: "VCHRTOKO50K-ABCDE" }
-                expiredDate: { type: string, format: date, example: "2024-12-31" }
+                expiredDate:
+                  { type: string, format: date, example: "2024-12-31" }
         productDetails:
           nullable: true
           type: object
@@ -363,7 +446,8 @@ components:
               properties:
                 id: { type: integer, example: 7 }
                 name: { type: string, example: "Mug Kawan Nusa" }
-                image: { type: string, example: "https://cdn.example.com/mug.jpg" }
+                image:
+                  { type: string, example: "https://cdn.example.com/mug.jpg" }
                 category:
                   nullable: true
                   type: object
@@ -381,8 +465,18 @@ components:
                 id: { type: integer, example: 3 }
                 shipper: { type: string, example: "jne" }
                 trackingNumber: { type: string, example: "JNE001234567890" }
-                shippedAt: { type: string, format: date-time, example: "2024-03-05T14:00:00.000Z" }
-        createdAt: { type: string, format: date-time, example: "2024-03-01T09:00:00.000Z" }
+                shippedAt:
+                  {
+                    type: string,
+                    format: date-time,
+                    example: "2024-03-05T14:00:00.000Z",
+                  }
+        createdAt:
+          {
+            type: string,
+            format: date-time,
+            example: "2024-03-01T09:00:00.000Z",
+          }
 
     CreateCashRedemptionRequest:
       type: object
@@ -403,7 +497,11 @@ components:
       required: [catalogId, address]
       properties:
         catalogId: { type: integer, example: 7 }
-        address: { type: string, example: "Jl. Raya No.10 RT 01/02, Kel. Tegalsari, Kec. Tegalsari, Surabaya 60111" }
+        address:
+          {
+            type: string,
+            example: "Jl. Raya No.10 RT 01/02, Kel. Tegalsari, Kec. Tegalsari, Surabaya 60111",
+          }
         notes: { type: string, example: "Tolong dikirim pagi hari" }
 
     # --- Catalog Schemas ---
@@ -412,9 +510,17 @@ components:
       properties:
         id: { type: integer, example: 5 }
         name: { type: string, example: "Voucher Tokopedia 50K" }
-        description: { type: string, example: "Voucher belanja Tokopedia senilai Rp 50.000" }
+        description:
+          {
+            type: string,
+            example: "Voucher belanja Tokopedia senilai Rp 50.000",
+          }
         point: { type: number, example: 500 }
-        image: { type: string, example: "https://cdn.example.com/voucher-tokopedia.jpg" }
+        image:
+          {
+            type: string,
+            example: "https://cdn.example.com/voucher-tokopedia.jpg",
+          }
         type: { type: string, example: "voucher" }
         category:
           type: object
@@ -427,9 +533,15 @@ components:
       type: object
       properties:
         id: { type: integer, example: 1 }
-        title: { type: string, example: "Tips Memaksimalkan Koneksi Internet Fiber" }
-        content: { type: string, example: "Internet fiber optik adalah teknologi koneksi..." }
-        image: { type: string, example: "https://cdn.example.com/article-fiber.jpg" }
+        title:
+          { type: string, example: "Tips Memaksimalkan Koneksi Internet Fiber" }
+        content:
+          {
+            type: string,
+            example: "Internet fiber optik adalah teknologi koneksi...",
+          }
+        image:
+          { type: string, example: "https://cdn.example.com/article-fiber.jpg" }
         author: { type: string, example: "Tim Nusanet" }
         readingTime: { type: string, example: "3 menit baca" }
         isView: { type: boolean, example: false }
@@ -440,16 +552,28 @@ components:
           properties:
             id: { type: integer, example: 1 }
             name: { type: string, example: "Tips & Trik" }
-        createdAt: { type: string, format: date-time, example: "2024-02-10T08:00:00.000Z" }
+        createdAt:
+          {
+            type: string,
+            format: date-time,
+            example: "2024-02-10T08:00:00.000Z",
+          }
 
     EducationVideo:
       type: object
       properties:
         id: { type: integer, example: 1 }
-        title: { type: string, example: "Cara Menggunakan Dashboard Kawan Nusa" }
-        url: { type: string, example: "https://www.youtube.com/watch?v=example" }
-        thumbnail: { type: string, example: "https://cdn.example.com/video-thumb.jpg" }
-        description: { type: string, example: "Tutorial lengkap menggunakan fitur-fitur dashboard Kawan Nusa" }
+        title:
+          { type: string, example: "Cara Menggunakan Dashboard Kawan Nusa" }
+        url:
+          { type: string, example: "https://www.youtube.com/watch?v=example" }
+        thumbnail:
+          { type: string, example: "https://cdn.example.com/video-thumb.jpg" }
+        description:
+          {
+            type: string,
+            example: "Tutorial lengkap menggunakan fitur-fitur dashboard Kawan Nusa",
+          }
         author: { type: string, example: "Tim Nusanet" }
         isView: { type: boolean, example: true }
         categoryId: { type: integer, example: 2 }
@@ -459,7 +583,12 @@ components:
           properties:
             id: { type: integer, example: 2 }
             name: { type: string, example: "Tutorial" }
-        createdAt: { type: string, format: date-time, example: "2024-02-15T08:00:00.000Z" }
+        createdAt:
+          {
+            type: string,
+            format: date-time,
+            example: "2024-02-15T08:00:00.000Z",
+          }
 
     # --- Template Schemas ---
     Template:
@@ -467,14 +596,49 @@ components:
       properties:
         id: { type: integer, example: 1 }
         name: { type: string, example: "Banner Promo Lebaran 2024" }
-        description: { type: string, nullable: true, example: "Template banner untuk promosi Hari Raya Lebaran" }
-        thumbnail: { type: string, nullable: true, example: "https://cdn.example.com/template-thumb.jpg" }
-        png: { type: string, nullable: true, example: "https://cdn.example.com/template.png" }
-        jpg: { type: string, nullable: true, example: "https://cdn.example.com/template.jpg" }
-        psd: { type: string, nullable: true, example: "https://cdn.example.com/template.psd" }
-        mp4: { type: string, nullable: true, example: "https://cdn.example.com/template.mp4" }
+        description:
+          {
+            type: string,
+            nullable: true,
+            example: "Template banner untuk promosi Hari Raya Lebaran",
+          }
+        thumbnail:
+          {
+            type: string,
+            nullable: true,
+            example: "https://cdn.example.com/template-thumb.jpg",
+          }
+        png:
+          {
+            type: string,
+            nullable: true,
+            example: "https://cdn.example.com/template.png",
+          }
+        jpg:
+          {
+            type: string,
+            nullable: true,
+            example: "https://cdn.example.com/template.jpg",
+          }
+        psd:
+          {
+            type: string,
+            nullable: true,
+            example: "https://cdn.example.com/template.psd",
+          }
+        mp4:
+          {
+            type: string,
+            nullable: true,
+            example: "https://cdn.example.com/template.mp4",
+          }
         isActive: { type: boolean, example: true }
-        createdAt: { type: string, format: date-time, example: "2024-01-20T08:00:00.000Z" }
+        createdAt:
+          {
+            type: string,
+            format: date-time,
+            example: "2024-01-20T08:00:00.000Z",
+          }
 
     # --- Service Promotion Schemas ---
     ServicePromotion:
@@ -482,12 +646,32 @@ components:
       properties:
         id: { type: integer, example: 1 }
         title: { type: string, example: "Promo Double Speed Februari 2024" }
-        description: { type: string, example: "Upgrade kecepatan internet Anda 2x lipat tanpa biaya tambahan" }
-        image: { type: string, example: "https://cdn.example.com/promo-feb.jpg" }
-        url: { type: string, nullable: true, example: "https://nusanet.id/promo/double-speed" }
+        description:
+          {
+            type: string,
+            example: "Upgrade kecepatan internet Anda 2x lipat tanpa biaya tambahan",
+          }
+        image:
+          { type: string, example: "https://cdn.example.com/promo-feb.jpg" }
+        url:
+          {
+            type: string,
+            nullable: true,
+            example: "https://nusanet.id/promo/double-speed",
+          }
         startPeriod: { type: string, format: date, example: "2024-02-01" }
         endPeriod: { type: string, format: date, example: "2024-02-29" }
-        createdAt: { type: string, format: date-time, example: "2024-01-25T08:00:00.000Z" }
+        createdAt:
+          {
+            type: string,
+            format: date-time,
+            example: "2024-01-25T08:00:00.000Z",
+          }
+        service:
+          type: object
+          properties:
+            code: { type: string, example: "SVC-FIBER-001" }
+            name: { type: string, example: "Fiber Home 20 Mbps" }
 
     # --- Statistics Schemas ---
     Achievement:
@@ -503,17 +687,17 @@ components:
           type: object
           properties:
             value: { type: integer, example: 148 }
-            achievement: { $ref: '#/components/schemas/Achievement' }
+            achievement: { $ref: "#/components/schemas/Achievement" }
         customerService:
           type: object
           properties:
             value: { type: integer, example: 215 }
-            achievement: { $ref: '#/components/schemas/Achievement' }
+            achievement: { $ref: "#/components/schemas/Achievement" }
         point:
           type: object
           properties:
             value: { type: integer, example: 25500 }
-            achievement: { $ref: '#/components/schemas/Achievement' }
+            achievement: { $ref: "#/components/schemas/Achievement" }
 
     # --- Additional Schemas ---
     AdditionalItem:
@@ -566,7 +750,7 @@ components:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/BaseResponse'
+              - $ref: "#/components/schemas/BaseResponse"
             example:
               success: false
               statusCode: 401
@@ -578,7 +762,7 @@ components:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/BaseResponse'
+              - $ref: "#/components/schemas/BaseResponse"
             example:
               success: false
               statusCode: 404
@@ -588,7 +772,7 @@ components:
       description: Validation Error
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ValidationError' }
+          schema: { $ref: "#/components/schemas/ValidationError" }
 
 paths:
   # =============================================
@@ -602,7 +786,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RegisterRequest' }
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
             example:
               firstName: "Budi"
               lastName: "Santoso"
@@ -623,10 +807,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BaseResponse'
+                  - $ref: "#/components/schemas/BaseResponse"
                   - type: object
                     properties:
-                      data: { $ref: '#/components/schemas/User' }
+                      data: { $ref: "#/components/schemas/User" }
               example:
                 success: true
                 statusCode: 201
@@ -650,7 +834,7 @@ paths:
                   passwordUpdatedAt: null
                   createdAt: "2024-06-01T08:00:00.000Z"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /auth/login:
     post:
@@ -660,7 +844,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/LoginRequest' }
+            schema: { $ref: "#/components/schemas/LoginRequest" }
             example:
               identifier: "budi.santoso@nusanet.id"
               password: "secret123"
@@ -671,10 +855,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BaseResponse'
+                  - $ref: "#/components/schemas/BaseResponse"
                   - type: object
                     properties:
-                      data: { $ref: '#/components/schemas/AuthResponse' }
+                      data: { $ref: "#/components/schemas/AuthResponse" }
               example:
                 success: true
                 statusCode: 200
@@ -708,7 +892,7 @@ paths:
                 statusCode: 401
                 message: "Invalid credentials"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /auth/forgot-password:
     post:
@@ -718,7 +902,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ForgotPasswordRequest' }
+            schema: { $ref: "#/components/schemas/ForgotPasswordRequest" }
             example:
               email: "budi.santoso@nusanet.id"
       responses:
@@ -740,7 +924,7 @@ paths:
                 statusCode: 400
                 message: "Email not found"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /auth/validate-reset-token:
     get:
@@ -785,7 +969,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ResetPasswordRequest' }
+            schema: { $ref: "#/components/schemas/ResetPasswordRequest" }
             example:
               token: "a3f8c2d1e9b4..."
               newPassword: "newSecret123"
@@ -808,7 +992,7 @@ paths:
                 statusCode: 400
                 message: "Invalid or expired reset token"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /auth/refresh:
     post:
@@ -818,7 +1002,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RefreshTokenRequest' }
+            schema: { $ref: "#/components/schemas/RefreshTokenRequest" }
             example:
               refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
@@ -828,10 +1012,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BaseResponse'
+                  - $ref: "#/components/schemas/BaseResponse"
                   - type: object
                     properties:
-                      data: { $ref: '#/components/schemas/AuthResponse' }
+                      data: { $ref: "#/components/schemas/AuthResponse" }
               example:
                 success: true
                 statusCode: 200
@@ -865,10 +1049,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BaseResponse'
+                  - $ref: "#/components/schemas/BaseResponse"
                   - type: object
                     properties:
-                      data: { $ref: '#/components/schemas/User' }
+                      data: { $ref: "#/components/schemas/User" }
               example:
                 success: true
                 statusCode: 200
@@ -891,7 +1075,7 @@ paths:
                     isAutoWithdraw: false
                   createdAt: "2024-06-01T08:00:00.000Z"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /auth/logout:
     post:
@@ -909,7 +1093,7 @@ paths:
                 message: "Logged out successfully"
                 data: null
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   # =============================================
   # PROFILE ROUTES
@@ -926,10 +1110,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BaseResponse'
+                  - $ref: "#/components/schemas/BaseResponse"
                   - type: object
                     properties:
-                      data: { $ref: '#/components/schemas/User' }
+                      data: { $ref: "#/components/schemas/User" }
               example:
                 success: true
                 statusCode: 200
@@ -952,7 +1136,7 @@ paths:
                     isAutoWithdraw: false
                   createdAt: "2024-06-01T08:00:00.000Z"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /profile/account:
     put:
@@ -963,7 +1147,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdateAccountRequest' }
+            schema: { $ref: "#/components/schemas/UpdateAccountRequest" }
             example:
               firstName: "Budi"
               lastName: "Wijaya"
@@ -982,9 +1166,9 @@ paths:
                 message: "Account updated successfully"
                 data: null
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /profile/bank:
     put:
@@ -995,7 +1179,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdateBankRequest' }
+            schema: { $ref: "#/components/schemas/UpdateBankRequest" }
             example:
               accountHolderName: "Budi Santoso"
               bankName: "Mandiri"
@@ -1011,9 +1195,9 @@ paths:
                 message: "Bank details updated successfully"
                 data: null
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /profile/preference:
     put:
@@ -1024,7 +1208,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdatePreferenceRequest' }
+            schema: { $ref: "#/components/schemas/UpdatePreferenceRequest" }
             example:
               isSubscribe: true
               isAutoWithdraw: false
@@ -1039,7 +1223,7 @@ paths:
                 message: "Preferences updated successfully"
                 data: null
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /profile/password:
     put:
@@ -1050,7 +1234,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdatePasswordRequest' }
+            schema: { $ref: "#/components/schemas/UpdatePasswordRequest" }
             example:
               oldPassword: "secret123"
               newPassword: "newSecret456"
@@ -1073,9 +1257,9 @@ paths:
                 statusCode: 400
                 message: "Old password is incorrect"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /profile/photo:
     post:
@@ -1106,9 +1290,9 @@ paths:
                 message: "Photo updated successfully"
                 data: null
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   # =============================================
   # POINT ROUTES
@@ -1131,7 +1315,7 @@ paths:
                 data:
                   value: 25500
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   # =============================================
   # REWARD ROUTES
@@ -1142,16 +1326,16 @@ paths:
       tags: [Reward]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
           description: "Sort field (e.g. createdAt, point, price)"
           schema: { type: string, default: "createdAt" }
-        - $ref: '#/components/parameters/OrderParam'
-        - $ref: '#/components/parameters/StartDateParam'
-        - $ref: '#/components/parameters/EndDateParam'
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
         - name: "type[]"
           in: query
           description: "Filter by reward type (repeatable)"
@@ -1200,7 +1384,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
     post:
       summary: Create a new reward (Internal use only)
@@ -1211,7 +1395,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateRewardRequest' }
+            schema: { $ref: "#/components/schemas/CreateRewardRequest" }
             example:
               customerServiceId: 42
               price: 250000
@@ -1237,7 +1421,7 @@ paths:
                   type: "OTP"
                   createdAt: "2024-03-01T09:00:00.000Z"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "404":
           description: Customer service not found
           content:
@@ -1247,7 +1431,7 @@ paths:
                 statusCode: 404
                 message: "Customer service not found"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   # =============================================
   # REDEMPTION ROUTES
@@ -1258,22 +1442,26 @@ paths:
       tags: [Redemption]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
           description: "Sort field (e.g. createdAt, pointsUsed)"
           schema: { type: string, default: "createdAt" }
-        - $ref: '#/components/parameters/OrderParam'
-        - $ref: '#/components/parameters/StartDateParam'
-        - $ref: '#/components/parameters/EndDateParam'
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
         - name: "status[]"
           in: query
           description: "Filter by redemption status (repeatable)"
           schema:
             type: array
-            items: { type: string, enum: ["pending", "processing", "completed", "cancelled"] }
+            items:
+              {
+                type: string,
+                enum: ["pending", "processing", "completed", "cancelled"],
+              }
           style: form
           explode: true
         - name: "type[]"
@@ -1317,7 +1505,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /redemption/cash:
     post:
@@ -1329,7 +1517,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateCashRedemptionRequest' }
+            schema: { $ref: "#/components/schemas/CreateCashRedemptionRequest" }
             example:
               pointsUsed: 1000
               notes: "Mohon segera diproses"
@@ -1367,9 +1555,9 @@ paths:
                 statusCode: 400
                 message: "Insufficient point balance. Available: 800, Required: 1000"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /redemption/voucher:
     post:
@@ -1381,7 +1569,8 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateRedemptionVoucherRequest' }
+            schema:
+              { $ref: "#/components/schemas/CreateRedemptionVoucherRequest" }
             example:
               catalogId: 5
               notes: "Voucher untuk hadiah"
@@ -1424,9 +1613,9 @@ paths:
                 statusCode: 400
                 message: "Insufficient point balance. Available: 400, Required: 500"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /redemption/product:
     post:
@@ -1438,7 +1627,8 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateRedemptionProductRequest' }
+            schema:
+              { $ref: "#/components/schemas/CreateRedemptionProductRequest" }
             example:
               catalogId: 7
               address: "Jl. Raya No.10 RT 01/02, Kel. Tegalsari, Kec. Tegalsari, Surabaya 60111"
@@ -1484,9 +1674,9 @@ paths:
                 statusCode: 400
                 message: "Catalog item not found"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "422":
-          $ref: '#/components/responses/ValidationErrorResponse'
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /redemption/{id}:
     get:
@@ -1507,10 +1697,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BaseResponse'
+                  - $ref: "#/components/schemas/BaseResponse"
                   - type: object
                     properties:
-                      data: { $ref: '#/components/schemas/Redemption' }
+                      data: { $ref: "#/components/schemas/Redemption" }
               example:
                 success: true
                 statusCode: 200
@@ -1532,9 +1722,9 @@ paths:
                   productDetails: null
                   createdAt: "2024-03-01T09:00:00.000Z"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "404":
-          $ref: '#/components/responses/NotFoundResponse'
+          $ref: "#/components/responses/NotFoundResponse"
 
   /redemption/{id}/receipt:
     get:
@@ -1605,8 +1795,8 @@ paths:
       tags: [Customer]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
         - name: q
           in: query
           description: "Search by customer ID, name, or company"
@@ -1615,7 +1805,7 @@ paths:
           in: query
           description: "Sort field (id, name, company, registrationDate, isActive, createdAt, updatedAt)"
           schema: { type: string, default: "registrationDate" }
-        - $ref: '#/components/parameters/OrderParam'
+        - $ref: "#/components/parameters/OrderParam"
         - name: isActive
           in: query
           description: "Filter by active status (1 = active, 0 = inactive)"
@@ -1670,7 +1860,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /customer/{id}:
     get:
@@ -1691,10 +1881,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BaseResponse'
+                  - $ref: "#/components/schemas/BaseResponse"
                   - type: object
                     properties:
-                      data: { $ref: '#/components/schemas/CustomerDetail' }
+                      data: { $ref: "#/components/schemas/CustomerDetail" }
               example:
                 success: true
                 statusCode: 200
@@ -1732,9 +1922,9 @@ paths:
                       type: "OTP"
                       createdAt: "2024-03-01T09:00:00.000Z"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "404":
-          $ref: '#/components/responses/NotFoundResponse'
+          $ref: "#/components/responses/NotFoundResponse"
 
   /customer/{id}/service:
     get:
@@ -1748,14 +1938,14 @@ paths:
           description: Customer ID
           schema: { type: string }
           example: "CUST-0001"
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
           description: "Sort field (e.g. referenceDate, registrationDate, activationDate, totalPoint, latestReward.point)"
           schema: { type: string, default: "referenceDate" }
-        - $ref: '#/components/parameters/OrderParam'
+        - $ref: "#/components/parameters/OrderParam"
         - name: startRegistration
           in: query
           description: Filter by registration date from (YYYY-MM-DD)
@@ -1818,9 +2008,9 @@ paths:
                   from: 1
                   to: 3
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "404":
-          $ref: '#/components/responses/NotFoundResponse'
+          $ref: "#/components/responses/NotFoundResponse"
 
   /customer/{id}/reward:
     get:
@@ -1834,15 +2024,15 @@ paths:
           description: Customer ID
           schema: { type: string }
           example: "CUST-0001"
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
           schema: { type: string, default: "createdAt" }
-        - $ref: '#/components/parameters/OrderParam'
-        - $ref: '#/components/parameters/StartDateParam'
-        - $ref: '#/components/parameters/EndDateParam'
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
         - name: "type[]"
           in: query
           description: "Filter by reward type (repeatable)"
@@ -1884,7 +2074,7 @@ paths:
                   from: 1
                   to: 8
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   # =============================================
   # SERVICE ROUTES
@@ -1895,9 +2085,9 @@ paths:
       tags: [Service]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
           description: "Sort field (name, code, totalCustomerServices, lastReferanceDate, totalPoint)"
@@ -1905,8 +2095,8 @@ paths:
         - name: order
           in: query
           schema: { type: string, enum: [ASC, DESC], default: ASC }
-        - $ref: '#/components/parameters/StartDateParam'
-        - $ref: '#/components/parameters/EndDateParam'
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
         - name: isActive
           in: query
           description: Filter by active status (1 or 0)
@@ -1914,7 +2104,11 @@ paths:
         - name: category
           in: query
           description: "Filter by service category"
-          schema: { type: string, enum: ["Access Business", "Access Home", "Digital Business"] }
+          schema:
+            {
+              type: string,
+              enum: ["Access Business", "Access Home", "Digital Business"],
+            }
       responses:
         "200":
           description: Service list retrieved successfully
@@ -1947,7 +2141,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /service/{code}:
     get:
@@ -1986,9 +2180,9 @@ paths:
                   totalCustomerServices: 25
                   totalPoint: 12500
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "404":
-          $ref: '#/components/responses/NotFoundResponse'
+          $ref: "#/components/responses/NotFoundResponse"
 
   /service/{code}/customer:
     get:
@@ -2002,13 +2196,13 @@ paths:
           description: Service code
           schema: { type: string }
           example: "SVC-FIBER-001"
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
           schema: { type: string, default: "referenceDate" }
-        - $ref: '#/components/parameters/OrderParam'
+        - $ref: "#/components/parameters/OrderParam"
         - name: startRegistration
           in: query
           schema: { type: string, format: date, example: "2024-01-01" }
@@ -2053,7 +2247,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /service/promotion:
     get:
@@ -2061,9 +2255,9 @@ paths:
       tags: [Service]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
       responses:
         "200":
           description: Service promotions retrieved successfully
@@ -2082,6 +2276,9 @@ paths:
                     startPeriod: "2024-02-01"
                     endPeriod: "2024-02-29"
                     createdAt: "2024-01-25T08:00:00.000Z"
+                    service:
+                      code: "SVC-FIBER-001"
+                      name: "Fiber Home 20 Mbps"
                 meta:
                   total: 5
                   perPage: 10
@@ -2090,7 +2287,7 @@ paths:
                   from: 1
                   to: 5
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   # =============================================
   # CUSTOMER SERVICE ROUTES
@@ -2101,16 +2298,16 @@ paths:
       tags: [CustomerService]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
           description: "Sort field (e.g. referenceDate, registrationDate, totalPoint, latestReward.point, latestReward.type)"
           schema: { type: string, default: "referenceDate" }
-        - $ref: '#/components/parameters/OrderParam'
-        - $ref: '#/components/parameters/StartDateParam'
-        - $ref: '#/components/parameters/EndDateParam'
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
         - name: "type[]"
           in: query
           description: "Filter by latest reward type (repeatable)"
@@ -2166,7 +2363,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   # =============================================
   # TEMPLATE ROUTES
@@ -2177,9 +2374,9 @@ paths:
       tags: [Template]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
       responses:
         "200":
           description: Templates retrieved successfully
@@ -2208,7 +2405,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /template/{id}:
     get:
@@ -2242,9 +2439,9 @@ paths:
                   isActive: true
                   createdAt: "2024-01-20T08:00:00.000Z"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "404":
-          $ref: '#/components/responses/NotFoundResponse'
+          $ref: "#/components/responses/NotFoundResponse"
 
   /template/{id}/download:
     get:
@@ -2285,9 +2482,9 @@ paths:
       tags: [Catalog]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: categoryId
           in: query
           description: Filter by category ID
@@ -2328,7 +2525,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /catalog/{id}:
     get:
@@ -2361,9 +2558,9 @@ paths:
                     id: 2
                     name: "E-Commerce"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "404":
-          $ref: '#/components/responses/NotFoundResponse'
+          $ref: "#/components/responses/NotFoundResponse"
 
   /catalog/category:
     get:
@@ -2387,7 +2584,7 @@ paths:
                   - id: 3
                     name: "Merchandise"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   # =============================================
   # EDUCATION ROUTES
@@ -2398,9 +2595,9 @@ paths:
       tags: [Education]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: categoryId
           in: query
           description: Filter by education category ID
@@ -2439,7 +2636,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /education/article/{id}:
     get:
@@ -2476,9 +2673,9 @@ paths:
                     name: "Tips & Trik"
                   createdAt: "2024-02-10T08:00:00.000Z"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "404":
-          $ref: '#/components/responses/NotFoundResponse'
+          $ref: "#/components/responses/NotFoundResponse"
 
   /education/video:
     get:
@@ -2486,9 +2683,9 @@ paths:
       tags: [Education]
       security: [{ bearerAuth: [] }]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - $ref: '#/components/parameters/SearchParam'
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: categoryId
           in: query
           description: Filter by education category ID
@@ -2527,7 +2724,7 @@ paths:
                   from: 1
                   to: 10
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /education/video/{id}:
     get:
@@ -2564,9 +2761,9 @@ paths:
                     name: "Tutorial"
                   createdAt: "2024-02-15T08:00:00.000Z"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
         "404":
-          $ref: '#/components/responses/NotFoundResponse'
+          $ref: "#/components/responses/NotFoundResponse"
 
   /education/category:
     get:
@@ -2590,7 +2787,7 @@ paths:
                   - id: 3
                     name: "Berita"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   # =============================================
   # STATISTIC ROUTES
@@ -2627,7 +2824,7 @@ paths:
                       percentage: 5
                       isUp: false
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /statistic/point:
     get:
@@ -2653,7 +2850,7 @@ paths:
                   - label: "April"
                     total: 0
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /statistic/customer:
     get:
@@ -2702,7 +2899,7 @@ paths:
                       - label: "3 Maret"
                         count: 1
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /statistic/redemption-reward:
     get:
@@ -2728,7 +2925,7 @@ paths:
                   - status: "cancelled"
                     count: 3
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   # =============================================
   # ADDITIONAL / LOOKUP ROUTES
@@ -2755,7 +2952,7 @@ paths:
                   - code: "SVC-BIZ-001"
                     name: "Business Fiber 100 Mbps"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /additional/customer-type:
     get:
@@ -2783,7 +2980,7 @@ paths:
                   - code: "WARNET"
                     name: "Warnet"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /additional/customer-service-status:
     get:
@@ -2809,7 +3006,7 @@ paths:
                   - code: "FR"
                     name: "Free"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /additional/reward-point-type:
     get:
@@ -2833,7 +3030,7 @@ paths:
                   - code: "CASHBACK"
                     name: "Cashback"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /additional/service-category:
     get:
@@ -2857,7 +3054,7 @@ paths:
                   - code: "DIGITAL_BUSINESS"
                     name: "Digital Business"
         "401":
-          $ref: '#/components/responses/UnauthorizedResponse'
+          $ref: "#/components/responses/UnauthorizedResponse"
 
 tags:
   - name: Auth

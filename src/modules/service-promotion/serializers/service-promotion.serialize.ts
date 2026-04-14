@@ -10,6 +10,10 @@ export class ServicePromotionSerializer {
             url: item.url,
             startPeriod: item.startPeriod,
             endPeriod: item.endPeriod,
+            service: item.service ? {
+                code: item.service.code,
+                name: item.service.name
+            } : null,
             createdAt: item.createdAt
         }
     }

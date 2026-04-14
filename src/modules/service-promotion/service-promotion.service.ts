@@ -11,6 +11,7 @@ export class ServicePromotionService {
 
     async getAll(page: number = 1, limit: number = 10, q: string = "") {
         const query = this.repository.createQueryBuilder("promotion")
+            .leftJoinAndSelect("promotion.service", "service")
             .where("promotion.isActive = :isActive", { isActive: true })
 
         if (q) {
