@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from "typeorm"
 import type { Relation } from "typeorm"
 import { EducationArticle } from "../../education-article/entities/education-article.entity"
 import { EducationVideo } from "../../education-video/entities/education-video.entity"
@@ -8,6 +8,7 @@ export class EducationCategory {
     @PrimaryGeneratedColumn()
     id!: number
 
+    @Index()
     @Column()
     name!: string
 

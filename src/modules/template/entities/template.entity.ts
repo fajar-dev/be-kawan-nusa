@@ -5,6 +5,7 @@ export class Template {
     @PrimaryGeneratedColumn()
     id!: number
 
+    @Index()
     @Column()
     name!: string
 

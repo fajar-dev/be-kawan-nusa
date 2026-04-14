@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from "typeorm"
 
 @Entity("service_promotions")
 export class ServicePromotion {
     @PrimaryGeneratedColumn()
     id!: number
 
+    @Index()
     @Column()
     title!: string
 
@@ -23,6 +24,7 @@ export class ServicePromotion {
     @Column({ name: "end_period", type: "date", nullable: true })
     endPeriod?: Date
     
+    @Index()
     @Column({ name: "is_active", default: true })
     isActive!: boolean
 

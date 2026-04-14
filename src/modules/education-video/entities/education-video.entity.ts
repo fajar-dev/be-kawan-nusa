@@ -12,6 +12,7 @@ export class EducationVideo {
     @Column({ name: "category_id" })
     categoryId!: number
 
+    @Index()
     @Column()
     title!: string
 
@@ -37,6 +38,7 @@ export class EducationVideo {
     // Virtual properties (populated via manual mapping)
     isViewed?: boolean
 
+    @Index()
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
 
