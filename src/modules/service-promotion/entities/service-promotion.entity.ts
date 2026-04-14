@@ -1,9 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn } from "typeorm"
+import type { Relation } from "typeorm"
+import { Service } from "../../service/entities/service.entity"
 
 @Entity("service_promotions")
 export class ServicePromotion {
     @PrimaryGeneratedColumn()
     id!: number
+
+    @Index()
+    @Column({ name: "service_code", nullable: true })
+    serviceCode?: string
 
     @Index()
     @Column()
@@ -28,9 +34,14 @@ export class ServicePromotion {
     @Column({ name: "is_active", default: true })
     isActive!: boolean
 
+    @Index()
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
 
     @UpdateDateColumn({ name: "updated_at" })
     updatedAt!: Date
+
+    @ManyToOne(() => Service)
+    @JoinColumn({ name: "service_code", referencedColumnName: "code" })
+    service?: Relation<Service>
 }

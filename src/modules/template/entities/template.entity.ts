@@ -31,6 +31,7 @@ export class Template {
     @Column({ name: "is_active", default: true })
     isActive!: boolean
 
+    @Index()
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
 

@@ -40,5 +40,8 @@ export const AppDataSource = new DataSource({
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",
-    charset: "utf8mb4_unicode_ci"
+    charset: "utf8mb4_unicode_ci",
+    extra: {
+        multipleStatements: true
+    }
 })
