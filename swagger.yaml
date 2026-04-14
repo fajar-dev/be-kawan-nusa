@@ -706,6 +706,13 @@ components:
         code: { type: string, example: "WARNET" }
         name: { type: string, example: "Warnet" }
 
+    SearchResult:
+      type: object
+      properties:
+        title: { type: string, example: "Warnet Jaya" }
+        module: { type: string, example: "Customer" }
+        route: { type: string, example: "/customer/CUST-0001" }
+
   parameters:
     PageParam:
       name: page
@@ -3053,6 +3060,33 @@ paths:
                     name: "Access Home"
                   - code: "DIGITAL_BUSINESS"
                     name: "Digital Business"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /additional/search:
+    get:
+      summary: Global search across modules (Customer, Service, Education)
+      description: "Performs a UNION search across multiple modules. Customers are filtered based on the logged-in user."
+      tags: [Additional]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/SearchParam"
+      responses:
+        "200":
+          description: Search results retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Search results retrieved successfully"
+                data:
+                  - title: "Warnet Jaya"
+                    module: "customer"
+                    route: "/customer/CUST-0001"
+                  - title: "Fiber Home 20 Mbps"
+                    module: "service"
+                    route: "/service/SVC-FIBER-001"
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 

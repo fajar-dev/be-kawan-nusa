@@ -57,4 +57,15 @@ export class AdditionalController {
             "Additional service categories list retrieved successfully"
         )
     }
+
+    async search(c: Context) {
+        const q = c.req.query('q') || ""
+        const user = c.get('user')
+        const data = await this.additionalService.search(q, user?.id)
+        return ApiResponse.success(
+            c, 
+            data, 
+            "Search results retrieved successfully"
+        )
+    }
 }

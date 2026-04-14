@@ -126,5 +126,6 @@ routes.get('/additional/customer-type', authMiddleware, (c) => additionalControl
 routes.get('/additional/customer-service-status', authMiddleware, (c) => additionalController.getCustomerServiceStatus(c))
 routes.get('/additional/reward-point-type', authMiddleware, (c) => additionalController.getRewardPointTypes(c))
 routes.get('/additional/service-category', authMiddleware, (c) => additionalController.getServiceCategories(c))
+routes.get('/additional/search', authMiddleware, (c) => additionalController.search(c))
 
 export default routes
