@@ -27,7 +27,7 @@ export class EducationArticleService {
             if (isView) {
                 query.andWhere(qb => {
                     const subQuery = qb.subQuery()
-                        .select("view.articleId")
+                        .select("view.educationArticleId")
                         .from(EducationArticleView, "view")
                         .where("view.userId = :currentUserId", { currentUserId })
                         .getQuery()
@@ -36,7 +36,7 @@ export class EducationArticleService {
             } else {
                 query.andWhere(qb => {
                     const subQuery = qb.subQuery()
-                        .select("view.articleId")
+                        .select("view.educationArticleId")
                         .from(EducationArticleView, "view")
                         .where("view.userId = :currentUserId", { currentUserId })
                         .getQuery()

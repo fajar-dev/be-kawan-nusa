@@ -27,7 +27,7 @@ export class EducationVideoService {
             if (isView) {
                 query.andWhere(qb => {
                     const subQuery = qb.subQuery()
-                        .select("view.videoId")
+                        .select("view.educationVideoId")
                         .from(EducationVideoView, "view")
                         .where("view.userId = :currentUserId", { currentUserId })
                         .getQuery()
@@ -36,7 +36,7 @@ export class EducationVideoService {
             } else {
                 query.andWhere(qb => {
                     const subQuery = qb.subQuery()
-                        .select("view.videoId")
+                        .select("view.educationVideoId")
                         .from(EducationVideoView, "view")
                         .where("view.userId = :currentUserId", { currentUserId })
                         .getQuery()
