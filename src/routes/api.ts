@@ -24,6 +24,8 @@ import { EducationArticleController } from '../modules/education-article/educati
 import { EducationVideoController } from '../modules/education-video/education-video.controller'
 import { ServicePromotionController } from '../modules/service-promotion/service-promotion.controller'
 import { TemplateController } from '../modules/template/template.controller'
+import { FeedbackController } from '../modules/feedback/feedback.controller'
+import { StoreFeedbackValidator } from '../modules/feedback/validators/feedback.validator'
 import { validationHook } from '../core/helpers/validator'
 
 const routes = new Hono()
@@ -44,6 +46,7 @@ const educationArticleController = new EducationArticleController()
 const educationVideoController = new EducationVideoController()
 const servicePromotionController = new ServicePromotionController()
 const templateController = new TemplateController()
+const feedbackController = new FeedbackController()
 
 
 // Auth Routes
@@ -119,6 +122,10 @@ routes.get('/education/article', authMiddleware, (c) => educationArticleControll
 routes.get('/education/article/:id', authMiddleware, (c) => educationArticleController.show(c))
 routes.get('/education/video', authMiddleware, (c) => educationVideoController.index(c))
 routes.get('/education/video/:id', authMiddleware, (c) => educationVideoController.show(c))
+
+// Feedback Routes
+routes.get('/feedback', authMiddleware, (c) => feedbackController.index(c))
+routes.post('/feedback', authMiddleware, zValidator('form', StoreFeedbackValidator, validationHook), (c) => feedbackController.store(c))
 
 // Additional Routes
 routes.get('/additional/service', authMiddleware, (c) => additionalController.getServices(c))
