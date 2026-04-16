@@ -48,6 +48,6 @@ export class FeedbackService {
         }
 
         const data = await response.json() as FeedbackItem[]
-        return data.filter((item) => item.userId === String(userId))
+        return data.filter((item) => String(item.userId) === String(userId))
     }
 }
