@@ -64,6 +64,7 @@ src/
 ├── modules/     # Business logic modules (Auth, Reward, etc.)
 │   ├── auth/          # Authentication module
 │   ├── customer/      # Customer management
+│   ├── feedback/      # Feedback module (AppScript integration)
 │   ├── reward/        # Reward system logic
 │   └── ...            # Other feature modules
 ├── routes/      # API routing definitions
@@ -90,4 +91,6 @@ src/
 | `SMTP_FROM`          | SMTP Sender Email                 | -                        |
 | `JWT_SECRET`         | Access Token Secret               | `supersecretkey`         |
 | `JWT_REFRESH_SECRET` | Refresh Token Secret              | `superrefreshsecretkey`  |
+| `APP_URL`            | Public base URL of the server     | `http://localhost:4000`  |
+| `FEEDBACK_URL`       | Google AppScript deployment URL   | -                        |
 

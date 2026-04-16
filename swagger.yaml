@@ -713,6 +713,37 @@ components:
         module: { type: string, example: "Customer" }
         route: { type: string, example: "/customer/CUST-0001" }
 
+    # --- Feedback Schemas ---
+    FeedbackItem:
+      type: object
+      properties:
+        timestamp:
+          { type: string, format: date-time, example: "2026-04-16T04:34:54.591Z" }
+        userId: { type: string, example: "1" }
+        name: { type: string, example: "Budi Santoso" }
+        images:
+          type: array
+          items: { type: string, format: uri, example: "https://domain.com/uploads/feedback/feedback_1_1744123456789_0.jpg" }
+        url: { type: string, format: uri, example: "https://nusa.net.id" }
+        category: { type: string, example: "gallery" }
+        message: { type: string, example: "Mengirim banyak gambar" }
+        type: { type: string, example: "" }
+        reply: { type: string, example: "" }
+
+    StoreFeedbackRequest:
+      type: object
+      required: [message, type, "images[]"]
+      properties:
+        message: { type: string, example: "Pelayanan sangat memuaskan" }
+        type: { type: string, example: "gallery" }
+        url: { type: string, format: uri, example: "https://nusa.net.id" }
+        "images[]":
+          type: array
+          minItems: 1
+          maxItems: 5
+          items: { type: string, format: binary }
+          description: "1–5 image files (jpg, png, jpeg, etc)"
+
   parameters:
     PageParam:
       name: page
@@ -3090,6 +3121,64 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 
+  # =============================================
+  # FEEDBACK ROUTES
+  # =============================================
+  /feedback:
+    get:
+      summary: Get feedback by logged-in user
+      description: "Fetch all feedback entries from AppScript that belong to the currently authenticated user."
+      tags: [Feedback]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Feedback retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Feedback retrieved successfully"
+                data:
+                  - timestamp: "2026-04-16T04:34:54.591Z"
+                    userId: "1"
+                    name: "Budi Santoso"
+                    images:
+                      - "https://domain.com/uploads/feedback/feedback_1_1744123456789_0.jpg"
+                    url: "https://nusa.net.id"
+                    category: "gallery"
+                    message: "Pelayanan sangat memuaskan"
+                    type: ""
+                    reply: ""
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+    post:
+      summary: Submit new feedback
+      description: "Upload 1–5 images (stored locally), then send the feedback data to AppScript in fire-and-forget fashion. Returns immediately after images are saved."
+      tags: [Feedback]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/StoreFeedbackRequest"
+      responses:
+        "201":
+          description: Feedback submitted successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 201
+                message: "Feedback submitted successfully"
+                data: null
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
 tags:
   - name: Auth
     description: Authentication — register, login, logout, token refresh, and password reset
@@ -3117,3 +3206,5 @@ tags:
     description: Dashboard statistics and chart data
   - name: Additional
     description: Lookup/reference data for dropdowns and filters
+  - name: Feedback
+    description: Submit and retrieve user feedback stored via Google AppScript
