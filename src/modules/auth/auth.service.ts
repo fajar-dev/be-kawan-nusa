@@ -120,7 +120,7 @@ export class AuthService {
 
         await this.userService.save(user)
         const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'User'
-        const resetLink = `${config.app.feUrl}/auth/reset-password?email=${user.email}&token=${resetToken}`
+        const resetLink = `${config.app.appUrl}/auth/reset-password?email=${user.email}&token=${resetToken}`
         
         const templatePath = path.join(process.cwd(), 'public/templates/forgot-password.html')
         const html = fs.readFileSync(templatePath, 'utf8')

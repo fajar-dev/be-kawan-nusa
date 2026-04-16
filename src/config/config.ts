@@ -5,7 +5,7 @@
 export const config = {
     app: {
         port: Number(process.env.PORT) || 3000,
-        feUrl: process.env.FE_URL || 'http://localhost:3000',
+        appUrl: process.env.APP_URL || 'http://localhost:4000',
         env: process.env.NODE_ENV || 'development',
         jwtSecret: process.env.JWT_SECRET || 'supersecretkey',
         jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'superrefreshsecretkey',
@@ -27,7 +27,6 @@ export const config = {
         from: process.env.SMTP_FROM || '"Kawan Nusa" <kawan@nusa.net.id>',
     },
     feedback: {
-        appUrl: process.env.APP_URL || 'http://localhost:4000',
         scriptUrl: process.env.FEEDBACK_URL || '',
     }
 }

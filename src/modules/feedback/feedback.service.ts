@@ -22,7 +22,7 @@ export class FeedbackService {
             const filePath = path.join(uploadDir, filename)
 
             fs.writeFileSync(filePath, Buffer.from(await file.arrayBuffer()))
-            imageUrls.push(`${config.feedback.appUrl}/uploads/feedback/${filename}`)
+            imageUrls.push(`${config.app.appUrl}/api/uploads/feedback/${filename}`)
         }
 
         fetch(config.feedback.scriptUrl, {
