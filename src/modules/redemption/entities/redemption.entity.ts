@@ -11,8 +11,8 @@ export class Redemption {
     @PrimaryGeneratedColumn()
     id!: number
 
-    @Column({ name: "redemp_no", unique: true, length: 50 })
-    redempNo!: string
+    @Column({ name: "redemp_no", unique: true, length: 50, nullable: true })
+    redempNo?: string
 
     @Index()
     @Column({ name: "user_id" })

@@ -3,6 +3,8 @@ import { EntityManager, Repository, MoreThan } from "typeorm"
 import { BadRequestException } from "../../core/exceptions/base"
 import { Reward } from "../reward/entities/reward.entity"
 import { PointHelper } from "../../core/helpers/point"
+import { Redemption } from "../redemption/entities/redemption.entity"
+import { RedemptionType, RedemptionStatus } from "../redemption/redemption.enum"
 
 export class PointService {
     private rewardRepository: Repository<Reward>
@@ -43,8 +45,7 @@ export class PointService {
      */
     private async cleanupExpiredPoints(userId: number) {
         const today = new Date().toISOString().split('T')[0]
-        
-        // Find expired rewards for this user that still have remaining points
+
         const expiredRewards = await this.rewardRepository.createQueryBuilder("reward")
             .innerJoin("reward.customerService", "cs")
             .where("cs.userId = :userId", { userId })
@@ -52,11 +53,23 @@ export class PointService {
             .andWhere("reward.remainingPoint > 0")
             .getMany()
 
-        if (expiredRewards.length > 0) {
+        if (expiredRewards.length === 0) return
+
+        await AppDataSource.transaction(async (manager) => {
+            const redemptions: Partial<Redemption>[] = []
+
             for (const reward of expiredRewards) {
+                redemptions.push({
+                    userId,
+                    pointsUsed: Number(reward.remainingPoint),
+                    type: RedemptionType.EXPIRED,
+                    status: RedemptionStatus.EXPIRED,
+                })
                 reward.remainingPoint = 0
             }
-            await this.rewardRepository.save(expiredRewards)
-        }
+
+            await manager.save(Reward, expiredRewards)
+            await manager.save(Redemption, redemptions)
+        })
     }
 }

@@ -1,14 +1,16 @@
 export enum RedemptionType {
     CASH = 'cash',
     VOUCHER = 'voucher',
-    PRODUCT = 'product'
+    PRODUCT = 'product',
+    EXPIRED = 'expired'
 }
 
 export enum RedemptionStatus {
     PENDING = 'pending',
     PROCESSING = 'processing',
     COMPLETED = 'completed',
-    CANCELLED = 'cancelled'
+    CANCELLED = 'cancelled',
+    EXPIRED = 'expired'
 }
 
 export enum Shipper {
