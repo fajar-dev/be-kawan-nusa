@@ -71,7 +71,7 @@ export const generateWithdrawalNote = (redemption: Redemption): Promise<Buffer> 
             const fontMedium = hasMontserrat ? 'Montserrat-500' : 'Helvetica-Bold'
             const fontSemiBold = hasMontserrat ? 'Montserrat-600' : 'Helvetica-Bold'
 
-            const withdrawDetail = redemption.withdrawRedemption
+            const withdrawDetail = redemption.redemptionWithdraw
             if (!withdrawDetail) {
                 console.error('Withdrawal details missing for redemption note')
             }
