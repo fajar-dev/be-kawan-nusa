@@ -8,143 +8,79 @@ import { Catalog } from "../catalog/entities/catalog.entity"
 import { RedemptionType, RedemptionStatus } from "./redemption.enum"
 import { PointHelper } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
-import { Repository, Brackets } from "typeorm"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
+import { IRedemptionRepository, RedemptionListFilters } from "./interfaces/redemption.repository.interface"
 
 export class RedemptionService {
-    private repository: Repository<Redemption>
+    constructor(private readonly repository: IRedemptionRepository) {}
 
-    constructor() {
-        this.repository = AppDataSource.getRepository(Redemption)
+    async getAll(
+        userId: number,
+        page: number,
+        limit: number,
+        filters: RedemptionListFilters,
+        sort: string,
+        order: string
+    ): Promise<{ data: Redemption[]; total: number }> {
+        return await this.repository.findAllByUserId(userId, page, limit, filters, sort, order)
     }
 
-    async getAll(userId: number, page: number, limit: number, filters: { startDate?: string, endDate?: string, status?: string[], type?: string[], q?: string } = {}, sort: string = "createdAt", order: string = "DESC") {
-        const query = this.repository.createQueryBuilder("redemption")
-            .leftJoinAndSelect("redemption.redemptionWithdraw", "withdraw")
-            .leftJoinAndSelect("redemption.redemptionVoucher", "voucher")
-            .leftJoinAndSelect("voucher.catalog", "vCatalog")
-            .leftJoinAndSelect("vCatalog.category", "vCategory")
-            .leftJoinAndSelect("redemption.redemptionProduct", "product")
-            .leftJoinAndSelect("product.catalog", "pCatalog")
-            .leftJoinAndSelect("pCatalog.category", "pCategory")
-            .leftJoinAndSelect("voucher.detail", "vDetail")
-            .leftJoinAndSelect("product.shipping", "pShipping")
-            .where("redemption.userId = :userId", { userId })
-
-        if (filters.startDate) {
-            query.andWhere("redemption.createdAt >= :startDate", { startDate: filters.startDate })
-        }
-
-        if (filters.endDate) {
-            query.andWhere("redemption.createdAt <= :endDate", { endDate: `${filters.endDate} 23:59:59` })
-        }
-
-        if (filters.status && filters.status.length > 0) {
-            query.andWhere("redemption.status IN (:...status)", { status: filters.status })
-        }
-
-        if (filters.type && filters.type.length > 0) {
-            query.andWhere("redemption.type IN (:...type)", { type: filters.type })
-        }
-
-        if (filters.q) {
-            const searchPattern = `%${filters.q}%`
-            query.andWhere(new Brackets(qb => {
-                qb.where("redemption.redempNo LIKE :q")
-                  .orWhere("redemption.notes LIKE :q")
-                  .orWhere("vCatalog.name LIKE :q")
-                  .orWhere("pCatalog.name LIKE :q")
-                  .orWhere("voucher.name LIKE :q")
-                  .orWhere("product.name LIKE :q")
-                  .orWhere("vDetail.code LIKE :q")
-                  .orWhere("pShipping.trackingNumber LIKE :q")
-            }), { q: searchPattern })
-        }
-
-        const sortAlias = sort.includes(".") ? sort : `redemption.${sort}`
-        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
-            .take(limit)
-            .skip((page - 1) * limit)
-
-        const [data, total] = await query.getManyAndCount()
-
-        return { data, total }
-    }
-
-    async getById(id: number, userId: number) {
-        const redemption = await this.repository.findOne({
-            where: { id, userId },
-            relations: [
-                "user", 
-                "redemptionWithdraw", 
-                "redemptionVoucher", "redemptionVoucher.catalog", "redemptionVoucher.catalog.category", "redemptionVoucher.detail",
-                "redemptionProduct", "redemptionProduct.catalog", "redemptionProduct.catalog.category", "redemptionProduct.shipping"
-            ]
-        })
-
+    async getById(id: number, userId: number): Promise<Redemption> {
+        const redemption = await this.repository.findByIdAndUserId(id, userId)
         if (!redemption) {
             throw new NotFoundException("Redemption record not found")
         }
-
         return redemption
     }
 
-     async getReceiptById(id: number, userId: number) {
-        const redemption = await this.repository.findOne({
-            where: { id, userId, type: RedemptionType.CASH },
-            relations: [
-                "user", 
-                "redemptionWithdraw", 
-                "redemptionVoucher", "redemptionVoucher.catalog", "redemptionVoucher.catalog.category", "redemptionVoucher.detail",
-                "redemptionProduct", "redemptionProduct.catalog", "redemptionProduct.catalog.category", "redemptionProduct.shipping"
-            ]
-        })
-
+    async getReceiptById(id: number, userId: number): Promise<Redemption> {
+        const redemption = await this.repository.findReceiptByIdAndUserId(id, userId)
         if (!redemption) {
             throw new NotFoundException("Redemption record not found")
         }
-
         return redemption
     }
 
-    async createCash(userId: number, pointsUsed: number, notes?: string) {
+    async createCash(userId: number, pointsUsed: number, notes?: string): Promise<Redemption> {
         return await AppDataSource.transaction(async (manager) => {
             const user = await manager.findOne(User, { where: { id: userId } })
             if (!user) throw new NotFoundException("User not found")
 
-            // 1. Check point balance
             const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
-                throw new BadRequestException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
+                throw new BadRequestException(
+                    `Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`
+                )
             }
 
-            // 2. Calculate and deduct points
             await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
-            // 2. Create cash redemption detail
             const { tax, payout } = calculateWithdrawal(pointsUsed)
             const withdraw = manager.create(RedemptionWithdraw, {
                 bankName: user.bankName,
                 accountNumber: user.accountNumber,
                 accountHolderName: user.accountHolderName,
                 payout,
-                tax
+                tax,
             })
             const savedWithdraw = await manager.save(withdraw)
 
-            // 3. Create parent record
             const redempNo = await this.generateRedempNo()
             const redemption = manager.create(Redemption, {
-                redempNo, userId, pointsUsed, type: RedemptionType.CASH,
-                status: RedemptionStatus.PENDING, notes,
-                redemptionWithdrawId: savedWithdraw.id
+                redempNo,
+                userId,
+                pointsUsed,
+                type: RedemptionType.CASH,
+                status: RedemptionStatus.PENDING,
+                notes,
+                redemptionWithdrawId: savedWithdraw.id,
             })
 
             return await manager.save(redemption)
         })
     }
 
-    async createVoucher(userId: number, catalogId: number, notes?: string) {
+    async createVoucher(userId: number, catalogId: number, notes?: string): Promise<Redemption> {
         return await AppDataSource.transaction(async (manager) => {
             const user = await manager.findOne(User, { where: { id: userId } })
             if (!user) throw new NotFoundException("User not found")
@@ -153,37 +89,38 @@ export class RedemptionService {
             if (!catalog) throw new NotFoundException("Catalog item not found")
 
             const pointsUsed = Number(catalog.point)
-
-            // 1. Check point balance
             const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
-                throw new BadRequestException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
+                throw new BadRequestException(
+                    `Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`
+                )
             }
 
-            // 2. Deduct points
             await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
-            // 3. Create voucher redemption detail
             const voucher = manager.create(RedemptionVoucher, {
                 catalogId,
                 name: [user.firstName, user.lastName].filter(Boolean).join(" "),
-                email: user.email
+                email: user.email,
             })
             const savedVoucher = await manager.save(voucher)
 
-            // 4. Create parent record
             const redempNo = await this.generateRedempNo()
             const redemption = manager.create(Redemption, {
-                redempNo, userId, pointsUsed, type: RedemptionType.VOUCHER,
-                status: RedemptionStatus.PENDING, notes,
-                redemptionVoucherId: savedVoucher.id
+                redempNo,
+                userId,
+                pointsUsed,
+                type: RedemptionType.VOUCHER,
+                status: RedemptionStatus.PENDING,
+                notes,
+                redemptionVoucherId: savedVoucher.id,
             })
 
             return await manager.save(redemption)
         })
     }
 
-    async createProduct(userId: number, catalogId: number, address: string, notes?: string) {
+    async createProduct(userId: number, catalogId: number, address: string, notes?: string): Promise<Redemption> {
         return await AppDataSource.transaction(async (manager) => {
             const user = await manager.findOne(User, { where: { id: userId } })
             if (!user) throw new NotFoundException("User not found")
@@ -192,32 +129,33 @@ export class RedemptionService {
             if (!catalog) throw new NotFoundException("Catalog item not found")
 
             const pointsUsed = Number(catalog.point)
-
-            // 1. Check point balance
             const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
-                throw new BadRequestException(`Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`)
+                throw new BadRequestException(
+                    `Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`
+                )
             }
 
-            // 2. Deduct points
             await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
-            // 3. Create product redemption detail
             const product = manager.create(RedemptionProduct, {
                 catalogId,
                 name: [user.firstName, user.lastName].filter(Boolean).join(" "),
                 email: user.email,
                 phone: user.phone,
-                address
+                address,
             })
             const savedProduct = await manager.save(product)
 
-            // 4. Create parent record
             const redempNo = await this.generateRedempNo()
             const redemption = manager.create(Redemption, {
-                redempNo, userId, pointsUsed, type: RedemptionType.PRODUCT,
-                status: RedemptionStatus.PENDING, notes,
-                redemptionProductId: savedProduct.id
+                redempNo,
+                userId,
+                pointsUsed,
+                type: RedemptionType.PRODUCT,
+                status: RedemptionStatus.PENDING,
+                notes,
+                redemptionProductId: savedProduct.id,
             })
 
             return await manager.save(redemption)
@@ -226,24 +164,19 @@ export class RedemptionService {
 
     private async generateRedempNo(): Promise<string> {
         const date = new Date()
-        const year = date.getFullYear()
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const day = String(date.getDate()).padStart(2, '0')
-        const dateStr = `${year}${month}${day}`
-        
-        // Find latest for the day
-        const latest = await this.repository.createQueryBuilder("redemption")
-            .where("redemption.redempNo LIKE :prefix", { prefix: `RED-${dateStr}-%` })
-            .orderBy("redemption.redempNo", "DESC")
-            .getOne()
+        const dateStr = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0"),
+        ].join("")
 
+        const latestRedempNo = await this.repository.getLatestRedempNoByDate(dateStr)
         let sequence = 1
-        if (latest) {
-            const parts = latest.redempNo.split("-")
+        if (latestRedempNo) {
+            const parts = latestRedempNo.split("-")
             sequence = parseInt(parts[parts.length - 1]) + 1
         }
 
-        const sequenceStr = String(sequence).padStart(4, '0')
-        return `RED-${dateStr}-${sequenceStr}`
+        return `RED-${dateStr}-${String(sequence).padStart(4, "0")}`
     }
 }

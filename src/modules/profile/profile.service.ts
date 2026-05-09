@@ -1,49 +1,40 @@
-import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
 import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator } from "./validators/profile.validator"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
-import { Repository } from "typeorm"
+import { IUserRepository } from "../user/interfaces/user.repository.interface"
 
 export class ProfileService {
-    private repository: Repository<User>
+    constructor(private readonly repository: IUserRepository) {}
 
-    constructor() {
-        this.repository = AppDataSource.getRepository(User)
-    }
-
-    async getProfile(userId: number) {
-        const user = await this.repository.findOneBy({ id: userId })
+    async getProfile(userId: number): Promise<User> {
+        const user = await this.repository.findById(userId)
         if (!user) {
             throw new NotFoundException("Profile not found")
         }
         return user
     }
 
-    async updateAccount(userId: number, data: UpdateAccountValidator) {
+    async updateAccount(userId: number, data: UpdateAccountValidator): Promise<User> {
         const user = await this.getProfile(userId)
-        this.repository.merge(user, data)
-        return await this.repository.save(user)
+        const merged = this.repository.merge(user, data)
+        return await this.repository.save(merged)
     }
 
-    async updateBank(userId: number, data: UpdateBankValidator) {
+    async updateBank(userId: number, data: UpdateBankValidator): Promise<User> {
         const user = await this.getProfile(userId)
-        this.repository.merge(user, data)
-        return await this.repository.save(user)
+        const merged = this.repository.merge(user, data)
+        return await this.repository.save(merged)
     }
 
-    async updatePreference(userId: number, data: UpdatePreferenceValidator) {
+    async updatePreference(userId: number, data: UpdatePreferenceValidator): Promise<User> {
         const user = await this.getProfile(userId)
-        this.repository.merge(user, data)
-        return await this.repository.save(user)
+        const merged = this.repository.merge(user, data)
+        return await this.repository.save(merged)
     }
 
-    async updatePassword(userId: number, data: UpdatePasswordValidator) {
-        const user = await this.repository.createQueryBuilder("user")
-            .where("user.id = :id", { id: userId })
-            .addSelect("user.password")
-            .getOne()
-
+    async updatePassword(userId: number, data: UpdatePasswordValidator): Promise<User> {
+        const user = await this.repository.findByIdWithPassword(userId)
         if (!user) {
             throw new NotFoundException("User not found")
         }
@@ -57,7 +48,7 @@ export class ProfileService {
         return await this.repository.save(user)
     }
 
-    async updatePhoto(userId: number, photo: string) {
+    async updatePhoto(userId: number, photo: string): Promise<User> {
         const user = await this.getProfile(userId)
         user.photo = photo
         return await this.repository.save(user)

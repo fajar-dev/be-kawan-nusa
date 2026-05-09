@@ -1,17 +1,10 @@
-import { AppDataSource } from "../../config/database"
 import { EducationCategory } from "./entities/education-category.entity"
-import { Repository } from "typeorm"
+import { IEducationCategoryRepository } from "./interfaces/education-category.repository.interface"
 
 export class EducationCategoryService {
-    private repository: Repository<EducationCategory>
+    constructor(private readonly repository: IEducationCategoryRepository) {}
 
-    constructor() {
-        this.repository = AppDataSource.getRepository(EducationCategory)
-    }
-
-    async getAll() {
-        return await this.repository.find({
-            order: { name: "ASC" }
-        })
+    async getAll(): Promise<EducationCategory[]> {
+        return await this.repository.findAll()
     }
 }
