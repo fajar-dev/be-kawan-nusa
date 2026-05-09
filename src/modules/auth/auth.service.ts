@@ -1,6 +1,12 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
-import { RegisterValidator, LoginValidator, ForgotPasswordValidator, ResetPasswordValidator, RefreshTokenValidator, } from "./validators/auth.validator"
+import {
+    RegisterValidator,
+    LoginValidator,
+    ForgotPasswordValidator,
+    ResetPasswordValidator,
+    RefreshTokenValidator,
+} from "./validators/auth.validator"
 import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { sign, verify } from "hono/jwt"
@@ -13,31 +19,24 @@ import { EntityManager } from "typeorm"
 import { UserService } from "../user/user.service"
 
 export class AuthService {
-    private userService: UserService
-
-    constructor() {
-        this.userService = new UserService()
-    }
+    constructor(private readonly userService: UserService) {}
 
     async register(data: RegisterValidator) {
-        const user = await this.userService.getByEmail(data.email)
-        if (user) {
+        const existing = await this.userService.getByEmail(data.email)
+        if (existing) {
             throw new BadRequestException("Email already in use")
         }
 
         return AppDataSource.transaction(async (manager: EntityManager) => {
-            const user = await this.userService.save({
-                ...data,
-                password: await hashPassword(data.password)
-            }, manager)
-
-            return user
+            return await this.userService.save(
+                { ...data, password: await hashPassword(data.password) },
+                manager
+            )
         })
     }
 
     async login(data: LoginValidator) {
         const user = await this.userService.getByIdentifier(data.identifier)
-
         if (!user) {
             throw new UnauthorizedException("Invalid credentials")
         }
@@ -48,62 +47,41 @@ export class AuthService {
         }
 
         const accessToken = await sign(
-            { 
-                sub: user.id, 
-                email: user.email, 
-                exp: Math.floor(Date.now() / 1000) + 60 * 15 // 15 mins
-            }, 
+            { sub: user.id, email: user.email, exp: Math.floor(Date.now() / 1000) + 60 * 15 },
             config.app.jwtSecret,
             "HS256"
         )
 
         const refreshToken = await sign(
-            { 
-                sub: user.id, 
-                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 // 7 days
-            }, 
+            { sub: user.id, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 },
             config.app.jwtRefreshSecret,
             "HS256"
         )
 
-        const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitiveData } = user
-
-        return { user: userWithoutSensitiveData, accessToken, refreshToken }
+        const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user
+        return { user: safeUser, accessToken, refreshToken }
     }
 
     async refreshToken(data: RefreshTokenValidator) {
         try {
             const decoded = await verify(data.refreshToken, config.app.jwtRefreshSecret, "HS256") as { sub: number }
-            
             const user = await this.userService.getById(decoded.sub)
-            
-            if (!user) {
-                throw new UnauthorizedException("User not found")
-            }
 
             const newToken = await sign(
-                { 
-                    sub: user.id, 
-                    email: user.email, 
-                    exp: Math.floor(Date.now() / 1000) + 60 * 15 // 15 mins
-                }, 
+                { sub: user.id, email: user.email, exp: Math.floor(Date.now() / 1000) + 60 * 15 },
                 config.app.jwtSecret,
                 "HS256"
             )
 
             const newRefreshToken = await sign(
-                { 
-                    sub: user.id, 
-                    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 // 7 days
-                }, 
+                { sub: user.id, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 },
                 config.app.jwtRefreshSecret,
                 "HS256"
             )
 
-            const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitiveData } = user
-
-            return { user: userWithoutSensitiveData, accessToken: newToken, refreshToken: newRefreshToken }
-        } catch (error) {
+            const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user
+            return { user: safeUser, accessToken: newToken, refreshToken: newRefreshToken }
+        } catch {
             throw new UnauthorizedException("Invalid or expired refresh token")
         }
     }
@@ -114,30 +92,26 @@ export class AuthService {
             throw new BadRequestException("Email not found")
         }
 
-        const resetToken = crypto.randomBytes(32).toString('hex')
+        const resetToken = crypto.randomBytes(32).toString("hex")
         user.resetPasswordToken = resetToken
-        user.resetPasswordExpires = new Date(Date.now() + 36000000) // 1 hour
+        user.resetPasswordExpires = new Date(Date.now() + 36000000)
 
         await this.userService.save(user)
-        const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'User'
+
+        const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || "User"
         const resetLink = `${config.app.appUrl}/auth/reset-password?email=${user.email}&token=${resetToken}`
-        
-        const templatePath = path.join(process.cwd(), 'public/templates/forgot-password.html')
-        const html = fs.readFileSync(templatePath, 'utf8')
+
+        const templatePath = path.join(process.cwd(), "public/templates/forgot-password.html")
+        const html = fs.readFileSync(templatePath, "utf8")
             .replace(/{{name}}/g, name)
             .replace(/{{resetLink}}/g, resetLink)
 
-        await mail.sendHtml(
-            user.email,
-            "Atur Ulang Kata Sandi",
-            html
-        )        
+        await mail.sendHtml(user.email, "Atur Ulang Kata Sandi", html)
         return true
     }
 
     async resetPassword(data: ResetPasswordValidator) {
         const user = await this.userService.getByResetToken(data.token)
-        
         if (!user) {
             throw new BadRequestException("Invalid or expired reset token")
         }
@@ -150,19 +124,15 @@ export class AuthService {
         return true
     }
 
-    async validateResetToken(email:string, token:string) {
+    async validateResetToken(email: string, token: string) {
         const user = await this.userService.getByEmailAndResetToken(email, token)
-        
         if (!user) {
             throw new BadRequestException("Invalid or expired reset token")
         }
-
         return true
     }
 
-    async logout(user: User) {
-        // Since refresh token is not stored in DB, nothing to clear here.
-        // The client should just delete the token.
+    async logout(_user: User) {
         return true
     }
 }

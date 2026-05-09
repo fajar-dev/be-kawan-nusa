@@ -1,115 +1,39 @@
 import { AppDataSource } from "../../config/database"
 import { Reward } from "./entities/reward.entity"
-import { Brackets, Repository, EntityManager } from "typeorm"
 import { CustomerService } from "../customer-service/entities/customer-service.entity"
-import { PointService } from "../point/point.service"
 import { NotFoundException } from "../../core/exceptions/base"
 import { PointHelper } from "../../core/helpers/point"
+import { IRewardRepository, RewardListFilters } from "./interfaces/reward.repository.interface"
 
 export class RewardService {
-    private repository: Repository<Reward>
-    private pointService: PointService
+    constructor(private readonly repository: IRewardRepository) {}
 
-    constructor() {
-        this.repository = AppDataSource.getRepository(Reward)
-        this.pointService = new PointService()
+    async getAll(
+        userId: number,
+        page: number,
+        limit: number,
+        q: string,
+        sort: string,
+        order: string,
+        filters: RewardListFilters = {}
+    ): Promise<{ data: Reward[]; total: number }> {
+        return await this.repository.findAllByUserId(userId, page, limit, q, sort, order, filters)
     }
 
     async getByCustomerId(
-        customerId: string, 
-        userId: number, 
-        page: number, 
-        limit: number, 
-        q: string, 
-        sort: string, 
+        customerId: string,
+        userId: number,
+        page: number,
+        limit: number,
+        q: string,
+        sort: string,
         order: string,
-        filters: { startDate?: string, endDate?: string, types?: string[] } = {}
-    ) {
-        const query = this.repository.createQueryBuilder("reward")
-            .leftJoinAndSelect("reward.customerService", "cs")
-            .leftJoinAndSelect("cs.service", "service")
-            .leftJoinAndSelect("cs.customer", "customer")
-            .where("customer.id = :customerId", { customerId })
-            .andWhere("cs.userId = :userId", { userId })
-
-        if (q) {
-            const searchPattern = `%${q}%`
-            query.andWhere(new Brackets(qb => {
-                qb.where("reward.type LIKE :q")
-                  .orWhere("service.name LIKE :q")
-                  .orWhere("cs.serviceCode LIKE :q")
-            }), { q: searchPattern })
-        }
-
-        if (filters.startDate) {
-            query.andWhere("reward.createdAt >= :startDate", { startDate: filters.startDate })
-        }
-        if (filters.endDate) {
-            query.andWhere("reward.createdAt <= :endDate", { endDate: filters.endDate })
-        }
-        if (filters.types && filters.types.length > 0) {
-            query.andWhere("reward.type IN (:...types)", { types: filters.types })
-        }
-
-        const sortAlias = sort.includes(".") ? sort : `reward.${sort}`
-        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
-
-        const [data, total] = await query
-            .take(limit)
-            .skip((page - 1) * limit)
-            .getManyAndCount()
-
-        return { data, total }
+        filters: RewardListFilters = {}
+    ): Promise<{ data: Reward[]; total: number }> {
+        return await this.repository.findAllByCustomerId(customerId, userId, page, limit, q, sort, order, filters)
     }
 
-    async getAll(
-        userId: number, 
-        page: number, 
-        limit: number, 
-        q: string, 
-        sort: string, 
-        order: string,
-        filters: { startDate?: string, endDate?: string, types?: string[] } = {}
-    ) {
-        const query = this.repository.createQueryBuilder("reward")
-            .leftJoinAndSelect("reward.customerService", "cs")
-            .leftJoinAndSelect("cs.service", "service")
-            .leftJoinAndSelect("cs.customer", "customer")
-            .where("cs.userId = :userId", { userId })
-
-        if (q) {
-            const searchPattern = `%${q}%`
-            query.andWhere(new Brackets(qb => {
-                qb.where("reward.type LIKE :q")
-                  .orWhere("service.name LIKE :q")
-                  .orWhere("cs.serviceCode LIKE :q")
-            }), { q: searchPattern })
-        }
-
-        if (filters.startDate) {
-            query.andWhere("reward.createdAt >= :startDate", { startDate: filters.startDate })
-        }
-
-        if (filters.endDate) {
-            query.andWhere("reward.createdAt <= :endDate", { endDate: filters.endDate })
-        }
-
-        if (filters.types && filters.types.length > 0) {
-            query.andWhere("reward.type IN (:...types)", { types: filters.types })
-        }
-
-        const sortAlias = sort.includes(".") ? sort : `reward.${sort}`
-        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
-
-        const [data, total] = await query
-            .take(limit)
-            .skip((page - 1) * limit)
-            .getManyAndCount()
-
-        return { data, total }
-    }
-
-    async create(data: Partial<Reward>) {
+    async create(data: Partial<Reward>): Promise<Reward> {
         return await AppDataSource.transaction(async (manager) => {
             const cs = await manager.createQueryBuilder(CustomerService, "cs")
                 .innerJoinAndSelect("cs.customer", "customer")
@@ -119,10 +43,8 @@ export class RewardService {
             if (!cs) {
                 throw new NotFoundException("Customer service not found")
             }
-            
-            const savedReward = await PointHelper.addPointsReward(manager, data)
 
-            return savedReward
+            return await PointHelper.addPointsReward(manager, data)
         })
     }
 }

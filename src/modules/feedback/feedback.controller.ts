@@ -4,11 +4,7 @@ import { ApiResponse } from "../../core/helpers/response"
 import { FeedbackSerializer } from "./serializers/feedback.serialize"
 
 export class FeedbackController {
-    private service: FeedbackService
-
-    constructor() {
-        this.service = new FeedbackService()
-    }
+    constructor(private readonly service: FeedbackService) {}
 
     async index(c: Context) {
         const user = c.get("user")
@@ -25,9 +21,14 @@ export class FeedbackController {
         const url = body["url"] as string | undefined
 
         const raw = body["images[]"]
-        const imageFiles: File[] = Array.isArray(raw) ? raw as File[] : [raw as File]
+        const imageFiles: File[] = Array.isArray(raw) ? (raw as File[]) : [raw as File]
 
-        await this.service.store(user.id, `${user.firstName} ${user.lastName}`, { message, type, url }, imageFiles)
+        await this.service.store(
+            user.id,
+            `${user.firstName} ${user.lastName}`,
+            { message, type, url },
+            imageFiles
+        )
 
         return ApiResponse.success(c, null, "Feedback submitted successfully", 201)
     }

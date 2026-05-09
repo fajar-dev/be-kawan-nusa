@@ -1,17 +1,10 @@
-import { AppDataSource } from "../../config/database"
 import { CatalogCategory } from "./entities/catalog-category.entity"
-import { Repository } from "typeorm"
+import { ICatalogCategoryRepository } from "./interfaces/catalog-category.repository.interface"
 
 export class CatalogCategoryService {
-    private repository: Repository<CatalogCategory>
+    constructor(private readonly repository: ICatalogCategoryRepository) {}
 
-    constructor() {
-        this.repository = AppDataSource.getRepository(CatalogCategory)
-    }
-
-    async getAll() {
-        return await this.repository.find({
-            order: { name: "ASC" }
-        })
+    async getAll(): Promise<CatalogCategory[]> {
+        return await this.repository.findAll()
     }
 }
