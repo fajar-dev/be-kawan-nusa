@@ -23,11 +23,17 @@ export class User {
     @Column({ name: "job_position", nullable: true })
     jobPosition?: string
 
-    @Column({ unique: true })
-    email!: string
+    @Column({ unique: true, nullable: true })
+    email?: string
 
-    @Column()
-    phone!: string
+    @Column({ unique: true, nullable: true })
+    phone?: string
+
+    @Column({ name: "identity_number", type: "bigint", nullable: true })
+    identityNumber?: number
+
+    @Column({ name: "tax_number", nullable: true })
+    taxNumber?: string
 
     @Column({ select: false })
     password!: string

@@ -56,15 +56,17 @@ components:
     # --- Auth Schemas ---
     RegisterRequest:
       type: object
-      required: [firstName, lastName, email, phone, password]
+      required: [firstName, lastName, password]
       properties:
         firstName: { type: string, example: "Budi" }
         lastName: { type: string, example: "Santoso" }
         company: { type: string, example: "PT Nusanet" }
         jobPosition: { type: string, example: "Sales Manager" }
         email:
-          { type: string, format: email, example: "budi.santoso@nusanet.id" }
-        phone: { type: string, example: "081234567890" }
+          { type: string, format: email, nullable: true, example: "budi.santoso@nusanet.id" }
+        phone: { type: string, nullable: true, example: "081234567890" }
+        identityNumber: { type: integer, nullable: true, example: 3201234567890001 }
+        taxNumber: { type: string, nullable: true, example: "01.234.567.8-901.000" }
         password: { type: string, minLength: 6, example: "secret123" }
         accountHolderName: { type: string, example: "Budi Santoso" }
         bankName: { type: string, example: "BCA" }
@@ -117,8 +119,10 @@ components:
             example: "https://cdn.example.com/photo.jpg",
           }
         email:
-          { type: string, format: email, example: "budi.santoso@nusanet.id" }
-        phone: { type: string, example: "081234567890" }
+          { type: string, format: email, nullable: true, example: "budi.santoso@nusanet.id" }
+        phone: { type: string, nullable: true, example: "081234567890" }
+        identityNumber: { type: integer, nullable: true, example: 3201234567890001 }
+        taxNumber: { type: string, nullable: true, example: "01.234.567.8-901.000" }
         company: { type: string, example: "PT Nusanet" }
         jobPosition: { type: string, example: "Sales Manager" }
         bankDetails:
@@ -162,13 +166,15 @@ components:
 
     UpdateAccountRequest:
       type: object
-      required: [firstName, lastName, email, phone]
+      required: [firstName, lastName]
       properties:
         firstName: { type: string, example: "Budi" }
         lastName: { type: string, example: "Santoso" }
         email:
-          { type: string, format: email, example: "budi.santoso@nusanet.id" }
-        phone: { type: string, example: "081234567890" }
+          { type: string, format: email, nullable: true, example: "budi.santoso@nusanet.id" }
+        phone: { type: string, nullable: true, example: "081234567890" }
+        identityNumber: { type: integer, nullable: true, example: 3201234567890001 }
+        taxNumber: { type: string, nullable: true, example: "01.234.567.8-901.000" }
         company: { type: string, example: "PT Nusanet" }
         jobPosition: { type: string, example: "Sales Manager" }
 

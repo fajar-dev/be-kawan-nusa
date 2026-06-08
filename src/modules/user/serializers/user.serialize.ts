@@ -9,6 +9,8 @@ export class UserSerializer {
             photo: user.photo,
             email: user.email,
             phone: user.phone,
+            identityNumber: user.identityNumber,
+            taxNumber: user.taxNumber,
             company: user.company,
             jobPosition: user.jobPosition,
             bankDetails: {

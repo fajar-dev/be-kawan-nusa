@@ -3,8 +3,10 @@ import { z } from "zod"
 export const UpdateAccountValidator = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
-    phone: z.string().min(1, "Phone is required"),
-    email: z.email("Invalid email format"),
+    phone: z.string().min(1, "Phone is required").optional(),
+    email: z.email("Invalid email format").optional(),
+    identityNumber: z.number().optional(),
+    taxNumber: z.string().optional(),
     company: z.string().optional(),
     jobPosition: z.string().optional(),
 })
