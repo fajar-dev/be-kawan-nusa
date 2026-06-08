@@ -44,3 +44,9 @@ export const RefreshTokenValidator = z.object({
 })
 
 export type RefreshTokenValidator = z.infer<typeof RefreshTokenValidator>
+
+export const GoogleLoginSchema = z.object({
+    code: z.string().min(1, 'Code is required'),
+})
+
+export type GoogleLoginValidator = z.infer<typeof GoogleLoginSchema>

@@ -7,6 +7,7 @@ import {
     ForgotPasswordValidator,
     ResetPasswordValidator,
     RefreshTokenValidator,
+    GoogleLoginValidator,
 } from "./validators/auth.validator"
 import { UserSerializer } from "../user/serializers/user.serialize"
 import { BadRequestException } from "../../core/exceptions/base"
@@ -28,6 +29,16 @@ export class AuthController {
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,
         }, "Logged in successfully")
+    }
+
+    async google(c: Context) {
+        const body = await c.req.json() as GoogleLoginValidator
+        const data = await this.service.googleLogin(body)
+        return ApiResponse.success(c, {
+            user: UserSerializer.single(data.user as any),
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken
+        }, 'Logged in successfully')
     }
 
     async refreshToken(c: Context) {

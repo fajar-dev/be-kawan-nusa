@@ -6,6 +6,7 @@ import {
     ForgotPasswordValidator,
     ResetPasswordValidator,
     RefreshTokenValidator,
+    GoogleLoginValidator,
 } from "./validators/auth.validator"
 import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
@@ -17,14 +18,17 @@ import * as fs from "fs"
 import * as path from "path"
 import { EntityManager } from "typeorm"
 import { UserService } from "../user/user.service"
+import { AuthHelper } from "../../core/helpers/auth"
 
 export class AuthService {
     constructor(private readonly userService: UserService) {}
 
     async register(data: RegisterValidator) {
-        const existing = await this.userService.getByEmail(data.email)
-        if (existing) {
-            throw new BadRequestException("Email already in use")
+        if (data.email) {
+            const existing = await this.userService.getByEmail(data.email)
+            if (existing) {
+                throw new BadRequestException("Email already in use")
+            }
         }
 
         return AppDataSource.transaction(async (manager: EntityManager) => {
@@ -33,6 +37,15 @@ export class AuthService {
                 manager
             )
         })
+    }
+
+    async googleLogin(data: GoogleLoginValidator) {
+        const payload = await AuthHelper.verifyGoogleCode(data.code)
+        const user = await this.userService.getByEmail(payload.email!)
+
+        const { accessToken, refreshToken } = await AuthHelper.generateTokens(user)
+        const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user as any
+        return { user: safeUser, accessToken, refreshToken }
     }
 
     async login(data: LoginValidator) {
@@ -46,17 +59,7 @@ export class AuthService {
             throw new UnauthorizedException("Invalid credentials")
         }
 
-        const accessToken = await sign(
-            { sub: user.id, email: user.email, exp: Math.floor(Date.now() / 1000) + 60 * 15 },
-            config.app.jwtSecret,
-            "HS256"
-        )
-
-        const refreshToken = await sign(
-            { sub: user.id, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 },
-            config.app.jwtRefreshSecret,
-            "HS256"
-        )
+        const { accessToken, refreshToken } = await AuthHelper.generateTokens(user)
 
         const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user
         return { user: safeUser, accessToken, refreshToken }
@@ -67,20 +70,10 @@ export class AuthService {
             const decoded = await verify(data.refreshToken, config.app.jwtRefreshSecret, "HS256") as { sub: number }
             const user = await this.userService.getById(decoded.sub)
 
-            const newToken = await sign(
-                { sub: user.id, email: user.email, exp: Math.floor(Date.now() / 1000) + 60 * 15 },
-                config.app.jwtSecret,
-                "HS256"
-            )
-
-            const newRefreshToken = await sign(
-                { sub: user.id, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 },
-                config.app.jwtRefreshSecret,
-                "HS256"
-            )
+            const { accessToken, refreshToken } = await AuthHelper.generateTokens(user)
 
             const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user
-            return { user: safeUser, accessToken: newToken, refreshToken: newRefreshToken }
+            return { user: safeUser, accessToken, refreshToken }
         } catch {
             throw new UnauthorizedException("Invalid or expired refresh token")
         }
@@ -106,7 +99,7 @@ export class AuthService {
             .replace(/{{name}}/g, name)
             .replace(/{{resetLink}}/g, resetLink)
 
-        await mail.sendHtml(user.email, "Atur Ulang Kata Sandi", html)
+        await mail.sendHtml(user.email!, "Atur Ulang Kata Sandi", html)
         return true
     }
 
