@@ -21,16 +21,6 @@ export class TypeOrmPointRepository implements IPointRepository {
         return Number(result?.total || 0)
     }
 
-    async findExpiredWithRemainingPoints(userId: number): Promise<Reward[]> {
-        const today = new Date().toISOString().split("T")[0]
-        return await this.rewardRepository.createQueryBuilder("reward")
-            .innerJoin("reward.customerService", "cs")
-            .where("cs.userId = :userId", { userId })
-            .andWhere("reward.expiredDate <= :today", { today })
-            .andWhere("reward.remainingPoint > 0")
-            .getMany()
-    }
-
     async saveRewards(rewards: Reward[], manager?: EntityManager): Promise<void> {
         const repo = manager ? manager.getRepository(Reward) : this.rewardRepository
         await repo.save(rewards)
