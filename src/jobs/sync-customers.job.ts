@@ -2,6 +2,7 @@ import { AppDataSource } from "../config/database"
 import { NisDataSource } from "../config/nis-database"
 import { Customer } from "../modules/customer/entities/customer.entity"
 import { CustomerPhone } from "../modules/customer/entities/customer-phone.entity"
+import { CustomerEmail } from "../modules/customer/entities/customer-email.entity"
 import { Service } from "../modules/service/entities/service.entity"
 import { CustomerService } from "../modules/customer-service/entities/customer-service.entity"
 import { CustomerType } from "../modules/customer/customer.enum"
@@ -26,6 +27,7 @@ async function sync() {
         await syncServices()
         await syncCustomers()
         await syncCustomerPhones()
+        await syncCustomerEmails()
         await syncCustomerServices()
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2)
@@ -257,6 +259,66 @@ async function syncCustomerPhones() {
     }
 
     console.log(`[Sync] Synced ${synced} customer phones, skipped ${skipped}`)
+}
+
+async function syncCustomerEmails() {
+    const sourceRows: any[] = await NisDataSource.query(`
+        SELECT cve.id, cve.cust_id AS customer_id, cve.cust_email AS email, cve.email_type AS label  
+        FROM CustomerVerifiedEmail cve
+        WHERE EXISTS (
+            SELECT 1 FROM CustomerServices cs
+            WHERE cs.CustId = cve.cust_id
+              AND cs.ResellerType = 'reseller'
+              AND cs.ResellerTypeId != 1
+              AND cs.ResellerTypeId IS NOT NULL
+              AND cs.ResellerTypeId != ''
+        );
+    `)
+
+    if (sourceRows.length === 0) {
+        console.log("[Sync] No customer emails found in source")
+        return
+    }
+
+    const repo = AppDataSource.getRepository(CustomerEmail)
+    const batchSize = 500
+    let synced = 0
+    let skipped = 0
+
+    const entitiesToInsert = []
+    
+    for (const row of sourceRows) {
+        if (!row.customer_id) continue
+        
+        const email = row.email || ''
+        if (!email) continue
+
+        entitiesToInsert.push({
+            id: row.id,
+            customerId: row.customer_id,
+            email: email.trim().toLowerCase(),
+            label: row.label || 'Email'
+        })
+    }
+
+    for (let i = 0; i < entitiesToInsert.length; i += batchSize) {
+        const batch = entitiesToInsert.slice(i, i + batchSize)
+        try {
+            await repo.upsert(batch, ["id"])
+            synced += batch.length
+        } catch (err: any) {
+            for (const item of batch) {
+                try {
+                    await repo.upsert(item, ["id"])
+                    synced++
+                } catch (e) {
+                    skipped++
+                }
+            }
+        }
+    }
+
+    console.log(`[Sync] Synced ${synced} customer emails, skipped ${skipped}`)
 }
 
 async function syncCustomerServices() {
