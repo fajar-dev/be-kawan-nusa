@@ -1,12 +1,9 @@
 import { AppDataSource } from "../config/database"
 import { NisDataSource } from "../config/nis-database"
-import { Customer } from "../modules/customer/entities/customer.entity"
-import { Service } from "../modules/service/entities/service.entity"
-import { CustomerService } from "../modules/customer-service/entities/customer-service.entity"
 import { User } from "../modules/user/entities/user.entity"
 
 /**
- * Sync customers & services from source database.
+ * Sync users from NIS database.
  * Run: bun run sync
  */
 async function sync() {
@@ -65,28 +62,59 @@ async function syncUsers() {
     }
 
     const repo = AppDataSource.getRepository(User)
-    const batchSize = 500
 
-    for (let i = 0; i < sourceRows.length; i += batchSize) {
-        const batch = sourceRows.slice(i, i + batchSize)
-        const entities = batch.map(row => repo.create({
-            id: row.id,
-            firstName: row.first_name || '',
-            lastName: row.last_name || '',
-            phone: row.phone || null,
-            email: row.email || null,
-            company: row.company || null,
-            accountNumber: row.account_number || null,
-            accountHolderName: row.account_holder_name || null,
-            bankName: row.bank_name || null,
-            identityNumber: row.identity_number || null,
-            isActive: row.is_active === 1,
-        }))
+    // Deduplicate: for duplicate emails/phones, keep active user, null out the rest
+    const emailSeen = new Map<string, any>()
+    const phoneSeen = new Map<string, any>()
 
-        await repo.upsert(entities, ["id"])
+    // Sort: active users first so they take priority
+    const sorted = [...sourceRows].sort((a, b) => (b.is_active ?? 0) - (a.is_active ?? 0))
+
+    for (const row of sorted) {
+        const email = row.email?.trim().toLowerCase() || null
+        const phone = row.phone ? row.phone.replace(/\D/g, '').replace(/^62/, '0') : null
+
+        if (email && emailSeen.has(email)) {
+            row._email = null // duplicate, null it out
+        } else {
+            row._email = email
+            if (email) emailSeen.set(email, row)
+        }
+
+        if (phone && phoneSeen.has(phone)) {
+            row._phone = null // duplicate, null it out
+        } else {
+            row._phone = phone
+            if (phone) phoneSeen.set(phone, row)
+        }
     }
 
-    console.log(`[Sync] Synced ${sourceRows.length} users`)
+    let synced = 0
+    let skipped = 0
+
+    for (const row of sorted) {
+        try {
+            await repo.upsert({
+                id: row.id,
+                firstName: row.first_name || '',
+                lastName: row.last_name || '',
+                phone: row._phone,
+                email: row._email,
+                company: row.company || null,
+                accountNumber: row.account_number || null,
+                accountHolderName: row.account_holder_name || null,
+                bankName: row.bank_name || null,
+                identityNumber: row.identity_number || null,
+                isActive: row.is_active === 1,
+            }, ["id"])
+            synced++
+        } catch (error: any) {
+            console.warn(`[Sync] Skipped user ID ${row.id}: ${error.message}`)
+            skipped++
+        }
+    }
+
+    console.log(`[Sync] Synced ${synced} users, skipped ${skipped}`)
 }
 
 sync()
