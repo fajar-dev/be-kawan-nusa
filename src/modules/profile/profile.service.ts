@@ -39,12 +39,18 @@ export class ProfileService {
             throw new NotFoundException("User not found")
         }
 
-        const isValid = await comparePassword(data.oldPassword, user.password)
-        if (!isValid) {
-            throw new BadRequestException("Old password is incorrect")
+        if (user.password) {
+            if (!data.oldPassword) {
+                throw new BadRequestException("Old password is required")
+            }
+            const isValid = await comparePassword(data.oldPassword, user.password)
+            if (!isValid) {
+                throw new BadRequestException("Old password is incorrect")
+            }
         }
 
         user.password = await hashPassword(data.newPassword)
+        user.passwordUpdatedAt = new Date()
         return await this.repository.save(user)
     }
 

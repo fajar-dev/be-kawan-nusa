@@ -22,7 +22,7 @@ export const UpdateBankValidator = z.object({
 export type UpdateBankValidator = z.infer<typeof UpdateBankValidator>
 
 export const UpdatePasswordValidator = z.object({
-    oldPassword: z.string().min(1, "Old password is required"),
+    oldPassword: z.string().min(1, "Old password is required").optional(),
     newPassword: z.string().min(6, "New password must be at least 6 characters"),
 })
 

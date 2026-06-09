@@ -8,17 +8,11 @@ export class User {
     @PrimaryGeneratedColumn()
     id!: number
 
-    @Column({ default: "user" })
-    role!: "user" | "admin"
-
-    @Column({ name: "is_active", default: true })
-    isActive!: boolean
-
-    @Column({ name: "first_name" })
+    @Column({ name: "first_name"})
     firstName!: string
 
-    @Column({ name: "last_name" })
-    lastName!: string
+    @Column({ name: "last_name", nullable: true })
+    lastName?: string
 
     @Column({ nullable: true })
     photo?: string
@@ -41,8 +35,8 @@ export class User {
     @Column({ name: "tax_number", nullable: true })
     taxNumber?: string
 
-    @Column({ select: false })
-    password!: string
+    @Column({ select: false, nullable: true })
+    password?: string
 
     @Column({ name: "account_holder_name", nullable: true })
     accountHolderName?: string
@@ -65,8 +59,14 @@ export class User {
     @Column({ name: "reset_password_expires", type: "timestamp", nullable: true })
     resetPasswordExpires?: Date
 
-    @CreateDateColumn({ name: "password_updated_at" })
+    @Column({ name: "password_updated_at", type: "timestamp", nullable: true })
     passwordUpdatedAt?: Date
+
+    @Column({ default: "user" })
+    role!: "user" | "admin"
+
+    @Column({ name: "is_active", default: true })
+    isActive!: boolean
 
     @OneToMany(() => CustomerService, (customerService) => customerService.user)
     customerServices!: Relation<CustomerService[]>

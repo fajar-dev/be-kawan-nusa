@@ -33,5 +33,12 @@ export const config = {
         clientId: process.env.GOOGLE_CLIENT_ID || '',
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     },
+    nis: {
+        host: process.env.NIS_DB_HOST || '127.0.0.1',
+        port: Number(process.env.NIS_DB_PORT) || 3306,
+        user: process.env.NIS_DB_USER || 'root',
+        pass: process.env.NIS_DB_PASS || '',
+        name: process.env.NIS_DB_NAME || '',
+    },
 }
 

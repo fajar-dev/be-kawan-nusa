@@ -66,6 +66,10 @@ export class AuthService {
             throw new UnauthorizedException("Account is inactive")
         }
 
+        if (!user.password) {
+            throw new UnauthorizedException("Invalid credentials")
+        }
+
         const isValid = await comparePassword(data.password, user.password)
         if (!isValid) {
             throw new UnauthorizedException("Invalid credentials")
