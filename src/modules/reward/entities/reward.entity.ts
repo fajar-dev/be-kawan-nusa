@@ -18,7 +18,6 @@ export class Reward {
     @Column({ type: "decimal", precision: 15, scale: 2, default: 0 })
     point!: number
 
-
     @Column({ name: "expired_date", type: "date" })
     expiredDate!: Date
 

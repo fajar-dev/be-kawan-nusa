@@ -7,7 +7,9 @@
     "seed": "bun run src/database/seed.ts",
     "sync-users": "bun run src/jobs/sync-users.job.ts",
     "sync-customers": "bun run src/jobs/sync-customers.job.ts",
-    "sync": "bun run sync-users && bun run sync-customers"
+    "sync": "bun run sync-users && bun run sync-customers",
+    "sync-sheets:all": "bun run src/jobs/sync-point-sheet.job.ts --all",
+    "sync-sheets": "bun run src/jobs/sync-point-sheet.job.ts --current"
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.6.1",
