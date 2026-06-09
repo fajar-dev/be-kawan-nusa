@@ -23,6 +23,9 @@ export class CustomerService {
     @Column({ name: "user_id" })
     userId!: number
 
+    @Column({ name: "account_name", type: "varchar" })
+    accountName!: string
+
     @Column({ name: "registration_date", type: "date" })
     registrationDate!: Date
 
