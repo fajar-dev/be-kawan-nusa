@@ -199,7 +199,7 @@ async function syncCustomers() {
 
 async function syncCustomerPhones() {
     const sourceRows: any[] = await NisDataSource.query(`
-        SELECT sp.id, sp.custId AS customer_id, sp.name AS label  
+        SELECT sp.id, sp.custId AS customer_id, sp.phone AS phone, sp.name AS label  
         FROM sms_phonebook sp
         WHERE EXISTS (
             SELECT 1 FROM CustomerServices cs
@@ -218,42 +218,36 @@ async function syncCustomerPhones() {
 
     const repo = AppDataSource.getRepository(CustomerPhone)
     
-    console.log("[Sync] Clearing existing customer phones...")
-    await repo.clear()
-
     const batchSize = 500
     let synced = 0
     let skipped = 0
 
-    // Note: Assuming 'label' holds the phone number based on query structure (or vice versa).
-    // We will clean the phone number format
     const entitiesToInsert = []
     
     for (const row of sourceRows) {
-        if (!row.customer_id || !row.label) continue
+        if (!row.customer_id) continue
         
-        const rawPhone = row.label
-        const phone = rawPhone.replace(/\\D/g, '').replace(/^62/, '0')
+        const phone = row.phone || ''
         if (!phone) continue
 
         entitiesToInsert.push({
-            id: row.id, // Keep the source id if needed to avoid duplicate inserts, or we use upsert
+            id: row.id,
             customerId: row.customer_id,
             phone: phone,
-            label: 'Phone' // Default label since name was mapped to phone
+            label: row.label || 'Phone'
         })
     }
 
     for (let i = 0; i < entitiesToInsert.length; i += batchSize) {
         const batch = entitiesToInsert.slice(i, i + batchSize)
         try {
-            await repo.insert(batch)
+            await repo.upsert(batch, ["id"])
             synced += batch.length
         } catch (err: any) {
-            // Fallback: insert individually if FK constraints fail
+            // Fallback: upsert individually if FK constraints fail
             for (const item of batch) {
                 try {
-                    await repo.insert(item)
+                    await repo.upsert(item, ["id"])
                     synced++
                 } catch (e) {
                     skipped++
