@@ -1,5 +1,5 @@
 export enum RewardPointType {
-    OTP = 'OTP',
+    OTC = 'OTC',
     BULANAN = 'Bulanan',
     CASHBACK = 'Cashback'
 }
