@@ -15,15 +15,16 @@ export class Service {
     @Index()
     name!: string
 
-    @Column({ type: "decimal", precision: 12, scale: 2, default: 0 })
-    price!: number
+    @Column({ type: "decimal", precision: 12, scale: 2, nullable: true })
+    price?: number
 
     @Column({
         type: "set",
         enum: ServiceUnit,
-        default: [ServiceUnit.MONTHLY]
+        default: null,
+        nullable: true
     })
-    unit!: ServiceUnit[]
+    unit?: ServiceUnit[]
 
     @Column({
         type: "enum",

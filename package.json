@@ -5,7 +5,9 @@
     "build": "bun build --minify --outfile dist/index.js --target bun src/index.ts",
     "start": "bun run src/index.ts",
     "seed": "bun run src/database/seed.ts",
-    "sync": "bun run src/jobs/sync-users.job.ts"
+    "sync-users": "bun run src/jobs/sync-users.job.ts",
+    "sync-customers": "bun run src/jobs/sync-customers.job.ts",
+    "sync": "bun run sync-users && bun run sync-customers"
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.6.1",

@@ -50,10 +50,9 @@ async function syncUsers() {
             CASE 
                 WHEN r.Status = 'AC' THEN 1
                 WHEN r.Status = 'NA' THEN 0
-                ELSE NULL
+                ELSE 0
             END AS is_active
         FROM Reseller r
-        WHERE r.PartnerType = 'referral'
     `)
 
     if (sourceRows.length === 0) {
@@ -63,6 +62,16 @@ async function syncUsers() {
 
     const repo = AppDataSource.getRepository(User)
 
+    // Fetch all existing users from local DB to avoid unique constraint conflicts
+    const existingUsers = await repo.find({ select: ["id", "email", "phone"] })
+    const existingEmailMap = new Map<string, number>()
+    const existingPhoneMap = new Map<string, number>()
+
+    for (const u of existingUsers) {
+        if (u.email) existingEmailMap.set(u.email, u.id)
+        if (u.phone) existingPhoneMap.set(u.phone, u.id)
+    }
+
     // Deduplicate: for duplicate emails/phones, keep active user, null out the rest
     const emailSeen = new Map<string, any>()
     const phoneSeen = new Map<string, any>()
@@ -71,21 +80,42 @@ async function syncUsers() {
     const sorted = [...sourceRows].sort((a, b) => (b.is_active ?? 0) - (a.is_active ?? 0))
 
     for (const row of sorted) {
-        const email = row.email?.trim().toLowerCase() || null
-        const phone = row.phone ? row.phone.replace(/\D/g, '').replace(/^62/, '0') : null
+        let email = row.email?.trim().toLowerCase() || null
+        if (email === "") email = null
+        
+        let phone = row.phone ? row.phone.replace(/\D/g, '').replace(/^62/, '0') : null
+        if (phone === "") phone = null
 
-        if (email && emailSeen.has(email)) {
-            row._email = null // duplicate, null it out
-        } else {
-            row._email = email
-            if (email) emailSeen.set(email, row)
+        row._email = email
+        row._phone = phone
+
+        // Check if email is already owned by ANOTHER user in the local database
+        if (row._email) {
+            const ownerId = existingEmailMap.get(row._email)
+            if (ownerId !== undefined && ownerId !== row.id) {
+                row._email = null
+            }
         }
 
-        if (phone && phoneSeen.has(phone)) {
-            row._phone = null // duplicate, null it out
-        } else {
-            row._phone = phone
-            if (phone) phoneSeen.set(phone, row)
+        // Check if phone is already owned by ANOTHER user in the local database
+        if (row._phone) {
+            const ownerId = existingPhoneMap.get(row._phone)
+            if (ownerId !== undefined && ownerId !== row.id) {
+                row._phone = null
+            }
+        }
+
+        // Check against duplicates WITHIN the current sync batch
+        if (row._email && emailSeen.has(row._email)) {
+            row._email = null
+        } else if (row._email) {
+            emailSeen.set(row._email, row)
+        }
+
+        if (row._phone && phoneSeen.has(row._phone)) {
+            row._phone = null
+        } else if (row._phone) {
+            phoneSeen.set(row._phone, row)
         }
     }
 
@@ -94,19 +124,24 @@ async function syncUsers() {
 
     for (const row of sorted) {
         try {
-            await repo.upsert({
-                id: row.id,
-                firstName: row.first_name || '',
-                lastName: row.last_name || '',
-                phone: row._phone,
-                email: row._email,
-                company: row.company || null,
-                accountNumber: row.account_number || null,
-                accountHolderName: row.account_holder_name || null,
-                bankName: row.bank_name || null,
-                identityNumber: row.identity_number || null,
-                isActive: row.is_active === 1,
-            }, ["id"])
+            await repo.createQueryBuilder()
+                .insert()
+                .into(User)
+                .values({
+                    id: row.id,
+                    firstName: row.first_name || '',
+                    lastName: row.last_name || '',
+                    phone: row._phone,
+                    email: row._email,
+                    company: row.company || null,
+                    accountNumber: row.account_number || null,
+                    accountHolderName: row.account_holder_name || null,
+                    bankName: row.bank_name || null,
+                    identityNumber: row.identity_number || null,
+                    isActive: row.is_active === 1,
+                })
+                .orUpdate(["is_active"], ["id"])
+                .execute()
             synced++
         } catch (error: any) {
             console.warn(`[Sync] Skipped user ID ${row.id}: ${error.message}`)
