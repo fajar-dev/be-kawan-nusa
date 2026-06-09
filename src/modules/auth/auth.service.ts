@@ -41,7 +41,15 @@ export class AuthService {
 
     async googleLogin(data: GoogleLoginValidator) {
         const payload = await AuthHelper.verifyGoogleCode(data.code)
-        const user = await this.userService.getByEmail(payload.email!)
+        let user = await this.userService.getByEmail(payload.email!)
+
+        if (!user) {
+            throw new BadRequestException("User not registered")
+        }
+
+        if (!user.isActive) {
+            throw new BadRequestException("Account is inactive")
+        }
 
         const { accessToken, refreshToken } = await AuthHelper.generateTokens(user)
         const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user as any
@@ -51,7 +59,11 @@ export class AuthService {
     async login(data: LoginValidator) {
         const user = await this.userService.getByIdentifier(data.identifier)
         if (!user) {
-            throw new UnauthorizedException("Invalid credentials")
+            throw new UnauthorizedException("User not registered")
+        }
+
+        if (!user.isActive) {
+            throw new UnauthorizedException("Account is inactive")
         }
 
         const isValid = await comparePassword(data.password, user.password)
@@ -83,6 +95,10 @@ export class AuthService {
         const user = await this.userService.getByEmail(data.email)
         if (!user) {
             throw new BadRequestException("Email not found")
+        }
+
+        if (!user.isActive) {
+            throw new BadRequestException("Account is inactive")
         }
 
         const resetToken = crypto.randomBytes(32).toString("hex")

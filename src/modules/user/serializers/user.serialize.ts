@@ -22,6 +22,8 @@ export class UserSerializer {
                 isSubscribe: user.isSubscribe,
                 isAutoWithdraw: user.isAutoWithdraw
             },
+            role: user.role,
+            isActive: user.isActive,
             passwordUpdatedAt: user.passwordUpdatedAt,
             createdAt: user.createdAt
         }

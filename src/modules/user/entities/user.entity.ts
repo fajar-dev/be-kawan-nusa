@@ -8,6 +8,12 @@ export class User {
     @PrimaryGeneratedColumn()
     id!: number
 
+    @Column({ default: "user" })
+    role!: "user" | "admin"
+
+    @Column({ name: "is_active", default: true })
+    isActive!: boolean
+
     @Column({ name: "first_name" })
     firstName!: string
 
