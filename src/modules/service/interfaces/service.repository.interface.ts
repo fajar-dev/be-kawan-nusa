@@ -9,7 +9,7 @@ export interface ServiceListFilters {
 
 export interface ServiceWithStats extends Service {
     totalCustomerServices: number
-    lastReferanceDate: string | null
+    lastReferanceDate: Date | string | null
     totalPoint: number
 }
 

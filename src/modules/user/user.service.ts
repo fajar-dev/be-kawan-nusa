@@ -1,13 +1,13 @@
 import { User } from "./entities/user.entity"
 import { NotFoundException } from "../../core/exceptions/base"
 import { EntityManager } from "typeorm"
-import { IUserRepository } from "./interfaces/user.repository.interface"
+import { IUserRepository, UserListFilters } from "./interfaces/user.repository.interface"
 
 export class UserService {
     constructor(private readonly repository: IUserRepository) {}
 
-    async getAll(page: number, limit: number, q: string, sort: string, order: string): Promise<{ data: any[]; total: number }> {
-        return await this.repository.findAll(page, limit, q, sort, order)
+    async getAll(page: number, limit: number, q: string, sort: string, order: string, filters: UserListFilters = {}): Promise<{ data: any[]; total: number }> {
+        return await this.repository.findAll(page, limit, q, sort, order, filters)
     }
 
     async getById(id: number): Promise<User> {

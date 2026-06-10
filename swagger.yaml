@@ -791,9 +791,17 @@ components:
           }
         email:
           { type: string, format: email, nullable: true, example: "budi.santoso@nusanet.id" }
+        phone: { type: string, nullable: true, example: "081234567890" }
         identityNumber: { type: integer, nullable: true, example: 3201234567890001 }
         taxNumber: { type: string, nullable: true, example: "01.234.567.8-901.000" }
-        customerServicesCount: { type: integer, example: 15 }
+        bank:
+          type: object
+          properties:
+            holderName: { type: string, nullable: true, example: "Budi Santoso" }
+            name: { type: string, nullable: true, example: "BCA" }
+            number: { type: string, nullable: true, example: "1234567890" }
+        isActive: { type: boolean, example: true }
+        lastReferanceDate: { type: string, format: date, nullable: true, example: "2024-03-15" }
         point: { type: number, example: 25500 }
 
   parameters:
@@ -3269,9 +3277,13 @@ paths:
         - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
-          description: "Sort field (name, email, createdAt)"
-          schema: { type: string, default: createdAt, enum: [name, email, createdAt] }
+          description: "Sort field"
+          schema: { type: string, default: createdAt, enum: [name, email, phone, identityNumber, taxNumber, isActive, lastReferanceDate, point, createdAt] }
         - $ref: "#/components/parameters/OrderParam"
+        - name: isActive
+          in: query
+          description: "Filter by active status (1 = active, 0 = inactive)"
+          schema: { type: string, enum: ["1", "0"] }
       responses:
         "200":
           description: User list retrieved successfully
@@ -3297,9 +3309,15 @@ paths:
                     name: "Budi Santoso"
                     photo: "https://cdn.example.com/photo.jpg"
                     email: "budi.santoso@nusanet.id"
+                    phone: "081234567890"
                     identityNumber: 3201234567890001
                     taxNumber: "01.234.567.8-901.000"
-                    customerServicesCount: 15
+                    bank:
+                      holderName: "Budi Santoso"
+                      name: "BCA"
+                      number: "1234567890"
+                    isActive: true
+                    lastReferanceDate: "2024-03-15"
                     point: 25500
                 meta:
                   total: 50

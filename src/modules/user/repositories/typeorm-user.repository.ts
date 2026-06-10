@@ -1,7 +1,7 @@
 import { EntityManager, Repository } from "typeorm"
 import { AppDataSource } from "../../../config/database"
 import { User } from "../entities/user.entity"
-import { IUserRepository } from "../interfaces/user.repository.interface"
+import { IUserRepository, UserListFilters } from "../interfaces/user.repository.interface"
 
 export class TypeOrmUserRepository implements IUserRepository {
     private readonly repository: Repository<User>
@@ -10,7 +10,7 @@ export class TypeOrmUserRepository implements IUserRepository {
         this.repository = AppDataSource.getRepository(User)
     }
 
-    async findAll(page: number, limit: number, q: string, sort: string, order: string): Promise<{ data: any[]; total: number }> {
+    async findAll(page: number, limit: number, q: string, sort: string, order: string, filters: UserListFilters = {}): Promise<{ data: any[]; total: number }> {
         const offset = (page - 1) * limit
         const today = new Date().toISOString().split("T")[0]
 
@@ -20,15 +20,20 @@ export class TypeOrmUserRepository implements IUserRepository {
                 "CONCAT(user.first_name, COALESCE(CONCAT(' ', user.last_name), '')) AS name",
                 "user.photo AS photo",
                 "user.email AS email",
+                "user.phone AS phone",
                 "user.identity_number AS identityNumber",
                 "user.tax_number AS taxNumber",
+                "user.account_holder_name AS accountHolderName",
+                "user.bank_name AS bankName",
+                "user.account_number AS accountNumber",
+                "user.is_active AS isActive",
             ])
             .addSelect(subQuery => {
                 return subQuery
-                    .select("COUNT(cs.id)", "count")
+                    .select("MAX(cs.reference_date)", "lastReferanceDate")
                     .from("customer_services", "cs")
                     .where("cs.user_id = user.id")
-            }, "customerServicesCount")
+            }, "lastReferanceDate")
             .addSelect(subQuery => {
                 return subQuery
                     .select("COALESCE(SUM(r.remaining_point), 0)", "total")
@@ -45,6 +50,10 @@ export class TypeOrmUserRepository implements IUserRepository {
             )
         }
 
+        if (filters.isActive !== undefined && filters.isActive !== "") {
+            query.andWhere("user.is_active = :isActive", { isActive: filters.isActive === "1" })
+        }
+
         // Get total count
         const countQuery = query.clone()
         const totalResult = await countQuery.getRawMany()
@@ -54,6 +63,12 @@ export class TypeOrmUserRepository implements IUserRepository {
         const sortMap: Record<string, string> = {
             name: "name",
             email: "user.email",
+            phone: "user.phone",
+            identityNumber: "user.identity_number",
+            taxNumber: "user.tax_number",
+            isActive: "user.is_active",
+            lastReferanceDate: "lastReferanceDate",
+            point: "point",
             createdAt: "user.created_at",
         }
         const finalSort = sortMap[sort] || "user.id"

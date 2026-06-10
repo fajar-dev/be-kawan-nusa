@@ -12,8 +12,9 @@ export class UserController {
         const q = c.req.query("q") || ""
         const sort = c.req.query("sort") || "createdAt"
         const order = c.req.query("order") || "DESC"
+        const isActive = c.req.query("isActive")
 
-        const { data, total } = await this.service.getAll(page, limit, q, sort, order)
+        const { data, total } = await this.service.getAll(page, limit, q, sort, order, { isActive })
 
         return ApiResponse.paginate(
             c,
