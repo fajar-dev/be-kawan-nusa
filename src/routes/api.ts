@@ -33,6 +33,7 @@ import { statisticController } from "../modules/statistic/statistic.module"
 import { additionalController } from "../modules/additional/additional.module"
 import { feedbackController } from "../modules/feedback/feedback.module"
 import { templateController } from "../modules/template/template.module"
+import { roleMiddleware } from "../core/middlewares/role.middleware"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const routes = new Hono()
@@ -50,56 +51,56 @@ routes.get("/auth/me", authMiddleware, (c) => authController.me(c))
 routes.post("/auth/logout", authMiddleware, (c) => authController.logout(c))
 
 // Profile
-routes.get("/profile", authMiddleware, (c) => profileController.show(c))
-routes.put("/profile/account", authMiddleware, zValidator("json", UpdateAccountValidator, validationHook), (c) => profileController.updateAccount(c))
-routes.put("/profile/bank", authMiddleware, zValidator("json", UpdateBankValidator, validationHook), (c) => profileController.updateBank(c))
-routes.put("/profile/preference", authMiddleware, zValidator("json", UpdatePreferenceValidator, validationHook), (c) => profileController.updatePreference(c))
-routes.put("/profile/password", authMiddleware, zValidator("json", UpdatePasswordValidator, validationHook), (c) => profileController.updatePassword(c))
-routes.post("/profile/photo", authMiddleware, zValidator("form", UpdatePhotoValidator, validationHook), (c) => profileController.updatePhoto(c))
+routes.get("/profile", authMiddleware, roleMiddleware('user'), (c) => profileController.show(c))
+routes.put("/profile/account", authMiddleware, roleMiddleware('user'), zValidator("json", UpdateAccountValidator, validationHook), (c) => profileController.updateAccount(c))
+routes.put("/profile/bank", authMiddleware, roleMiddleware('user'), zValidator("json", UpdateBankValidator, validationHook), (c) => profileController.updateBank(c))
+routes.put("/profile/preference", authMiddleware, roleMiddleware('user'), zValidator("json", UpdatePreferenceValidator, validationHook), (c) => profileController.updatePreference(c))
+routes.put("/profile/password", authMiddleware, roleMiddleware('user'), zValidator("json", UpdatePasswordValidator, validationHook), (c) => profileController.updatePassword(c))
+routes.post("/profile/photo", authMiddleware, roleMiddleware('user'), zValidator("form", UpdatePhotoValidator, validationHook), (c) => profileController.updatePhoto(c))
 
 // Point
-routes.get("/point", authMiddleware, (c) => pointController.show(c))
+routes.get("/point", authMiddleware, roleMiddleware('user'), (c) => pointController.show(c))
 
 // Redemption
-routes.get("/redemption", authMiddleware, (c) => redemptionController.index(c))
-routes.get("/redemption/:id", authMiddleware, (c) => redemptionController.show(c))
+routes.get("/redemption", authMiddleware, roleMiddleware('user'), (c) => redemptionController.index(c))
+routes.get("/redemption/:id", authMiddleware, roleMiddleware('user'), (c) => redemptionController.show(c))
 routes.get("/redemption/:id/receipt", tokenAuthMiddleware, (c) => redemptionController.previewReceipt(c))
 routes.get("/redemption/:id/receipt/download", tokenAuthMiddleware, (c) => redemptionController.downloadReceipt(c))
-routes.post("/redemption/cash", authMiddleware, zValidator("json", CreateCashRedemptionValidator, validationHook), (c) => redemptionController.storeCash(c))
-routes.post("/redemption/voucher", authMiddleware, zValidator("json", CreateRedemptionVoucherValidator, validationHook), (c) => redemptionController.storeVoucher(c))
-routes.post("/redemption/product", authMiddleware, zValidator("json", CreateRedemptionProductValidator, validationHook), (c) => redemptionController.storeProduct(c))
+routes.post("/redemption/cash", authMiddleware, roleMiddleware('user'), zValidator("json", CreateCashRedemptionValidator, validationHook), (c) => redemptionController.storeCash(c))
+routes.post("/redemption/voucher", authMiddleware, roleMiddleware('user'), zValidator("json", CreateRedemptionVoucherValidator, validationHook), (c) => redemptionController.storeVoucher(c))
+routes.post("/redemption/product", authMiddleware, roleMiddleware('user'), zValidator("json", CreateRedemptionProductValidator, validationHook), (c) => redemptionController.storeProduct(c))
 
 // Customer
-routes.get("/customer", authMiddleware, (c) => customerController.index(c))
-routes.get("/customer/:id", authMiddleware, (c) => customerController.show(c))
-routes.get("/customer/:id/service", authMiddleware, (c) => customerServiceController.byCustomer(c))
-routes.get("/customer/:id/reward", authMiddleware, (c) => rewardController.byCustomer(c))
+routes.get("/customer", authMiddleware, roleMiddleware('user'), (c) => customerController.index(c))
+routes.get("/customer/:id", authMiddleware, roleMiddleware('user'), (c) => customerController.show(c))
+routes.get("/customer/:id/service", authMiddleware, roleMiddleware('user'), (c) => customerServiceController.byCustomer(c))
+routes.get("/customer/:id/reward", authMiddleware, roleMiddleware('user'), (c) => rewardController.byCustomer(c))
 
 // Service Promotion
 routes.get("/service/promotion", authMiddleware, (c) => servicePromotionController.index(c))
 
 // Template
 routes.get("/template", authMiddleware, (c) => templateController.index(c))
-routes.get("/template/:id", authMiddleware, (c) => templateController.show(c))
-routes.get("/template/:id/download", authMiddleware, (c) => templateController.download(c))
+routes.get("/template/:id", authMiddleware, roleMiddleware('user'), (c) => templateController.show(c))
+routes.get("/template/:id/download", authMiddleware, roleMiddleware('user'), (c) => templateController.download(c))
 
 // Service
-routes.get("/service", authMiddleware, (c) => serviceController.index(c))
-routes.get("/service/:code", authMiddleware, (c) => serviceController.show(c))
-routes.get("/service/:code/customer", authMiddleware, (c) => customerServiceController.byService(c))
+routes.get("/service", authMiddleware, roleMiddleware('user'), (c) => serviceController.index(c))
+routes.get("/service/:code", authMiddleware, roleMiddleware('user'), (c) => serviceController.show(c))
+routes.get("/service/:code/customer", authMiddleware, roleMiddleware('user'), (c) => customerServiceController.byService(c))
 
 // Customer Service
-routes.get("/customer-service", authMiddleware, (c) => customerServiceController.index(c))
+routes.get("/customer-service", authMiddleware, roleMiddleware('user'), (c) => customerServiceController.index(c))
 
 // Reward
-routes.get("/reward", authMiddleware, (c) => rewardController.index(c))
-routes.post("/reward", apiKeyMiddleware, zValidator("json", CreateRewardValidator, validationHook), (c) => rewardController.store(c))
+routes.get("/reward", authMiddleware, roleMiddleware('user'), (c) => rewardController.index(c))
+routes.post("/reward", apiKeyMiddleware, roleMiddleware('admin'), zValidator("json", CreateRewardValidator, validationHook), (c) => rewardController.store(c))
 
 // Statistic
-routes.get("/statistic/count", authMiddleware, (c) => statisticController.count(c))
-routes.get("/statistic/point", authMiddleware, (c) => statisticController.pointPerMonth(c))
-routes.get("/statistic/customer", authMiddleware, (c) => statisticController.customerStats(c))
-routes.get("/statistic/redemption-reward", authMiddleware, (c) => statisticController.redemptionRewardStats(c))
+routes.get("/statistic/count", authMiddleware, roleMiddleware('user'), (c) => statisticController.count(c))
+routes.get("/statistic/point", authMiddleware, roleMiddleware('user'), (c) => statisticController.pointPerMonth(c))
+routes.get("/statistic/customer", authMiddleware, roleMiddleware('user'), (c) => statisticController.customerStats(c))
+routes.get("/statistic/redemption-reward", authMiddleware, roleMiddleware('user'), (c) => statisticController.redemptionRewardStats(c))
 
 // Catalog
 routes.get("/catalog/category", authMiddleware, (c) => catalogCategoryController.index(c))
