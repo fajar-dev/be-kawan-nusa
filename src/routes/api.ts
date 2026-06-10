@@ -33,6 +33,7 @@ import { statisticController } from "../modules/statistic/statistic.module"
 import { additionalController } from "../modules/additional/additional.module"
 import { feedbackController } from "../modules/feedback/feedback.module"
 import { templateController } from "../modules/template/template.module"
+import { userController } from "../modules/user/user.module"
 import { roleMiddleware } from "../core/middlewares/role.middleware"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
@@ -117,6 +118,9 @@ routes.get("/education/video/:id", authMiddleware, (c) => educationVideoControll
 // Feedback
 routes.get("/feedback", authMiddleware, (c) => feedbackController.index(c))
 routes.post("/feedback", authMiddleware, zValidator("form", StoreFeedbackValidator, validationHook), (c) => feedbackController.store(c))
+
+// User
+routes.get("/user", authMiddleware, roleMiddleware('admin'), (c) => userController.index(c))
 
 // Additional
 routes.get("/additional/service", authMiddleware, (c) => additionalController.getServices(c))

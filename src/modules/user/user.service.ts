@@ -6,6 +6,10 @@ import { IUserRepository } from "./interfaces/user.repository.interface"
 export class UserService {
     constructor(private readonly repository: IUserRepository) {}
 
+    async getAll(page: number, limit: number, q: string, sort: string, order: string): Promise<{ data: any[]; total: number }> {
+        return await this.repository.findAll(page, limit, q, sort, order)
+    }
+
     async getById(id: number): Promise<User> {
         const user = await this.repository.findById(id)
         if (!user) {

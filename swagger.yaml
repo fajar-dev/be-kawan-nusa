@@ -777,6 +777,25 @@ components:
           items: { type: string, format: binary }
           description: "1–5 image files (jpg, png, jpeg, etc)"
 
+    # --- User List Schemas ---
+    UserListItem:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Budi Santoso" }
+        photo:
+          {
+            type: string,
+            nullable: true,
+            example: "https://cdn.example.com/photo.jpg",
+          }
+        email:
+          { type: string, format: email, nullable: true, example: "budi.santoso@nusanet.id" }
+        identityNumber: { type: integer, nullable: true, example: 3201234567890001 }
+        taxNumber: { type: string, nullable: true, example: "01.234.567.8-901.000" }
+        customerServicesCount: { type: integer, example: 15 }
+        point: { type: number, example: 25500 }
+
   parameters:
     PageParam:
       name: page
@@ -3236,6 +3255,74 @@ paths:
           $ref: "#/components/responses/UnauthorizedResponse"
 
   # =============================================
+  # USER ROUTES
+  # =============================================
+  /user:
+    get:
+      summary: List all users
+      description: "Retrieve a paginated list of all users with their customer services count and available point balance. Admin only."
+      tags: [User]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: sort
+          in: query
+          description: "Sort field (name, email, createdAt)"
+          schema: { type: string, default: createdAt, enum: [name, email, createdAt] }
+        - $ref: "#/components/parameters/OrderParam"
+      responses:
+        "200":
+          description: User list retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/UserListItem"
+                      meta:
+                        $ref: "#/components/schemas/PaginationMeta"
+              example:
+                success: true
+                statusCode: 200
+                message: "User list retrieved successfully"
+                data:
+                  - id: 1
+                    name: "Budi Santoso"
+                    photo: "https://cdn.example.com/photo.jpg"
+                    email: "budi.santoso@nusanet.id"
+                    identityNumber: 3201234567890001
+                    taxNumber: "01.234.567.8-901.000"
+                    customerServicesCount: 15
+                    point: 25500
+                meta:
+                  total: 50
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 5
+                  from: 1
+                  to: 10
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin only
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+              example:
+                success: false
+                statusCode: 403
+                message: "Forbidden access: admin only"
+
+  # =============================================
   # FEEDBACK ROUTES
   # =============================================
   /feedback:
@@ -3322,3 +3409,5 @@ tags:
     description: Lookup/reference data for dropdowns and filters
   - name: Feedback
     description: Submit and retrieve user feedback stored via Google AppScript
+  - name: User
+    description: Admin endpoints for managing and listing users
