@@ -5,6 +5,42 @@ import { CustomerService } from "../modules/customer-service/entities/customer-s
 import { RewardPointType } from "../modules/reward/reward.enum"
 
 /**
+ * Helper to parse Month and Year from tab title (e.g. "Jun'26")
+ * and returns a Date object set to the 15th of that month.
+ */
+function parseDateFromTitle(title: string): Date {
+    const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"]
+    const now = new Date()
+    
+    // Find the month index
+    let foundMonthIndex = -1
+    for (let i = 0; i < months.length; i++) {
+        if (title.toLowerCase().includes(months[i].toLowerCase())) {
+            foundMonthIndex = i
+            break
+        }
+    }
+    
+    // Find year suffix like '26 or 2026 or 26.
+    let year = now.getFullYear()
+    const yearMatch = title.match(/'(\d{2})/)
+    if (yearMatch) {
+        year = 2000 + parseInt(yearMatch[1], 10)
+    } else {
+        // Fallback: search for any 2 or 4 digit numbers in the title
+        const anyYearMatch = title.match(/\b(20\d{2}|\d{2})\b/)
+        if (anyYearMatch) {
+            const yr = parseInt(anyYearMatch[1], 10)
+            year = yr < 100 ? 2000 + yr : yr
+        }
+    }
+    
+    const month = foundMonthIndex !== -1 ? foundMonthIndex : now.getMonth()
+    
+    return new Date(year, month, 15, 12, 0, 0)
+}
+
+/**
  * Sync data from Google Sheets to Application Database
  * Run: bun run sync-sheets
  */
@@ -56,6 +92,11 @@ async function sync() {
 
             if (rawRows.length === 0) continue
 
+            // Parse date for the current tab once
+            const tabDate = parseDateFromTitle(title)
+            const expiredDate = new Date(tabDate)
+            expiredDate.setFullYear(tabDate.getFullYear() + 1)
+
             // Proses data menjadi object { a, b, c, ... }
             const mappedData = rawRows.map(row => {
                 const obj: Record<string, any> = {}
@@ -105,6 +146,8 @@ async function sync() {
                     price,
                     point,
                     type: typeEnum,
+                    createdAt: tabDate,
+                    expiredDate: expiredDate,
                 })
 
                 await rewardRepo.save(reward)
