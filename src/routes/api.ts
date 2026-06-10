@@ -121,6 +121,7 @@ routes.post("/feedback", authMiddleware, zValidator("form", StoreFeedbackValidat
 
 // User
 routes.get("/user", authMiddleware, roleMiddleware('admin'), (c) => userController.index(c))
+routes.get("/user/:id", authMiddleware, roleMiddleware('admin'), (c) => userController.show(c))
 
 // Additional
 routes.get("/additional/service", authMiddleware, (c) => additionalController.getServices(c))

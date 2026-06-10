@@ -3340,6 +3340,71 @@ paths:
                 statusCode: 403
                 message: "Forbidden access: admin only"
 
+  /user/{id}:
+    get:
+      summary: Get user detail
+      description: "Retrieve a single user's full profile by ID. Admin only."
+      tags: [User]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema: { type: integer, example: 1 }
+      responses:
+        "200":
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserProfile"
+              example:
+                success: true
+                statusCode: 200
+                message: "User retrieved successfully"
+                data:
+                  id: 1
+                  firstName: "Budi"
+                  lastName: "Santoso"
+                  photo: "https://cdn.example.com/photo.jpg"
+                  email: "budi.santoso@nusanet.id"
+                  phone: "081234567890"
+                  identityNumber: 3201234567890001
+                  taxNumber: "01.234.567.8-901.000"
+                  company: "PT Nusanet"
+                  jobPosition: "Sales Manager"
+                  bankDetails:
+                    holderName: "Budi Santoso"
+                    name: "BCA"
+                    number: "1234567890"
+                  settings:
+                    isSubscribe: true
+                    isAutoWithdraw: false
+                  isActive: true
+                  passwordUpdatedAt: "2025-01-15T10:30:00.000Z"
+                  createdAt: "2024-06-01T08:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin only
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+              example:
+                success: false
+                statusCode: 403
+                message: "Forbidden access: admin only"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+
   # =============================================
   # FEEDBACK ROUTES
   # =============================================

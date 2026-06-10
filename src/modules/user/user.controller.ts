@@ -2,6 +2,7 @@ import { Context } from "hono"
 import { UserService } from "./user.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { UserListSerializer } from "./serializers/user-list.serialize"
+import { UserSerializer } from "./serializers/user.serialize"
 
 export class UserController {
     constructor(private readonly service: UserService) {}
@@ -24,5 +25,11 @@ export class UserController {
             limit,
             "User list retrieved successfully"
         )
+    }
+
+    async show(c: Context) {
+        const id = Number(c.req.param("id"))
+        const user = await this.service.getById(id)
+        return ApiResponse.success(c, UserSerializer.single(user), "User retrieved successfully")
     }
 }
