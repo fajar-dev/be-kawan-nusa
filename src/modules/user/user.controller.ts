@@ -3,9 +3,20 @@ import { UserService } from "./user.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { UserListSerializer } from "./serializers/user-list.serialize"
 import { UserSerializer } from "./serializers/user.serialize"
+import { CustomerServiceService } from "../customer-service/customer-service.service"
+import { CustomerServiceSerializer } from "../customer-service/serializers/customer-service.serialize"
+import { RewardService } from "../reward/reward.service"
+import { RewardSerializer } from "../reward/serializers/reward.serialize"
+import { RedemptionService } from "../redemption/redemption.service"
+import { RedemptionSerializer } from "../redemption/serializers/redemption.serialize"
 
 export class UserController {
-    constructor(private readonly service: UserService) {}
+    constructor(
+        private readonly service: UserService,
+        private readonly customerServiceService: CustomerServiceService,
+        private readonly rewardService: RewardService,
+        private readonly redemptionService: RedemptionService,
+    ) {}
 
     async index(c: Context) {
         const page = Number(c.req.query("page")) || 1
@@ -31,5 +42,94 @@ export class UserController {
         const id = Number(c.req.param("id"))
         const user = await this.service.getById(id)
         return ApiResponse.success(c, UserSerializer.single(user), "User retrieved successfully")
+    }
+
+    async services(c: Context) {
+        const userId = Number(c.req.param("id"))
+        const page = Number(c.req.query("page")) || 1
+        const limit = Number(c.req.query("limit")) || 10
+        const q = c.req.query("q") || ""
+        const sort = c.req.query("sort") || "referenceDate"
+        const order = c.req.query("order") || "DESC"
+        const startDate = c.req.query("startDate")
+        const endDate = c.req.query("endDate")
+        const types = c.req.queries("type[]")
+        const serviceCodes = c.req.queries("serviceCode[]")
+
+        const { data, total } = await this.customerServiceService.getAll(userId, page, limit, q, sort, order, {
+            startDate,
+            endDate,
+            types,
+            serviceCodes,
+        })
+
+        return ApiResponse.paginate(
+            c,
+            CustomerServiceSerializer.collection(data),
+            total,
+            page,
+            limit,
+            "User customer services retrieved successfully"
+        )
+    }
+
+    async rewards(c: Context) {
+        const userId = Number(c.req.param("id"))
+        const page = Number(c.req.query("page")) || 1
+        const limit = Number(c.req.query("limit")) || 10
+        const q = c.req.query("q") || ""
+        const sort = c.req.query("sort") || "createdAt"
+        const order = c.req.query("order") || "DESC"
+        const startDate = c.req.query("startDate")
+        const endDate = c.req.query("endDate")
+        const types = c.req.queries("type[]")
+
+        const { data, total } = await this.rewardService.getAll(userId, page, limit, q, sort, order, {
+            startDate,
+            endDate,
+            types,
+        })
+
+        return ApiResponse.paginate(
+            c,
+            RewardSerializer.collection(data),
+            total,
+            page,
+            limit,
+            "User rewards retrieved successfully"
+        )
+    }
+
+    async redemptions(c: Context) {
+        const userId = Number(c.req.param("id"))
+        const page = Number(c.req.query("page")) || 1
+        const limit = Number(c.req.query("limit")) || 10
+        const sort = c.req.query("sort") || "createdAt"
+        const order = c.req.query("order") || "DESC"
+        const queries = c.req.queries()
+
+        const { data, total } = await this.redemptionService.getAll(
+            userId,
+            page,
+            limit,
+            {
+                startDate: c.req.query("startDate"),
+                endDate: c.req.query("endDate"),
+                status: queries["status[]"] || queries["status"],
+                type: queries["type[]"] || queries["type"],
+                q: c.req.query("q") || "",
+            },
+            sort,
+            order
+        )
+
+        return ApiResponse.paginate(
+            c,
+            RedemptionSerializer.collection(data),
+            total,
+            page,
+            limit,
+            "User redemptions retrieved successfully"
+        )
     }
 }

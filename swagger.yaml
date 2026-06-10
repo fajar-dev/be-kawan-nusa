@@ -262,8 +262,6 @@ components:
       type: object
       properties:
         id: { type: integer, example: 42 }
-        customerId: { type: string, example: "CUST-0001" }
-        serviceCode: { type: string, example: "SVC-FIBER-001" }
         registrationDate:
           { type: string, format: date, nullable: true, example: "2024-01-10" }
         activationDate:
@@ -291,6 +289,13 @@ components:
             code: { type: string, example: "SVC-FIBER-001" }
             name: { type: string, example: "Fiber Home 20 Mbps" }
             type: { type: string, example: "Internet" }
+        customer:
+          nullable: true
+          type: object
+          properties:
+            id: { type: string, example: "CUST-0001" }
+            name: { type: string, example: "Warnet Jaya" }
+            company: { type: string, example: "CV Jaya Abadi" }
         totalPoint: { type: number, example: 1500 }
         latestReward:
           nullable: true
@@ -3404,6 +3409,153 @@ paths:
                 message: "Forbidden access: admin only"
         "404":
           $ref: "#/components/responses/NotFoundResponse"
+
+  /user/{id}/services:
+    get:
+      summary: List customer services for a user
+      description: "Retrieve paginated customer services belonging to a specific user. Admin only."
+      tags: [User]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema: { type: integer, example: 1 }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - $ref: "#/components/parameters/SortParam"
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
+      responses:
+        "200":
+          description: Customer services retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/CustomerServiceItem"
+                      meta:
+                        $ref: "#/components/schemas/PaginationMeta"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin only
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+              example:
+                success: false
+                statusCode: 403
+                message: "Forbidden access: admin only"
+
+  /user/{id}/reward:
+    get:
+      summary: List rewards for a user
+      description: "Retrieve paginated reward point transactions for a specific user. Admin only."
+      tags: [User]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema: { type: integer, example: 1 }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - $ref: "#/components/parameters/SortParam"
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
+      responses:
+        "200":
+          description: Rewards retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Reward"
+                      meta:
+                        $ref: "#/components/schemas/PaginationMeta"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin only
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+              example:
+                success: false
+                statusCode: 403
+                message: "Forbidden access: admin only"
+
+  /user/{id}/redeem:
+    get:
+      summary: List redemptions for a user
+      description: "Retrieve paginated redemption records for a specific user. Admin only."
+      tags: [User]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema: { type: integer, example: 1 }
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - $ref: "#/components/parameters/SortParam"
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
+      responses:
+        "200":
+          description: Redemptions retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Redemption"
+                      meta:
+                        $ref: "#/components/schemas/PaginationMeta"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin only
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+              example:
+                success: false
+                statusCode: 403
+                message: "Forbidden access: admin only"
 
   # =============================================
   # FEEDBACK ROUTES

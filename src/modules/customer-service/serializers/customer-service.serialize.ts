@@ -4,8 +4,6 @@ export class CustomerServiceSerializer {
     static single(item: CustomerService) {
         return {
             id: item.id,
-            customerId: item.customerId,
-            serviceCode: item.serviceCode,
             registrationDate: item.registrationDate,
             activationDate: item.activationDate,
             address: item.address,
@@ -22,6 +20,11 @@ export class CustomerServiceSerializer {
                 code: item.service.code,
                 name: item.service.name,
                 type: item.service.type
+            } : null,
+            customer: item.customer ? {
+                id: item.customer.id,
+                name: item.customer.name,
+                company: item.customer.company,
             } : null,
             totalPoint: (item as any).totalPoint ?? 0,
             latestReward: (item as any).latestReward ? {

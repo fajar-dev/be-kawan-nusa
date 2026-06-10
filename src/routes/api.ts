@@ -122,6 +122,9 @@ routes.post("/feedback", authMiddleware, zValidator("form", StoreFeedbackValidat
 // User
 routes.get("/user", authMiddleware, roleMiddleware('admin'), (c) => userController.index(c))
 routes.get("/user/:id", authMiddleware, roleMiddleware('admin'), (c) => userController.show(c))
+routes.get("/user/:id/services", authMiddleware, roleMiddleware('admin'), (c) => userController.services(c))
+routes.get("/user/:id/reward", authMiddleware, roleMiddleware('admin'), (c) => userController.rewards(c))
+routes.get("/user/:id/redeem", authMiddleware, roleMiddleware('admin'), (c) => userController.redemptions(c))
 
 // Additional
 routes.get("/additional/service", authMiddleware, (c) => additionalController.getServices(c))
