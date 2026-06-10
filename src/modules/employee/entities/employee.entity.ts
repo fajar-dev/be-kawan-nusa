@@ -21,6 +21,9 @@ export class Employee {
     @Column({ name: "job_position", nullable: true })
     jobPosition?: string
 
+    @Column({ nullable: true })
+    phone?: string
+
     @Column({ name: "manager_id", nullable: true })
     managerId!: number | null
 

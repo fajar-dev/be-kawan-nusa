@@ -3,11 +3,12 @@ import { OAuth2Client } from "google-auth-library"
 import { config } from "../../config/config"
 
 export class AuthHelper {
-    static async generateTokens(user: any) {
+    static async generateTokens(user: any, role: 'user' | 'admin' = 'user') {
         const accessToken = await sign(
             { 
                 sub: user.id, 
                 email: user.email, 
+                role,
                 exp: Math.floor(Date.now() / 1000) + 60 * 15 // 15 mins
             }, 
             config.app.jwtSecret,
@@ -17,6 +18,7 @@ export class AuthHelper {
         const refreshToken = await sign(
             { 
                 sub: user.id, 
+                role,
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 // 7 days
             }, 
             config.app.jwtRefreshSecret,

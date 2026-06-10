@@ -33,6 +33,7 @@ async function sync() {
                     email: emp.email,
                     photo: emp.photo_profile,
                     jobPosition: emp.job_position,
+                    phone: emp.whatsapp || emp.mobile_phone,
                     isActive: true,
                 })
             })

@@ -1,5 +1,6 @@
 import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
+import { Employee } from "../employee/entities/employee.entity"
 import {
     RegisterValidator,
     LoginValidator,
@@ -18,10 +19,14 @@ import * as fs from "fs"
 import * as path from "path"
 import { EntityManager } from "typeorm"
 import { UserService } from "../user/user.service"
+import { EmployeeService } from "../employee/employee.service"
 import { AuthHelper } from "../../core/helpers/auth"
 
 export class AuthService {
-    constructor(private readonly userService: UserService) {}
+    constructor(
+        private readonly userService: UserService,
+        private readonly employeeService: EmployeeService,
+    ) {}
 
     async register(data: RegisterValidator) {
         if (data.email) {
@@ -51,9 +56,25 @@ export class AuthService {
             throw new BadRequestException("Account is inactive")
         }
 
-        const { accessToken, refreshToken } = await AuthHelper.generateTokens(user)
+        const { accessToken, refreshToken } = await AuthHelper.generateTokens(user, 'user')
         const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user as any
         return { user: safeUser, accessToken, refreshToken }
+    }
+
+    async adminGoogleLogin(data: GoogleLoginValidator) {
+        const payload = await AuthHelper.verifyGoogleCode(data.code)
+        const employee = await this.employeeService.getByEmail(payload.email!)
+
+        if (!employee) {
+            throw new BadRequestException("Employee not registered")
+        }
+
+        if (!employee.isActive) {
+            throw new BadRequestException("Account is inactive")
+        }
+
+        const { accessToken, refreshToken } = await AuthHelper.generateTokens(employee, 'admin')
+        return { employee, accessToken, refreshToken }
     }
 
     async login(data: LoginValidator) {
@@ -75,7 +96,7 @@ export class AuthService {
             throw new UnauthorizedException("Invalid credentials")
         }
 
-        const { accessToken, refreshToken } = await AuthHelper.generateTokens(user)
+        const { accessToken, refreshToken } = await AuthHelper.generateTokens(user, 'user')
 
         const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user
         return { user: safeUser, accessToken, refreshToken }
@@ -83,13 +104,20 @@ export class AuthService {
 
     async refreshToken(data: RefreshTokenValidator) {
         try {
-            const decoded = await verify(data.refreshToken, config.app.jwtRefreshSecret, "HS256") as { sub: number }
-            const user = await this.userService.getById(decoded.sub)
+            const decoded = await verify(data.refreshToken, config.app.jwtRefreshSecret, "HS256") as { sub: number; role?: string }
+            const role = decoded.role || 'user'
 
-            const { accessToken, refreshToken } = await AuthHelper.generateTokens(user)
+            let account: User | Employee
 
-            const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user
-            return { user: safeUser, accessToken, refreshToken }
+            if (role === 'admin') {
+                account = await this.employeeService.getById(decoded.sub)
+            } else {
+                account = await this.userService.getById(decoded.sub)
+            }
+
+            const { accessToken, refreshToken } = await AuthHelper.generateTokens(account, role as 'user' | 'admin')
+
+            return { user: account, accessToken, refreshToken, role }
         } catch {
             throw new UnauthorizedException("Invalid or expired refresh token")
         }
