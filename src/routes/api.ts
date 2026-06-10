@@ -135,4 +135,13 @@ routes.get("/additional/reward-point-type", authMiddleware, (c) => additionalCon
 routes.get("/additional/service-category", authMiddleware, (c) => additionalController.getServiceCategories(c))
 routes.get("/additional/search", authMiddleware, (c) => additionalController.search(c))
 
+// Proxy MinIO
+routes.get("/proxy", async (c) => {
+    const path = c.req.query("path")
+    if (!path) return c.json({ message: "Missing 'path' query parameter" }, 400)
+
+    const { minio } = await import("../core/helpers/minio")
+    return minio.proxyHandler(path)
+})
+
 export default routes

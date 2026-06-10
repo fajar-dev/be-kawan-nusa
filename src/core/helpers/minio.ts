@@ -1,5 +1,6 @@
 import * as Minio from "minio"
 import { config } from "../../config/config"
+import { Readable } from "node:stream"
 
 const minioClient = new Minio.Client({
     endPoint: config.minio.endPoint,
@@ -66,6 +67,25 @@ class MinioHelper {
     }
 
     /**
+     * Get a proxy URL that goes through the backend
+     * @param objectName - The object key in the bucket
+     */
+    getProxyUrl(objectName: string): string {
+        return `${config.app.appUrl}/api/proxy?path=${encodeURI(objectName)}`
+    }
+
+    /**
+     * Get an object as a readable stream with its metadata
+     * @param objectName - The object key in the bucket
+     * @param bucket - Optional bucket override
+     */
+    async getObject(objectName: string, bucket: string = BUCKET): Promise<{ stream: Readable; stat: Minio.BucketItemStat }> {
+        const stat = await minioClient.statObject(bucket, objectName)
+        const stream = await minioClient.getObject(bucket, objectName)
+        return { stream, stat }
+    }
+
+    /**
      * Delete an object from MinIO
      * @param objectName - The object key in the bucket
      * @param bucket - Optional bucket override
@@ -87,6 +107,31 @@ class MinioHelper {
         } catch {
             return false
         }
+    }
+
+    /**
+     * Proxy handler: streams a MinIO object as an HTTP Response
+     * @param objectName - The object key in the bucket
+     */
+    async proxyHandler(objectName: string): Promise<Response> {
+        const { stream, stat } = await this.getObject(objectName)
+        const contentType = stat.metaData?.["content-type"] || "application/octet-stream"
+
+        const webStream = new ReadableStream({
+            start(controller) {
+                stream.on("data", (chunk: Buffer) => controller.enqueue(chunk))
+                stream.on("end", () => controller.close())
+                stream.on("error", (err: Error) => controller.error(err))
+            },
+        })
+
+        return new Response(webStream, {
+            headers: {
+                "Content-Type": contentType,
+                "Content-Length": String(stat.size),
+                "Cache-Control": "public, max-age=86400",
+            },
+        })
     }
 }
 

@@ -1,7 +1,10 @@
+import minio from "../../../core/helpers/minio"
+
 export interface FeedbackItem {
     timestamp: string
     userId: string
     name: string
+    source: string
     image: string[]
     url: string
     category: string
@@ -11,12 +14,18 @@ export interface FeedbackItem {
 }
 
 export class FeedbackSerializer {
-    static single(item: FeedbackItem) {
+    private static async resolvePhotoUrl(photo?: string | null): Promise<string | null> {
+        if (!photo) return null
+        return await minio.getPresignedUrl(photo)
+    }
+
+    static async single(item: FeedbackItem) {
         return {
             timestamp: item.timestamp,
             userId: item.userId,
             name: item.name,
-            images: item.image,
+            source: item.source,
+            images: await Promise.all(item.image.map((photo) => this.resolvePhotoUrl(photo))),
             url: item.url,
             category: item.category,
             message: item.message,
@@ -25,7 +34,7 @@ export class FeedbackSerializer {
         }
     }
 
-    static collection(items: FeedbackItem[]) {
-        return items.map((item) => this.single(item))
+    static async collection(items: FeedbackItem[]) {
+        return await Promise.all(items.map((item) => this.single(item)))
     }
 }

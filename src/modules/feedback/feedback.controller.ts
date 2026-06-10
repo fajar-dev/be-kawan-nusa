@@ -8,12 +8,16 @@ export class FeedbackController {
 
     async index(c: Context) {
         const user = c.get("user")
-        const data = await this.service.getByUser(user.id)
-        return ApiResponse.success(c, FeedbackSerializer.collection(data), "Feedback retrieved successfully")
+        const role = c.get("role") as string
+        const source = role === "admin" ? 'internal' : 'eksternal'
+        const data = await this.service.getByUser(user.id, source)
+        return ApiResponse.success(c, await FeedbackSerializer.collection(data), "Feedback retrieved successfully")
     }
 
     async store(c: Context) {
         const user = c.get("user")
+        const role = c.get("role") as string
+
         const body = await c.req.parseBody({ all: true })
 
         const message = body["message"] as string
@@ -25,7 +29,8 @@ export class FeedbackController {
 
         await this.service.store(
             user.id,
-            `${user.firstName} ${user.lastName}`,
+            `${user.name}`,
+            role === "admin" ? 'internal' : 'eksternal',
             { message, type, url },
             imageFiles
         )
