@@ -32,7 +32,7 @@ export class PointHelper {
      * Deduct points from oldest rewards first.
      * Automatically expires any overdue rewards before deducting.
      */
-    static async subtractPointsFIFO(manager: EntityManager, userId: number, amount: number) {
+    static async subtractPointsFIFO(manager: EntityManager, userId: number, amount: number): Promise<{ id: number; value: number }[]> {
         // Lazy expiration: expire overdue rewards for this user first
         await this.expirePoints(manager, userId)
 
@@ -56,20 +56,27 @@ export class PointHelper {
             throw new BadRequestException(`Insufficient point balance. Available: ${totalAvailable}, Required: ${amountToSubtract}`)
         }
 
+        const detail: { id: number; value: number }[] = []
         let remainingToSubtract = amountToSubtract
         for (const reward of rewards) {
             if (remainingToSubtract <= 0) break
 
             const remainingInReward = Number(reward.remainingPoint)
+            let deducted: number
             if (remainingInReward <= remainingToSubtract) {
+                deducted = remainingInReward
                 remainingToSubtract -= remainingInReward
                 reward.remainingPoint = 0
             } else {
+                deducted = remainingToSubtract
                 reward.remainingPoint = remainingInReward - remainingToSubtract
                 remainingToSubtract = 0
             }
+            detail.push({ id: reward.id, value: deducted })
             await manager.save(reward)
         }
+
+        return detail
     }
 
     /**
@@ -119,6 +126,7 @@ export class PointHelper {
                 type: RedemptionType.EXPIRED,
                 status: RedemptionStatus.EXPIRED,
                 notes: `Auto-expired from reward #${reward.id}`,
+                rewardOutDetail: [{ id: reward.id, value: expiredPoints }],
             })
             await manager.save(redemption)
 

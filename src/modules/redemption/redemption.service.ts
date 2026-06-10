@@ -53,7 +53,7 @@ export class RedemptionService {
                 )
             }
 
-            await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
+            const rewardOutDetail = await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
             const { tax, payout } = calculateWithdrawal(pointsUsed)
             const withdraw = manager.create(RedemptionWithdraw, {
@@ -73,6 +73,7 @@ export class RedemptionService {
                 type: RedemptionType.CASH,
                 status: RedemptionStatus.PENDING,
                 notes,
+                rewardOutDetail,
                 redemptionWithdrawId: savedWithdraw.id,
             })
 
@@ -96,7 +97,7 @@ export class RedemptionService {
                 )
             }
 
-            await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
+            const rewardOutDetail = await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
             const voucher = manager.create(RedemptionVoucher, {
                 catalogId,
@@ -113,6 +114,7 @@ export class RedemptionService {
                 type: RedemptionType.VOUCHER,
                 status: RedemptionStatus.PENDING,
                 notes,
+                rewardOutDetail,
                 redemptionVoucherId: savedVoucher.id,
             })
 
@@ -136,7 +138,7 @@ export class RedemptionService {
                 )
             }
 
-            await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
+            const rewardOutDetail = await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
 
             const product = manager.create(RedemptionProduct, {
                 catalogId,
@@ -155,6 +157,7 @@ export class RedemptionService {
                 type: RedemptionType.PRODUCT,
                 status: RedemptionStatus.PENDING,
                 notes,
+                rewardOutDetail,
                 redemptionProductId: savedProduct.id,
             })
 

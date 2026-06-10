@@ -37,6 +37,9 @@ export class Redemption {
     @Column({ type: "text", nullable: true })
     notes?: string
 
+    @Column({ name: "reward_out_detail", type: "json", nullable: true })
+    rewardOutDetail?: { id: number; value: number }[]
+
     @Column({ name: "redemption_withdraw_id", nullable: true })
     redemptionWithdrawId?: number
 
