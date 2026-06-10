@@ -8,6 +8,7 @@ import { CustomerService } from "../modules/customer-service/entities/customer-s
 import { CustomerType } from "../modules/customer/customer.enum"
 import { CustomerServiceStatus } from "../modules/customer-service/customer-service.enum"
 import { ServiceType, ServiceCategory } from "../modules/service/service.enum"
+import { Employee } from "../modules/employee/entities/employee.entity"
 
 /**
  * Sync customers, services, and customer services from NIS database.
@@ -332,7 +333,7 @@ async function syncCustomerServices() {
             cs.CustActivationDate AS activation_date,
             cs.CustAccName AS account_name,
             cs.installation_address AS address,
-            CONCAT(e.EmpFName, ' ', e.EmpLName) AS sales_name,
+            cs.SalesId AS sales_employee_id,
             STR_TO_DATE(CONCAT('01', cs.InvoicePeriod), '%d%m%y') AS start_date,
             cs.ContractUntil AS end_date,
             DATE(cshn_first.insert_time) AS reference_date,
@@ -344,8 +345,6 @@ async function syncCustomerServices() {
                 ELSE NULL
             END AS status
         FROM CustomerServices cs
-        LEFT JOIN Employee e
-            ON cs.SalesId = e.EmpId 
         LEFT JOIN (
             SELECT cust_serv_id, MIN(insert_time) AS insert_time
             FROM CustomerServicesHistoryNew
@@ -363,6 +362,15 @@ async function syncCustomerServices() {
         console.log("[Sync] No customer_services found in source")
         return
     }
+
+    // Pre-load all employees from local table, keyed by employeeId
+    const employeeRepo = AppDataSource.getRepository(Employee)
+    const allEmployees = await employeeRepo.find()
+    const employeeMap = new Map<string, number>()
+    for (const emp of allEmployees) {
+        employeeMap.set(emp.employeeId, emp.id)
+    }
+    console.log(`[Sync] Loaded ${employeeMap.size} employees for sales lookup`)
 
     const repo = AppDataSource.getRepository(CustomerService)
     const batchSize = 500
@@ -389,6 +397,9 @@ async function syncCustomerServices() {
             else if (row.status === 'Block') statusEnum = CustomerServiceStatus.BL
             else if (row.status === 'Free') statusEnum = CustomerServiceStatus.FR
 
+            // Lookup sales_id from local employees table by employee_id
+            const salesId = row.sales_employee_id ? (employeeMap.get(String(row.sales_employee_id)) ?? null) : null
+
             try {
                 await repo.upsert({
                     id: row.id,
@@ -402,7 +413,7 @@ async function syncCustomerServices() {
                     startDate: row.start_date || null,
                     endDate: row.end_date || null,
                     referenceDate: row.reference_date || row.registration_date, // fallback to reg date if ref missing
-                    salesName: row.sales_name || null,
+                    salesId: salesId,
                     status: statusEnum,
                 }, ["id"])
                 synced++

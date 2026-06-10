@@ -5,6 +5,7 @@ import { Service } from "../../service/entities/service.entity"
 import { CustomerServiceStatus } from "../customer-service.enum"
 import { Reward } from "../../reward/entities/reward.entity"
 import { User } from "../../user/entities/user.entity"
+import { Employee } from "../../employee/entities/employee.entity"
 
 @Entity("customer_services")
 export class CustomerService {
@@ -45,8 +46,8 @@ export class CustomerService {
     @CreateDateColumn({ name: "reference_date" })
     referenceDate!: Date
 
-    @Column({ name: "sales_name", nullable: true })
-    salesName?: string
+    @Column({ name: "sales_id", nullable: true })
+    salesId!: number | null
 
     @Column({
         type: "enum",
@@ -70,6 +71,10 @@ export class CustomerService {
     @ManyToOne(() => User, (user) => user.customerServices)
     @JoinColumn({ name: "user_id" })
     user!: Relation<User>
+
+    @ManyToOne(() => Employee, { nullable: true, eager: false })
+    @JoinColumn({ name: "sales_id" })
+    sales?: Relation<Employee>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

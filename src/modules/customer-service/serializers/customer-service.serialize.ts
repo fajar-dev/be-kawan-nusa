@@ -13,7 +13,11 @@ export class CustomerServiceSerializer {
             endDate: item.endDate,
             status: item.status,
             referenceDate: item.referenceDate,
-            salesName: item.salesName,
+            sales: item.sales ? {
+                id: item.sales.id,
+                name: item.sales.name,
+                employeeId: item.sales.employeeId,
+            } : null,
             service: item.service ? {
                 code: item.service.code,
                 name: item.service.name,

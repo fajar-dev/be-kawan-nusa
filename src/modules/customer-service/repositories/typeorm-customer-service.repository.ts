@@ -75,12 +75,13 @@ export class TypeOrmCustomerServiceRepository implements ICustomerServiceReposit
             .innerJoinAndSelect("cs.customer", "customer")
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.rewards", "reward")
+            .leftJoinAndSelect("cs.sales", "sales")
             .where("cs.userId = :userId", { userId })
 
         if (q) {
             query.andWhere(new Brackets(qb => {
                 qb.where("cs.serviceCode LIKE :q")
-                  .orWhere("cs.salesName LIKE :q")
+                  .orWhere("sales.name LIKE :q")
                   .orWhere("cs.address LIKE :q")
                   .orWhere("service.name LIKE :q")
             }), { q: `%${q}%` })
@@ -123,13 +124,14 @@ export class TypeOrmCustomerServiceRepository implements ICustomerServiceReposit
         const query = this.repository.createQueryBuilder("cs")
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.rewards", "reward")
+            .leftJoinAndSelect("cs.sales", "sales")
             .where("cs.customerId = :customerId", { customerId })
             .andWhere("cs.userId = :userId", { userId })
 
         if (q) {
             query.andWhere(new Brackets(qb => {
                 qb.where("cs.serviceCode LIKE :q")
-                  .orWhere("cs.salesName LIKE :q")
+                  .orWhere("sales.name LIKE :q")
                   .orWhere("cs.address LIKE :q")
                   .orWhere("service.name LIKE :q")
             }), { q: `%${q}%` })
@@ -161,12 +163,13 @@ export class TypeOrmCustomerServiceRepository implements ICustomerServiceReposit
             .innerJoinAndSelect("cs.customer", "customer")
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.rewards", "reward")
+            .leftJoinAndSelect("cs.sales", "sales")
             .where("cs.serviceCode = :serviceCode", { serviceCode })
             .andWhere("cs.userId = :userId", { userId })
 
         if (q) {
             query.andWhere(new Brackets(qb => {
-                qb.where("cs.salesName LIKE :q")
+                qb.where("sales.name LIKE :q")
                   .orWhere("customer.name LIKE :q")
                   .orWhere("customer.id LIKE :q")
             }), { q: `%${q}%` })
