@@ -1,6 +1,8 @@
-import { EntityManager, MoreThan } from "typeorm"
+import { EntityManager, LessThanOrEqual, MoreThan, FindOptionsWhere } from "typeorm"
 import { BadRequestException } from "../exceptions/base"
 import { Reward } from "../../modules/reward/entities/reward.entity"
+import { Redemption } from "../../modules/redemption/entities/redemption.entity"
+import { RedemptionType, RedemptionStatus } from "../../modules/redemption/redemption.enum"
 
 /**
  * Common point operations using FIFO logic.
@@ -8,8 +10,12 @@ import { Reward } from "../../modules/reward/entities/reward.entity"
 export class PointHelper {
     /**
      * Get the total available points for a user.
+     * Automatically expires any overdue rewards before calculating.
      */
     static async getAvailablePoints(manager: EntityManager, userId: number): Promise<number> {
+        // Lazy expiration: expire overdue rewards for this user first
+        await this.expirePoints(manager, userId)
+
         const today = new Date().toISOString().split('T')[0]
         const rewards = await manager.find(Reward, {
             where: {
@@ -24,8 +30,12 @@ export class PointHelper {
 
     /**
      * Deduct points from oldest rewards first.
+     * Automatically expires any overdue rewards before deducting.
      */
     static async subtractPointsFIFO(manager: EntityManager, userId: number, amount: number) {
+        // Lazy expiration: expire overdue rewards for this user first
+        await this.expirePoints(manager, userId)
+
         const amountToSubtract = Number(amount)
         const today = new Date().toISOString().split('T')[0]
 
@@ -41,8 +51,7 @@ export class PointHelper {
             relations: ["customerService"]
         })
 
-        // Check if total matches
-        const totalAvailable = await this.getAvailablePoints(manager, userId)
+        const totalAvailable = rewards.reduce((sum, r) => sum + Number(r.remainingPoint), 0)
         if (totalAvailable < amountToSubtract) {
             throw new BadRequestException(`Insufficient point balance. Available: ${totalAvailable}, Required: ${amountToSubtract}`)
         }
@@ -69,5 +78,57 @@ export class PointHelper {
     static async addPointsReward(manager: EntityManager, data: Partial<Reward>) {
         const reward = manager.create(Reward, data)
         return await manager.save(reward)
+    }
+
+    /**
+     * Expire rewards that have passed their expiredDate.
+     * Creates a redemption record with type "expired" for each expired reward.
+     * 
+     * @param manager - EntityManager (within a transaction)
+     * @param userId - Optional. If provided, only expire rewards for this user (lazy mode).
+     *                 If omitted, expire all users' rewards (cron mode).
+     */
+    static async expirePoints(manager: EntityManager, userId?: number): Promise<number> {
+        const today = new Date().toISOString().split('T')[0]
+
+        const where: FindOptionsWhere<Reward> = {
+            remainingPoint: MoreThan(0),
+            expiredDate: LessThanOrEqual(today as any),
+        }
+
+        if (userId) {
+            where.customerService = { userId }
+        }
+
+        // Find rewards with remaining points that have expired
+        const expiredRewards = await manager.find(Reward, {
+            where,
+            relations: ["customerService"],
+        })
+
+        let totalExpired = 0
+
+        for (const reward of expiredRewards) {
+            const expiredPoints = Number(reward.remainingPoint)
+            if (expiredPoints <= 0) continue
+
+            // Create expired redemption record
+            const redemption = manager.create(Redemption, {
+                userId: reward.customerService.userId,
+                pointsUsed: expiredPoints,
+                type: RedemptionType.EXPIRED,
+                status: RedemptionStatus.EXPIRED,
+                notes: `Auto-expired from reward #${reward.id}`,
+            })
+            await manager.save(redemption)
+
+            // Zero out the remaining points
+            reward.remainingPoint = 0
+            await manager.save(reward)
+
+            totalExpired++
+        }
+
+        return totalExpired
     }
 }

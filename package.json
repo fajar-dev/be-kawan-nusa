@@ -10,7 +10,8 @@
     "sync": "bun run sync-users && bun run sync-customers",
     "sync-employees": "bun run src/jobs/sync-employees.job.ts",
     "sync-sheets:all": "bun run src/jobs/sync-point-sheet.job.ts --all",
-    "sync-sheets": "bun run src/jobs/sync-point-sheet.job.ts --current"
+    "sync-sheets": "bun run src/jobs/sync-point-sheet.job.ts --current",
+    "expire-points": "bun run src/jobs/expire-points.job.ts"
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.6.1",
