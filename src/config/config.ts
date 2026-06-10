@@ -45,5 +45,10 @@ export const config = {
         pass: process.env.NIS_DB_PASS || '',
         name: process.env.NIS_DB_NAME || '',
     },
+    nusawork: {
+        apiUrl: process.env.NUSAWORK_API_URL || '',
+        clientId: process.env.NUSAWORK_CLIENT_ID || '',
+        clientSecret: process.env.NUSAWORK_CLIENT_SECRET || '',
+    },
 }
 
