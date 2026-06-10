@@ -4,6 +4,7 @@ export class CustomerServiceSerializer {
     static single(item: CustomerService) {
         return {
             id: item.id,
+            accountName: item.accountName,
             registrationDate: item.registrationDate,
             activationDate: item.activationDate,
             address: item.address,
