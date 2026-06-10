@@ -1,9 +1,16 @@
+import { minio } from "../../../core/helpers/minio"
+
 export class UserListSerializer {
-    static single(row: any) {
+    private static async resolvePhotoUrl(photo?: string | null): Promise<string | null> {
+        if (!photo) return null
+        return await minio.getPresignedUrl(photo)
+    }
+
+    static async single(row: any) {
         return {
             id: row.id,
             name: row.name,
-            photo: row.photo || null,
+            photo: await this.resolvePhotoUrl(row.photo),
             email: row.email || null,
             phone: row.phone || null,
             identityNumber: row.identityNumber ? Number(row.identityNumber) : null,
@@ -19,7 +26,7 @@ export class UserListSerializer {
         }
     }
 
-    static collection(rows: any[]) {
-        return rows.map(row => this.single(row))
+    static async collection(rows: any[]) {
+        return Promise.all(rows.map(row => this.single(row)))
     }
 }

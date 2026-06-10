@@ -9,36 +9,35 @@ import {
     UpdatePhotoValidator,
 } from "./validators/profile.validator"
 import { UserSerializer } from "../user/serializers/user.serialize"
-import * as fs from "node:fs"
-import * as path from "node:path"
+import { minio } from "../../core/helpers/minio"
 
 export class ProfileController {
     constructor(private readonly service: ProfileService) {}
 
     async show(c: Context) {
         const user = c.get("user")
-        return ApiResponse.success(c, UserSerializer.single(user), "Profile retrieved successfully")
+        return ApiResponse.success(c, await UserSerializer.single(user), "Profile retrieved successfully")
     }
 
     async updateAccount(c: Context) {
         const user = c.get("user")
         const body = await c.req.json() as UpdateAccountValidator
         const updated = await this.service.updateAccount(user.id, body)
-        return ApiResponse.success(c, UserSerializer.single(updated), "Account updated successfully")
+        return ApiResponse.success(c, await UserSerializer.single(updated), "Account updated successfully")
     }
 
     async updateBank(c: Context) {
         const user = c.get("user")
         const body = await c.req.json() as UpdateBankValidator
         const updated = await this.service.updateBank(user.id, body)
-        return ApiResponse.success(c, UserSerializer.single(updated), "Bank details updated successfully")
+        return ApiResponse.success(c, await UserSerializer.single(updated), "Bank details updated successfully")
     }
 
     async updatePreference(c: Context) {
         const user = c.get("user")
         const body = await c.req.json() as UpdatePreferenceValidator
         const updated = await this.service.updatePreference(user.id, body)
-        return ApiResponse.success(c, UserSerializer.single(updated), "Preference updated successfully")
+        return ApiResponse.success(c, await UserSerializer.single(updated), "Preference updated successfully")
     }
 
     async updatePassword(c: Context) {
@@ -54,20 +53,13 @@ export class ProfileController {
 
         const rawExt = photo.type.split("/")[1]
         const ext = rawExt === "jpeg" ? "jpg" : rawExt
-        const filename = `profile_${user.id}_${Date.now()}.${ext}`
-        const uploadDir = path.join(process.cwd(), "public", "uploads", "profile")
+        const filename = `profile/${user.id}_${Date.now()}.${ext}`
 
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true })
-        }
+        const buffer = Buffer.from(await photo.arrayBuffer())
+        await minio.upload(filename, buffer, photo.type)
 
-        const filePath = path.join(uploadDir, filename)
-        const buffer = await photo.arrayBuffer()
-        fs.writeFileSync(filePath, Buffer.from(buffer))
+        const updated = await this.service.updatePhoto(user.id, filename)
 
-        const photoUrl = `/uploads/profile/${filename}`
-        const updated = await this.service.updatePhoto(user.id, photoUrl)
-
-        return ApiResponse.success(c, UserSerializer.single(updated), "Profile photo updated successfully")
+        return ApiResponse.success(c, await UserSerializer.single(updated), "Profile photo updated successfully")
     }
 }

@@ -1,0 +1,95 @@
+import * as Minio from "minio"
+import { config } from "../../config/config"
+
+const minioClient = new Minio.Client({
+    endPoint: config.minio.endPoint,
+    port: config.minio.port,
+    useSSL: config.minio.useSSL,
+    accessKey: config.minio.accessKey,
+    secretKey: config.minio.secretKey,
+})
+
+const BUCKET = config.minio.bucket
+
+class MinioHelper {
+    /**
+     * Ensure the default bucket exists, create it if not
+     */
+    async ensureBucket(bucket: string = BUCKET) {
+        const exists = await minioClient.bucketExists(bucket)
+        if (!exists) {
+            await minioClient.makeBucket(bucket)
+            console.log(`[Minio] Bucket "${bucket}" created`)
+        }
+    }
+
+    /**
+     * Upload a file buffer to MinIO
+     * @param objectName - The object key / path in the bucket (e.g. "avatars/user-1.png")
+     * @param buffer - The file buffer
+     * @param contentType - MIME type (e.g. "image/png")
+     * @param bucket - Optional bucket override
+     * @returns The object name that was uploaded
+     */
+    async upload(objectName: string, buffer: Buffer, contentType: string, bucket: string = BUCKET): Promise<string> {
+        await this.ensureBucket(bucket)
+
+        await minioClient.putObject(bucket, objectName, buffer, buffer.length, {
+            "Content-Type": contentType,
+        })
+
+        console.log(`[Minio] Uploaded "${objectName}" to bucket "${bucket}"`)
+        return objectName
+    }
+
+    /**
+     * Get a presigned URL for downloading/viewing an object
+     * @param objectName - The object key in the bucket
+     * @param expiry - Expiry in seconds (default: 7 days)
+     * @param bucket - Optional bucket override
+     */
+    async getPresignedUrl(objectName: string, expiry: number = 7 * 24 * 60 * 60, bucket: string = BUCKET): Promise<string> {
+        return minioClient.presignedGetObject(bucket, objectName, expiry)
+    }
+
+    /**
+     * Get a public URL (for publicly accessible buckets)
+     * @param objectName - The object key in the bucket
+     * @param bucket - Optional bucket override
+     */
+    getPublicUrl(objectName: string, bucket: string = BUCKET): string {
+        const protocol = config.minio.useSSL ? "https" : "http"
+        const portPart = (config.minio.useSSL && config.minio.port === 443) || (!config.minio.useSSL && config.minio.port === 80)
+            ? ""
+            : `:${config.minio.port}`
+        return `${protocol}://${config.minio.endPoint}${portPart}/${bucket}/${objectName}`
+    }
+
+    /**
+     * Delete an object from MinIO
+     * @param objectName - The object key in the bucket
+     * @param bucket - Optional bucket override
+     */
+    async delete(objectName: string, bucket: string = BUCKET): Promise<void> {
+        await minioClient.removeObject(bucket, objectName)
+        console.log(`[Minio] Deleted "${objectName}" from bucket "${bucket}"`)
+    }
+
+    /**
+     * Check if an object exists in the bucket
+     * @param objectName - The object key in the bucket
+     * @param bucket - Optional bucket override
+     */
+    async exists(objectName: string, bucket: string = BUCKET): Promise<boolean> {
+        try {
+            await minioClient.statObject(bucket, objectName)
+            return true
+        } catch {
+            return false
+        }
+    }
+}
+
+// Export a singleton instance
+export const minio = new MinioHelper()
+export default minio

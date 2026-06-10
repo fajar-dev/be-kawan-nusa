@@ -32,7 +32,7 @@ export class UserController {
 
         return ApiResponse.paginate(
             c,
-            UserListSerializer.collection(data),
+            await UserListSerializer.collection(data),
             total,
             page,
             limit,
@@ -43,7 +43,7 @@ export class UserController {
     async show(c: Context) {
         const id = Number(c.req.param("id"))
         const user = await this.service.getById(id)
-        return ApiResponse.success(c, UserSerializer.single(user), "User retrieved successfully")
+        return ApiResponse.success(c, await UserSerializer.single(user), "User retrieved successfully")
     }
 
     async services(c: Context) {

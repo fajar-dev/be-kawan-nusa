@@ -50,5 +50,13 @@ export const config = {
         clientId: process.env.NUSAWORK_CLIENT_ID || '',
         clientSecret: process.env.NUSAWORK_CLIENT_SECRET || '',
     },
+    minio: {
+        endPoint: process.env.MINIO_ENDPOINT || '127.0.0.1',
+        port: Number(process.env.MINIO_PORT) || 9000,
+        useSSL: process.env.MINIO_USE_SSL === 'true',
+        accessKey: process.env.MINIO_ACCESS_KEY || '',
+        secretKey: process.env.MINIO_SECRET_KEY || '',
+        bucket: process.env.MINIO_BUCKET || 'kawan-nusa',
+    },
 }
 

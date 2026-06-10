@@ -1,12 +1,18 @@
 import { User } from "../entities/user.entity"
+import { minio } from "../../../core/helpers/minio"
 
 export class UserSerializer {
-    static single(user: User) {
+    private static async resolvePhotoUrl(photo?: string | null): Promise<string | null> {
+        if (!photo) return null
+        return await minio.getPresignedUrl(photo)
+    }
+
+    static async single(user: User) {
         return {
             id: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
-            photo: user.photo,
+            photo: await this.resolvePhotoUrl(user.photo),
             email: user.email,
             phone: user.phone,
             identityNumber: user.identityNumber,
@@ -28,7 +34,7 @@ export class UserSerializer {
         }
     }
 
-    static collection(users: User[]) {
-        return users.map(user => this.single(user))
+    static async collection(users: User[]) {
+        return Promise.all(users.map(user => this.single(user)))
     }
 }
