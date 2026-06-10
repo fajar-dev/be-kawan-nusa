@@ -4,7 +4,8 @@ import { UserController } from "./user.controller"
 import { customerServiceService } from "../customer-service/customer-service.module"
 import { rewardService } from "../reward/reward.module"
 import { redemptionService } from "../redemption/redemption.module"
+import { statisticService } from "../statistic/statistic.module"
 
 export const userRepository = new TypeOrmUserRepository()
 export const userService = new UserService(userRepository)
-export const userController = new UserController(userService, customerServiceService, rewardService, redemptionService)
+export const userController = new UserController(userService, customerServiceService, rewardService, redemptionService, statisticService)

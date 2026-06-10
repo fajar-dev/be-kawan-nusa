@@ -9,6 +9,7 @@ import { RewardService } from "../reward/reward.service"
 import { RewardSerializer } from "../reward/serializers/reward.serialize"
 import { RedemptionService } from "../redemption/redemption.service"
 import { RedemptionSerializer } from "../redemption/serializers/redemption.serialize"
+import { StatisticService } from "../statistic/statistic.service"
 
 export class UserController {
     constructor(
@@ -16,6 +17,7 @@ export class UserController {
         private readonly customerServiceService: CustomerServiceService,
         private readonly rewardService: RewardService,
         private readonly redemptionService: RedemptionService,
+        private readonly statisticService: StatisticService,
     ) {}
 
     async index(c: Context) {
@@ -131,5 +133,24 @@ export class UserController {
             limit,
             "User redemptions retrieved successfully"
         )
+    }
+
+    async statistic(c: Context) {
+        const userId = Number(c.req.param("id"))
+        const type = c.req.query("type") || "yearly"
+
+        const [count, pointPerMonth, customerStats, redemptionRewardStats] = await Promise.all([
+            this.statisticService.getCount(userId),
+            this.statisticService.getMonthlyPoints(userId),
+            this.statisticService.getCustomerStatistics(userId, type),
+            this.statisticService.getRedemptionRewardStats(userId),
+        ])
+
+        return ApiResponse.success(c, {
+            count,
+            pointPerMonth,
+            customerStats,
+            redemptionRewardStats,
+        }, "User statistics retrieved successfully")
     }
 }

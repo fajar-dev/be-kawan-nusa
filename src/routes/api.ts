@@ -125,6 +125,7 @@ routes.get("/user/:id", authMiddleware, roleMiddleware('admin'), (c) => userCont
 routes.get("/user/:id/services", authMiddleware, roleMiddleware('admin'), (c) => userController.services(c))
 routes.get("/user/:id/reward", authMiddleware, roleMiddleware('admin'), (c) => userController.rewards(c))
 routes.get("/user/:id/redeem", authMiddleware, roleMiddleware('admin'), (c) => userController.redemptions(c))
+routes.get("/user/:id/statistic", authMiddleware, roleMiddleware('admin'), (c) => userController.statistic(c))
 
 // Additional
 routes.get("/additional/service", authMiddleware, (c) => additionalController.getServices(c))

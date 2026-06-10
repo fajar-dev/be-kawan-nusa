@@ -3557,6 +3557,72 @@ paths:
                 statusCode: 403
                 message: "Forbidden access: admin only"
 
+  /user/{id}/statistic:
+    get:
+      summary: Get statistics for a user
+      description: "Retrieve combined statistics (count, monthly points, customer stats, redemption/reward stats) for a specific user. Admin only."
+      tags: [User]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema: { type: integer, example: 1 }
+        - name: type
+          in: query
+          description: "Customer stats type (yearly or monthly)"
+          schema: { type: string, default: yearly, enum: [yearly, monthly] }
+      responses:
+        "200":
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          count:
+                            $ref: "#/components/schemas/StatisticCount"
+                          pointPerMonth:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                label: { type: string, example: "Januari" }
+                                total: { type: number, example: 5000 }
+                          customerStats:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                label: { type: string, example: "Januari" }
+                                count: { type: integer, example: 10 }
+                          redemptionRewardStats:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                status: { type: string, example: "pending" }
+                                count: { type: integer, example: 3 }
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin only
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+              example:
+                success: false
+                statusCode: 403
+                message: "Forbidden access: admin only"
+
   # =============================================
   # FEEDBACK ROUTES
   # =============================================

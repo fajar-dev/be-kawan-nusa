@@ -4,6 +4,6 @@ import { StatisticService } from "./statistic.service"
 import { StatisticController } from "./statistic.controller"
 
 const statisticRepository = new TypeOrmStatisticRepository()
-const statisticService = new StatisticService(statisticRepository, pointService)
+export const statisticService = new StatisticService(statisticRepository, pointService)
 
 export const statisticController = new StatisticController(statisticService)
