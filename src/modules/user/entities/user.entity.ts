@@ -62,9 +62,6 @@ export class User {
     @Column({ name: "password_updated_at", type: "timestamp", nullable: true })
     passwordUpdatedAt?: Date
 
-    @Column({ default: "user" })
-    role!: "user" | "admin"
-
     @Column({ name: "is_active", default: true })
     isActive!: boolean
 

@@ -8,7 +8,6 @@ export class AuthHelper {
             { 
                 sub: user.id, 
                 email: user.email, 
-                role: user.role,
                 exp: Math.floor(Date.now() / 1000) + 60 * 15 // 15 mins
             }, 
             config.app.jwtSecret,

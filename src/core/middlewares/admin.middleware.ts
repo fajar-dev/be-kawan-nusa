@@ -1,6 +1,6 @@
 import { Context, Next } from 'hono'
 import { User } from '../../modules/user/entities/user.entity'
-import { ForbiddenException, UnauthorizedException } from '../exceptions/base'
+import { UnauthorizedException } from '../exceptions/base'
 
 /**
  * Middleware to restrict access to admin users only.
@@ -11,10 +11,6 @@ export const adminMiddleware = async (c: Context, next: Next) => {
 
     if (!user) {
         throw new UnauthorizedException("User not authenticated")
-    }
-
-    if (user.role !== 'admin') {
-        throw new ForbiddenException("Forbidden access: Admin only")
     }
 
     await next()

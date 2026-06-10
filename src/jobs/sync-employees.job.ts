@@ -22,6 +22,7 @@ async function sync() {
         const batchSize = 500
         let synced = 0
 
+        // Pass 1: Upsert all employees without managerId
         for (let i = 0; i < employees.length; i += batchSize) {
             const batch = employees.slice(i, i + batchSize)
             const entities = batch.map(emp => {
@@ -39,6 +40,24 @@ async function sync() {
             await repo.upsert(entities, ["id"])
             synced += entities.length
         }
+
+        console.log(`[Sync] Pass 1: Synced ${synced} employees`)
+
+        // Build a map of user_id -> id for manager lookup
+        const userIdMap = new Map<number, number>()
+        for (const emp of employees) {
+            userIdMap.set(emp.user_id, emp.user_id)
+        }
+
+        // Pass 2: Update managerId
+        let managersUpdated = 0
+        for (const emp of employees) {
+            const managerId = emp.id_report_to_value ? (userIdMap.get(Number(emp.id_report_to_value)) ?? null) : null
+            await repo.update(emp.user_id, { managerId })
+            if (managerId) managersUpdated++
+        }
+
+        console.log(`[Sync] Pass 2: Updated ${managersUpdated} manager relations`)
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2)
         console.log(`[Sync] Completed in ${duration}s. Synced ${synced} employees.`)

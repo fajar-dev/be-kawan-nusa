@@ -9,7 +9,7 @@ import {
     RefreshTokenValidator,
     GoogleLoginValidator,
 } from "./validators/auth.validator"
-import { UserSerializer } from "../user/serializers/user.serialize"
+import { AuthSerializer } from "./serializers/auth.serialize"
 import { BadRequestException } from "../../core/exceptions/base"
 
 export class AuthController {
@@ -18,14 +18,14 @@ export class AuthController {
     async register(c: Context) {
         const body = await c.req.json() as RegisterValidator
         const user = await this.service.register(body)
-        return ApiResponse.success(c, UserSerializer.single(user), "User registered successfully", 201)
+        return ApiResponse.success(c, AuthSerializer.single(user), "User registered successfully", 201)
     }
 
     async login(c: Context) {
         const body = await c.req.json() as LoginValidator
         const data = await this.service.login(body)
         return ApiResponse.success(c, {
-            user: UserSerializer.single(data.user as any),
+            user: AuthSerializer.single(data.user as any),
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,
         }, "Logged in successfully")
@@ -35,7 +35,7 @@ export class AuthController {
         const body = await c.req.json() as GoogleLoginValidator
         const data = await this.service.googleLogin(body)
         return ApiResponse.success(c, {
-            user: UserSerializer.single(data.user as any),
+            user: AuthSerializer.single(data.user as any),
             accessToken: data.accessToken,
             refreshToken: data.refreshToken
         }, 'Logged in successfully')
@@ -49,7 +49,7 @@ export class AuthController {
 
     async me(c: Context) {
         const user = c.get("user")
-        return ApiResponse.success(c, UserSerializer.single(user), "User profile retrieved successfully")
+        return ApiResponse.success(c, AuthSerializer.single(user), "User profile retrieved successfully")
     }
 
     async logout(c: Context) {
