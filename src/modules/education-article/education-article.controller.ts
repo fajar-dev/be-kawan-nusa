@@ -10,6 +10,7 @@ export class EducationArticleController {
 
     async index(c: Context) {
         const user = c.get("user")
+        const role = c.get("role")
         const page = Number(c.req.query("page")) || 1
         const limit = Number(c.req.query("limit")) || 10
         const categoryId = c.req.query("categoryId") ? Number(c.req.query("categoryId")) : undefined
@@ -20,7 +21,7 @@ export class EducationArticleController {
         const { data, total } = await this.service.getAll(page, limit, {
             categoryId,
             q,
-            currentUserId: user?.id,
+            currentUserId: role === "user" ? user?.id : undefined,
             isView,
         })
 
@@ -36,8 +37,9 @@ export class EducationArticleController {
 
     async show(c: Context) {
         const user = c.get("user")
+        const role = c.get("role")
         const id = Number(c.req.param("id"))
-        const article = await this.service.getById(id, user?.id)
+        const article = await this.service.getById(id, role === "user" ? user?.id : undefined)
         return ApiResponse.success(c, EducationArticleSerializer.single(article), "Education article details retrieved successfully")
     }
 
