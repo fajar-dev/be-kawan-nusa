@@ -21,4 +21,8 @@ export interface IEducationVideoRepository {
     recordView(videoId: number, userId: number): Promise<void>
 
     hasViewed(videoId: number, userId: number): Promise<boolean>
+
+    save(video: EducationVideo): Promise<EducationVideo>
+
+    delete(id: number): Promise<void>
 }

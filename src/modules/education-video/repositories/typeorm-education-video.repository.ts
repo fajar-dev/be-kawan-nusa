@@ -66,4 +66,16 @@ export class TypeOrmEducationVideoRepository implements IEducationVideoRepositor
         const view = await this.viewRepository.findOne({ where: { educationVideoId: videoId, userId } })
         return !!view
     }
+
+    async save(video: EducationVideo): Promise<EducationVideo> {
+        const saved = await this.repository.save(video)
+        // Reload relations so category details are available
+        const reloaded = await this.findById(saved.id)
+        if (!reloaded) return saved
+        return reloaded
+    }
+
+    async delete(id: number): Promise<void> {
+        await this.repository.delete(id)
+    }
 }

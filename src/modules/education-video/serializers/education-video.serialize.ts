@@ -1,4 +1,5 @@
 import { EducationVideo } from "../entities/education-video.entity";
+import { minio } from "../../../core/helpers/minio";
 
 export class EducationVideoSerializer {
     static single(item: EducationVideo) {
@@ -6,7 +7,11 @@ export class EducationVideoSerializer {
             id: item.id,
             title: item.title,
             url: item.url,
-            thumbnail: item.thumbnail,
+            thumbnail: item.thumbnail
+                ? (item.thumbnail.startsWith("http://") || item.thumbnail.startsWith("https://")
+                    ? item.thumbnail
+                    : minio.getProxyUrl(item.thumbnail))
+                : null,
             description: item.description,
             author: item.author,
             isView: !!item.isViewed,

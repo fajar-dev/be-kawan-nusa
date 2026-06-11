@@ -3140,6 +3140,43 @@ paths:
                   to: 10
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
+    post:
+      summary: Create education video (admin)
+      description: "Admin-only endpoint. Creates a new education video. Supports optional file upload for the thumbnail image."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [categoryId, title, url]
+              properties:
+                categoryId:
+                  type: integer
+                  example: 2
+                title:
+                  type: string
+                  example: "Tutorial Dashboard"
+                url:
+                  type: string
+                  example: "https://www.youtube.com/watch?v=example"
+                description:
+                  type: string
+                  example: "Deskripsi video tutorial"
+                author:
+                  type: string
+                  example: "Admin Nusanet"
+                thumbnail:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Video created successfully
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /education/video/{id}:
     get:
@@ -3175,6 +3212,68 @@ paths:
                     id: 2
                     name: "Tutorial"
                   createdAt: "2024-02-15T08:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    put:
+      summary: Update education video (admin)
+      description: "Admin-only endpoint. Updates an education video. Supports optional file upload for the thumbnail image."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: integer
+                  example: 2
+                title:
+                  type: string
+                  example: "Tutorial Dashboard Updated"
+                url:
+                  type: string
+                  example: "https://www.youtube.com/watch?v=example"
+                description:
+                  type: string
+                  example: "Deskripsi video tutorial terupdate"
+                author:
+                  type: string
+                  example: "Admin Nusanet"
+                thumbnail:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Video updated successfully
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    delete:
+      summary: Delete education video (admin)
+      description: "Admin-only endpoint. Deletes an education video."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Video deleted successfully
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
         "404":

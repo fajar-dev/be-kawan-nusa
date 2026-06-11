@@ -123,6 +123,9 @@ routes.post("/education/article/upload", authMiddleware, roleMiddleware('admin')
 
 routes.get("/education/video", authMiddleware, (c) => educationVideoController.index(c))
 routes.get("/education/video/:id", authMiddleware, (c) => educationVideoController.show(c))
+routes.post("/education/video", authMiddleware, roleMiddleware('admin'), (c) => educationVideoController.store(c))
+routes.put("/education/video/:id", authMiddleware, roleMiddleware('admin'), (c) => educationVideoController.update(c))
+routes.delete("/education/video/:id", authMiddleware, roleMiddleware('admin'), (c) => educationVideoController.destroy(c))
 
 // Feedback
 routes.get("/feedback", authMiddleware, (c) => feedbackController.index(c))

@@ -2,6 +2,7 @@ import { Context } from "hono"
 import { EducationVideoService } from "./education-video.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { EducationVideoSerializer } from "./serializers/education-video.serialize"
+import { CreateEducationVideoValidator, UpdateEducationVideoValidator } from "./validators/education-video.validator"
 
 export class EducationVideoController {
     constructor(private readonly service: EducationVideoService) {}
@@ -37,5 +38,46 @@ export class EducationVideoController {
         const id = Number(c.req.param("id"))
         const video = await this.service.getById(id, user?.id)
         return ApiResponse.success(c, EducationVideoSerializer.single(video), "Education video details retrieved successfully")
+    }
+
+    async store(c: Context) {
+        const rawBody = await c.req.parseBody()
+        const body = CreateEducationVideoValidator.parse(rawBody)
+        const { title, url, description, author, categoryId } = body
+
+        const video = await this.service.create({
+            categoryId,
+            title,
+            url,
+            description,
+            author,
+            thumbnailFile: rawBody.thumbnail
+        })
+
+        return ApiResponse.success(c, EducationVideoSerializer.single(video), "Education video created successfully")
+    }
+
+    async update(c: Context) {
+        const id = Number(c.req.param("id"))
+        const rawBody = await c.req.parseBody()
+        const body = UpdateEducationVideoValidator.parse(rawBody)
+        const { title, url, description, author, categoryId } = body
+
+        const video = await this.service.update(id, {
+            categoryId,
+            title,
+            url,
+            description,
+            author,
+            thumbnailFile: rawBody.thumbnail
+        })
+
+        return ApiResponse.success(c, EducationVideoSerializer.single(video), "Education video updated successfully")
+    }
+
+    async destroy(c: Context) {
+        const id = Number(c.req.param("id"))
+        await this.service.delete(id)
+        return ApiResponse.success(c, null, "Education video deleted successfully")
     }
 }
