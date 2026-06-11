@@ -26,7 +26,7 @@ export class EducationVideoController {
 
         return ApiResponse.paginate(
             c,
-            EducationVideoSerializer.collection(data),
+            await EducationVideoSerializer.collection(data),
             total,
             page,
             limit,
@@ -39,7 +39,7 @@ export class EducationVideoController {
         const role = c.get("role")
         const id = Number(c.req.param("id"))
         const video = await this.service.getById(id, role === "user" ? user?.id : undefined)
-        return ApiResponse.success(c, EducationVideoSerializer.single(video), "Education video details retrieved successfully")
+        return ApiResponse.success(c, await EducationVideoSerializer.single(video), "Education video details retrieved successfully")
     }
 
     async store(c: Context) {
@@ -56,7 +56,7 @@ export class EducationVideoController {
             thumbnailFile: rawBody.thumbnail
         })
 
-        return ApiResponse.success(c, EducationVideoSerializer.single(video), "Education video created successfully")
+        return ApiResponse.success(c, await EducationVideoSerializer.single(video), "Education video created successfully")
     }
 
     async update(c: Context) {
@@ -74,7 +74,7 @@ export class EducationVideoController {
             thumbnailFile: rawBody.thumbnail
         })
 
-        return ApiResponse.success(c, EducationVideoSerializer.single(video), "Education video updated successfully")
+        return ApiResponse.success(c, await EducationVideoSerializer.single(video), "Education video updated successfully")
     }
 
     async destroy(c: Context) {

@@ -27,7 +27,7 @@ export class EducationArticleController {
 
         return ApiResponse.paginate(
             c,
-            EducationArticleSerializer.collection(data),
+            await EducationArticleSerializer.collection(data),
             total,
             page,
             limit,
@@ -40,7 +40,7 @@ export class EducationArticleController {
         const role = c.get("role")
         const id = Number(c.req.param("id"))
         const article = await this.service.getById(id, role === "user" ? user?.id : undefined)
-        return ApiResponse.success(c, EducationArticleSerializer.single(article), "Education article details retrieved successfully")
+        return ApiResponse.success(c, await EducationArticleSerializer.single(article), "Education article details retrieved successfully")
     }
 
     async store(c: Context) {
@@ -56,7 +56,7 @@ export class EducationArticleController {
             imageFile: rawBody.image
         })
 
-        return ApiResponse.success(c, EducationArticleSerializer.single(article), "Education article created successfully")
+        return ApiResponse.success(c, await EducationArticleSerializer.single(article), "Education article created successfully")
     }
 
     async update(c: Context) {
@@ -73,7 +73,7 @@ export class EducationArticleController {
             imageFile: rawBody.image
         })
 
-        return ApiResponse.success(c, EducationArticleSerializer.single(article), "Education article updated successfully")
+        return ApiResponse.success(c, await EducationArticleSerializer.single(article), "Education article updated successfully")
     }
 
     async destroy(c: Context) {

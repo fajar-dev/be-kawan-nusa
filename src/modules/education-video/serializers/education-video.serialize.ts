@@ -2,16 +2,17 @@ import { EducationVideo } from "../entities/education-video.entity";
 import { minio } from "../../../core/helpers/minio";
 
 export class EducationVideoSerializer {
-    static single(item: EducationVideo) {
+   private static async resolvePhotoUrl(photo?: string | null): Promise<string | null> {
+        if (!photo) return null
+        return await minio.getPresignedUrl(photo)
+    }
+
+    static async single(item: EducationVideo) {
         return {
             id: item.id,
             title: item.title,
             url: item.url,
-            thumbnail: item.thumbnail
-                ? (item.thumbnail.startsWith("http://") || item.thumbnail.startsWith("https://")
-                    ? item.thumbnail
-                    : minio.getProxyUrl(item.thumbnail))
-                : null,
+            thumbnail: await this.resolvePhotoUrl(item.thumbnail),
             description: item.description,
             author: item.author,
             isView: !!item.isViewed,
@@ -24,7 +25,7 @@ export class EducationVideoSerializer {
         }
     }
 
-    static collection(items: EducationVideo[]) {
-        return items.map(item => this.single(item))
+    static async collection(items: EducationVideo[]) {
+        return Promise.all(items.map(item => this.single(item)))
     }
 }

@@ -2,12 +2,17 @@ import { EducationArticle } from "../entities/education-article.entity";
 import { minio } from "../../../core/helpers/minio";
 
 export class EducationArticleSerializer {
-    static single(item: EducationArticle) {
+    private static async resolvePhotoUrl(photo?: string | null): Promise<string | null> {
+        if (!photo) return null
+        return await minio.getPresignedUrl(photo)
+    }
+
+    static async single(item: EducationArticle) {
         return {
             id: item.id,
             title: item.title,
             content: item.content,
-            image: item.image ? minio.getProxyUrl(item.image) : null,
+            image: await this.resolvePhotoUrl(item.image),
             author: item.author,
             readingTime: this.calculateReadingTime(item.content),
             isView: !!item.isViewed,
@@ -27,7 +32,7 @@ export class EducationArticleSerializer {
         return `${minutes} menit baca`;
     }
 
-    static collection(items: EducationArticle[]) {
-        return items.map(item => this.single(item))
+    static async collection(items: EducationArticle[]) {
+        return Promise.all(items.map(item => this.single(item)))
     }
 }
