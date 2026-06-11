@@ -115,11 +115,11 @@ export class RedemptionController {
         }
     }
 
-    async complete(c: any) {
+    async completeCash(c: any) {
         const id = Number(c.req.param("id"))
 
         try {
-            const data = await this.service.complete(id)
+            const data = await this.service.completeCash(id)
             return ApiResponse.success(c, await RedemptionSerializer.single(data), "Redemption marked as completed successfully")
         } catch (error: any) {
             return ApiResponse.error(c, error.message || "Failed to complete redemption", 400)

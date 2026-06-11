@@ -11,7 +11,6 @@ import { StoreFeedbackValidator } from "../modules/feedback/validators/feedback.
 // ── Middlewares ──────────────────────────────────────────────────────────────
 import { authMiddleware } from "../core/middlewares/auth.middleware"
 import { apiKeyMiddleware } from "../core/middlewares/api-key.middleware"
-import { tokenAuthMiddleware } from "../core/middlewares/token-auth.middleware"
 import { validationHook } from "../core/helpers/validator"
 
 // ── Modules (controllers wired with their dependencies) ──────────────────────
@@ -64,7 +63,7 @@ routes.get("/point", authMiddleware, roleMiddleware('user'), (c) => pointControl
 
 // Redemption
 routes.get("/redemption/cash/list", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.cashList(c))
-routes.put("/redemption/cash/list/:id", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.complete(c))
+routes.put("/redemption/cash/list/:id", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.completeCash(c))
 routes.get("/redemption", authMiddleware, roleMiddleware('user'), (c) => redemptionController.index(c))
 routes.get("/redemption/:id", authMiddleware, roleMiddleware('user'), (c) => redemptionController.show(c))
 routes.post("/redemption/cash", authMiddleware, roleMiddleware('user'), zValidator("json", CreateCashRedemptionValidator, validationHook), (c) => redemptionController.storeCash(c))

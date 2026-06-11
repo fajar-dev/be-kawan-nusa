@@ -192,7 +192,7 @@ export class RedemptionService {
         })
     }
 
-    async complete(id: number): Promise<Redemption> {
+    async completeCash(id: number): Promise<Redemption> {
         const redemption = await this.repository.findById(id)
         if (!redemption) {
             throw new NotFoundException("Redemption record not found")
