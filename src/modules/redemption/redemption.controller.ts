@@ -115,15 +115,14 @@ export class RedemptionController {
         }
     }
 
-    async updateStatus(c: any) {
+    async complete(c: any) {
         const id = Number(c.req.param("id"))
-        const body = c.req.valid("json")
 
         try {
-            const data = await this.service.updateStatus(id, body.status)
-            return ApiResponse.success(c, await RedemptionSerializer.single(data), "Redemption status updated successfully")
+            const data = await this.service.complete(id)
+            return ApiResponse.success(c, await RedemptionSerializer.single(data), "Redemption marked as completed successfully")
         } catch (error: any) {
-            return ApiResponse.error(c, error.message || "Failed to update redemption status", 400)
+            return ApiResponse.error(c, error.message || "Failed to complete redemption", 400)
         }
     }
 }

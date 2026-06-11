@@ -192,13 +192,25 @@ export class RedemptionService {
         })
     }
 
-    async updateStatus(id: number, status: RedemptionStatus): Promise<Redemption> {
+    async complete(id: number): Promise<Redemption> {
         const redemption = await this.repository.findById(id)
         if (!redemption) {
             throw new NotFoundException("Redemption record not found")
         }
 
-        redemption.status = status
+        if (redemption.type !== RedemptionType.CASH) {
+            throw new BadRequestException("Only cash redemptions can be marked as completed")
+        }
+
+        if (redemption.status === RedemptionStatus.COMPLETED) {
+            throw new BadRequestException("Redemption is already completed")
+        }
+
+        if (redemption.status !== RedemptionStatus.PENDING && redemption.status !== RedemptionStatus.PROCESSING) {
+            throw new BadRequestException(`Cannot complete redemption with status ${redemption.status}`)
+        }
+
+        redemption.status = RedemptionStatus.COMPLETED
         return await this.repository.save(redemption)
     }
 

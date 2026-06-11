@@ -1685,8 +1685,8 @@ paths:
 
   /redemption/cash/list/{id}:
     put:
-      summary: Update cash redemption status (admin)
-      description: "Admin-only endpoint. Updates the status of a cash redemption transaction (e.g. from pending to completed)."
+      summary: Mark cash redemption as completed (admin)
+      description: "Admin-only endpoint. Marks a pending/processing cash redemption transaction as completed."
       tags: [Redemption]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -1696,27 +1696,15 @@ paths:
           description: Redemption ID
           schema:
             type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [status]
-              properties:
-                status:
-                  type: string
-                  enum: [pending, processing, completed, cancelled, expired]
-                  example: completed
       responses:
         "200":
-          description: Redemption status updated successfully
+          description: Redemption marked as completed successfully
           content:
             application/json:
               example:
                 success: true
                 statusCode: 200
-                message: "Redemption status updated successfully"
+                message: "Redemption marked as completed successfully"
                 data:
                   id: 1
                   redempNo: "RED-20240301-0001"
