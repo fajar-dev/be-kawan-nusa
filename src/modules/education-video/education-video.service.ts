@@ -45,7 +45,7 @@ export class EducationVideoService {
         return video
     }
 
-    async create(data: { categoryId: number; title: string; url: string; description?: string; author?: string; thumbnailFile?: any }): Promise<EducationVideo> {
+    async create(data: { categoryId: number; title: string; url: string; description?: string; authorId?: number; thumbnailFile?: any }): Promise<EducationVideo> {
         let thumbnail: string | undefined = undefined
         const file = data.thumbnailFile
         if (file && file instanceof File && file.size > 0) {
@@ -64,12 +64,12 @@ export class EducationVideoService {
         video.title = data.title
         video.url = data.url
         video.description = data.description
-        video.author = data.author
+        video.authorId = data.authorId
         video.thumbnail = thumbnail
         return await this.repository.save(video)
     }
 
-    async update(id: number, data: { categoryId?: number; title?: string; url?: string; description?: string; author?: string; thumbnailFile?: any }): Promise<EducationVideo> {
+    async update(id: number, data: { categoryId?: number; title?: string; url?: string; description?: string; authorId?: number; thumbnailFile?: any }): Promise<EducationVideo> {
         const video = await this.repository.findById(id)
         if (!video) {
             throw new NotFoundException("Education video not found")
@@ -79,7 +79,7 @@ export class EducationVideoService {
         if (data.title !== undefined) video.title = data.title
         if (data.url !== undefined) video.url = data.url
         if (data.description !== undefined) video.description = data.description
-        if (data.author !== undefined) video.author = data.author
+        if (data.authorId !== undefined) video.authorId = data.authorId
 
         if (data.thumbnailFile !== undefined) {
             let newThumbnail: string | undefined = undefined

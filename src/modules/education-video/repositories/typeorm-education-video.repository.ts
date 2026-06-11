@@ -23,6 +23,7 @@ export class TypeOrmEducationVideoRepository implements IEducationVideoRepositor
     ): Promise<{ data: EducationVideo[]; total: number }> {
         const query = this.repository.createQueryBuilder("video")
             .leftJoinAndSelect("video.category", "category")
+            .leftJoinAndSelect("video.author", "author")
 
         if (filters.categoryId) query.andWhere("video.categoryId = :categoryId", { categoryId: filters.categoryId })
         if (filters.q) query.andWhere("video.title LIKE :q OR video.description LIKE :q", { q: `%${filters.q}%` })
@@ -46,7 +47,7 @@ export class TypeOrmEducationVideoRepository implements IEducationVideoRepositor
     }
 
     async findById(id: number): Promise<EducationVideo | null> {
-        return await this.repository.findOne({ where: { id }, relations: ["category"] })
+        return await this.repository.findOne({ where: { id }, relations: ["category", "author"] })
     }
 
     async getViewedVideoIds(userId: number, videoIds: number[]): Promise<number[]> {

@@ -45,7 +45,7 @@ export class EducationArticleService {
         return article
     }
 
-    async create(data: { categoryId: number; title: string; content: string; author?: string; imageFile?: any }): Promise<EducationArticle> {
+    async create(data: { categoryId: number; title: string; content: string; authorId?: number; imageFile?: any }): Promise<EducationArticle> {
         let image: string | undefined = undefined
         const file = data.imageFile
         if (file && file instanceof File && file.size > 0) {
@@ -61,12 +61,12 @@ export class EducationArticleService {
         article.categoryId = data.categoryId
         article.title = data.title
         article.content = data.content
-        article.author = data.author
+        article.authorId = data.authorId
         article.image = image
         return await this.repository.save(article)
     }
 
-    async update(id: number, data: { categoryId?: number; title?: string; content?: string; author?: string; imageFile?: any }): Promise<EducationArticle> {
+    async update(id: number, data: { categoryId?: number; title?: string; content?: string; authorId?: number; imageFile?: any }): Promise<EducationArticle> {
         const article = await this.repository.findById(id)
         if (!article) {
             throw new NotFoundException("Education article not found")
@@ -75,7 +75,7 @@ export class EducationArticleService {
         if (data.categoryId !== undefined) article.categoryId = data.categoryId
         if (data.title !== undefined) article.title = data.title
         if (data.content !== undefined) article.content = data.content
-        if (data.author !== undefined) article.author = data.author
+        if (data.authorId !== undefined) article.authorId = data.authorId
         
         if (data.imageFile !== undefined) {
             let newImage: string | undefined = undefined

@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import type { Relation } from "typeorm"
 import { EducationCategory } from "../../education-category/entities/education-category.entity"
 import { EducationArticleView } from "./education-article-view.entity"
+import { Employee } from "../../employee/entities/employee.entity"
 
 @Entity("education_articles")
 export class EducationArticle {
@@ -22,8 +23,13 @@ export class EducationArticle {
     @Column({ nullable: true })
     image?: string
 
-    @Column({ nullable: true })
-    author?: string
+    @Index()
+    @Column({ name: "author_id", nullable: true })
+    authorId?: number
+
+    @ManyToOne(() => Employee, { nullable: true })
+    @JoinColumn({ name: "author_id" })
+    author?: Relation<Employee>
 
     @ManyToOne(() => EducationCategory, (category) => category.articles)
     @JoinColumn({ name: "category_id" })

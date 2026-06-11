@@ -41,18 +41,18 @@ export class EducationVideoController {
         const video = await this.service.getById(id, role === "user" ? user?.id : undefined)
         return ApiResponse.success(c, await EducationVideoSerializer.single(video), "Education video details retrieved successfully")
     }
-
     async store(c: Context) {
+        const user = c.get("user")
         const rawBody = await c.req.parseBody()
         const body = CreateEducationVideoValidator.parse(rawBody)
-        const { title, url, description, author, categoryId } = body
+        const { title, url, description, categoryId } = body
 
         const video = await this.service.create({
             categoryId,
             title,
             url,
             description,
-            author,
+            authorId: user?.id,
             thumbnailFile: rawBody.thumbnail
         })
 
@@ -63,14 +63,13 @@ export class EducationVideoController {
         const id = Number(c.req.param("id"))
         const rawBody = await c.req.parseBody()
         const body = UpdateEducationVideoValidator.parse(rawBody)
-        const { title, url, description, author, categoryId } = body
+        const { title, url, description, categoryId } = body
 
         const video = await this.service.update(id, {
             categoryId,
             title,
             url,
             description,
-            author,
             thumbnailFile: rawBody.thumbnail
         })
 

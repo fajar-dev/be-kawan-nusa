@@ -2943,16 +2943,14 @@ paths:
                   example: 1
                 title:
                   type: string
-                  example: "Cara Mengatur Router"
+                  example: "Tips Memaksimalkan Koneksi Internet Fiber"
                 content:
                   type: string
-                  example: "<p>Langkah-langkah mengatur router...</p>"
-                author:
-                  type: string
-                  example: "Admin Nusanet"
+                  example: "<p>Internet fiber optik adalah teknologi koneksi...</p>"
                 image:
                   type: string
                   format: binary
+
       responses:
         "200":
           description: Article created successfully
@@ -3057,9 +3055,7 @@ paths:
                 content:
                   type: string
                   example: "<p>Langkah-langkah mengatur router baru...</p>"
-                author:
-                  type: string
-                  example: "Admin Nusanet"
+
                 image:
                   type: string
                   format: binary
@@ -3164,9 +3160,7 @@ paths:
                 description:
                   type: string
                   example: "Deskripsi video tutorial"
-                author:
-                  type: string
-                  example: "Admin Nusanet"
+
                 thumbnail:
                   type: string
                   format: binary
@@ -3244,9 +3238,7 @@ paths:
                 description:
                   type: string
                   example: "Deskripsi video tutorial terupdate"
-                author:
-                  type: string
-                  example: "Admin Nusanet"
+
                 thumbnail:
                   type: string
                   format: binary

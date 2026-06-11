@@ -23,6 +23,7 @@ export class TypeOrmEducationArticleRepository implements IEducationArticleRepos
     ): Promise<{ data: EducationArticle[]; total: number }> {
         const query = this.repository.createQueryBuilder("article")
             .leftJoinAndSelect("article.category", "category")
+            .leftJoinAndSelect("article.author", "author")
 
         if (filters.categoryId) query.andWhere("article.categoryId = :categoryId", { categoryId: filters.categoryId })
         if (filters.q) query.andWhere("article.title LIKE :q OR article.content LIKE :q", { q: `%${filters.q}%` })
@@ -46,7 +47,7 @@ export class TypeOrmEducationArticleRepository implements IEducationArticleRepos
     }
 
     async findById(id: number): Promise<EducationArticle | null> {
-        return await this.repository.findOne({ where: { id }, relations: ["category"] })
+        return await this.repository.findOne({ where: { id }, relations: ["category", "author"] })
     }
 
     async getViewedArticleIds(userId: number, articleIds: number[]): Promise<number[]> {

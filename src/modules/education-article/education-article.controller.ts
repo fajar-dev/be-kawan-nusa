@@ -42,17 +42,17 @@ export class EducationArticleController {
         const article = await this.service.getById(id, role === "user" ? user?.id : undefined)
         return ApiResponse.success(c, await EducationArticleSerializer.single(article), "Education article details retrieved successfully")
     }
-
     async store(c: Context) {
+        const user = c.get("user")
         const rawBody = await c.req.parseBody()
         const body = CreateEducationArticleValidator.parse(rawBody)
-        const { title, content, author, categoryId } = body
+        const { title, content, categoryId } = body
 
         const article = await this.service.create({
             categoryId,
             title,
             content,
-            author,
+            authorId: user?.id,
             imageFile: rawBody.image
         })
 
@@ -63,13 +63,12 @@ export class EducationArticleController {
         const id = Number(c.req.param("id"))
         const rawBody = await c.req.parseBody()
         const body = UpdateEducationArticleValidator.parse(rawBody)
-        const { title, content, author, categoryId } = body
+        const { title, content, categoryId } = body
 
         const article = await this.service.update(id, {
             categoryId,
             title,
             content,
-            author,
             imageFile: rawBody.image
         })
 

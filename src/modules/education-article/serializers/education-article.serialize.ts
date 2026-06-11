@@ -13,7 +13,7 @@ export class EducationArticleSerializer {
             title: item.title,
             content: item.content,
             image: await this.resolvePhotoUrl(item.image),
-            author: item.author,
+            author: item.author ? item.author.name : null,
             readingTime: this.calculateReadingTime(item.content),
             isView: !!item.isViewed,
             categoryId: item.categoryId,

@@ -14,7 +14,7 @@ export class EducationVideoSerializer {
             url: item.url,
             thumbnail: await this.resolvePhotoUrl(item.thumbnail),
             description: item.description,
-            author: item.author,
+            author: item.author ? item.author.name : null,
             isView: !!item.isViewed,
             categoryId: item.categoryId,
             category: item.category ? {
