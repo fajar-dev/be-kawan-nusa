@@ -13,4 +13,16 @@ export class TypeOrmEducationCategoryRepository implements IEducationCategoryRep
     async findAll(): Promise<EducationCategory[]> {
         return await this.repository.find({ order: { name: "ASC" } })
     }
+
+    async findById(id: number): Promise<EducationCategory | null> {
+        return await this.repository.findOne({ where: { id } })
+    }
+
+    async save(category: EducationCategory): Promise<EducationCategory> {
+        return await this.repository.save(category)
+    }
+
+    async delete(id: number): Promise<void> {
+        await this.repository.delete(id)
+    }
 }

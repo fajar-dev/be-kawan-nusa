@@ -2926,6 +2926,73 @@ paths:
                   to: 10
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
+    post:
+      summary: Create education article (admin)
+      description: "Admin-only endpoint. Creates a new education article. Supports file upload for the thumbnail image."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [categoryId, title, content]
+              properties:
+                categoryId:
+                  type: integer
+                  example: 1
+                title:
+                  type: string
+                  example: "Cara Mengatur Router"
+                content:
+                  type: string
+                  example: "<p>Langkah-langkah mengatur router...</p>"
+                author:
+                  type: string
+                  example: "Admin Nusanet"
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Article created successfully
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /education/article/upload:
+    post:
+      summary: Upload image for rich editor (admin)
+      description: "Admin-only endpoint. Uploads an image to MinIO and returns the public proxy URL to be inserted in the rich text editor."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Image uploaded successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Image uploaded successfully"
+                data:
+                  url: "https://example.com/api/proxy?path=education/articles/editor/123456789.jpg"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
 
   /education/article/{id}:
     get:
@@ -2961,6 +3028,65 @@ paths:
                     id: 1
                     name: "Tips & Trik"
                   createdAt: "2024-02-10T08:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    put:
+      summary: Update education article (admin)
+      description: "Admin-only endpoint. Updates an education article. Supports file upload for the thumbnail image."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: integer
+                  example: 1
+                title:
+                  type: string
+                  example: "Cara Mengatur Router Terbaru"
+                content:
+                  type: string
+                  example: "<p>Langkah-langkah mengatur router baru...</p>"
+                author:
+                  type: string
+                  example: "Admin Nusanet"
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Article updated successfully
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    delete:
+      summary: Delete education article (admin)
+      description: "Admin-only endpoint. Deletes an education article."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Article deleted successfully
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
         "404":
@@ -3077,6 +3203,82 @@ paths:
                     name: "Berita"
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
+    post:
+      summary: Create education category (admin)
+      description: "Admin-only endpoint. Creates a new education category."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  example: "Tutorial"
+      responses:
+        "200":
+          description: Category created successfully
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /education/category/{id}:
+    put:
+      summary: Update education category (admin)
+      description: "Admin-only endpoint. Updates an education category."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  example: "Tutorial Baru"
+      responses:
+        "200":
+          description: Category updated successfully
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    delete:
+      summary: Delete education category (admin)
+      description: "Admin-only endpoint. Deletes an education category."
+      tags: [Education]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Category deleted successfully
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
 
   # =============================================
   # STATISTIC ROUTES

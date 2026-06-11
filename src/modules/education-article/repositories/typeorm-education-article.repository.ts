@@ -66,4 +66,12 @@ export class TypeOrmEducationArticleRepository implements IEducationArticleRepos
         const view = await this.viewRepository.findOne({ where: { educationArticleId: articleId, userId } })
         return !!view
     }
+
+    async save(article: EducationArticle): Promise<EducationArticle> {
+        return await this.repository.save(article)
+    }
+
+    async delete(id: number): Promise<void> {
+        await this.repository.delete(id)
+    }
 }

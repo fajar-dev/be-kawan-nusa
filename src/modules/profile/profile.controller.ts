@@ -4,12 +4,11 @@ import { ApiResponse } from "../../core/helpers/response"
 import {
     UpdateAccountValidator,
     UpdateBankValidator,
-    UpdatePasswordValidator,
     UpdatePreferenceValidator,
+    UpdatePasswordValidator,
     UpdatePhotoValidator,
 } from "./validators/profile.validator"
 import { UserSerializer } from "../user/serializers/user.serialize"
-import { minio } from "../../core/helpers/minio"
 
 export class ProfileController {
     constructor(private readonly service: ProfileService) {}
@@ -51,14 +50,7 @@ export class ProfileController {
         const user = c.get("user")
         const { photo } = await c.req.parseBody() as unknown as UpdatePhotoValidator
 
-        const rawExt = photo.type.split("/")[1]
-        const ext = rawExt === "jpeg" ? "jpg" : rawExt
-        const filename = `profile/${user.id}_${Date.now()}.${ext}`
-
-        const buffer = Buffer.from(await photo.arrayBuffer())
-        await minio.upload(filename, buffer, photo.type)
-
-        const updated = await this.service.updatePhoto(user.id, filename)
+        const updated = await this.service.updatePhoto(user.id, photo)
 
         return ApiResponse.success(c, await UserSerializer.single(updated), "Profile photo updated successfully")
     }

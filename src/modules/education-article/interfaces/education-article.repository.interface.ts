@@ -21,4 +21,8 @@ export interface IEducationArticleRepository {
     recordView(articleId: number, userId: number): Promise<void>
 
     hasViewed(articleId: number, userId: number): Promise<boolean>
+
+    save(article: EducationArticle): Promise<EducationArticle>
+
+    delete(id: number): Promise<void>
 }

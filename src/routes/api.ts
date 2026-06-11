@@ -7,6 +7,7 @@ import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, U
 import { CreateCashRedemptionValidator, CreateRedemptionVoucherValidator, CreateRedemptionProductValidator } from "../modules/redemption/validators/redemption.validator"
 import { CreateRewardValidator } from "../modules/reward/validators/reward.validator"
 import { StoreFeedbackValidator } from "../modules/feedback/validators/feedback.validator"
+import { CreateEducationCategoryValidator, UpdateEducationCategoryValidator } from "../modules/education-category/validators/education-category.validator"
 
 // ── Middlewares ──────────────────────────────────────────────────────────────
 import { authMiddleware } from "../core/middlewares/auth.middleware"
@@ -109,8 +110,17 @@ routes.get("/catalog/:id", authMiddleware, (c) => catalogController.show(c))
 
 // Education
 routes.get("/education/category", authMiddleware, (c) => educationCategoryController.index(c))
+routes.post("/education/category", authMiddleware, roleMiddleware('admin'), zValidator("json", CreateEducationCategoryValidator, validationHook), (c) => educationCategoryController.store(c))
+routes.put("/education/category/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", UpdateEducationCategoryValidator, validationHook), (c) => educationCategoryController.update(c))
+routes.delete("/education/category/:id", authMiddleware, roleMiddleware('admin'), (c) => educationCategoryController.destroy(c))
+
 routes.get("/education/article", authMiddleware, (c) => educationArticleController.index(c))
 routes.get("/education/article/:id", authMiddleware, (c) => educationArticleController.show(c))
+routes.post("/education/article", authMiddleware, roleMiddleware('admin'), (c) => educationArticleController.store(c))
+routes.put("/education/article/:id", authMiddleware, roleMiddleware('admin'), (c) => educationArticleController.update(c))
+routes.delete("/education/article/:id", authMiddleware, roleMiddleware('admin'), (c) => educationArticleController.destroy(c))
+routes.post("/education/article/upload", authMiddleware, roleMiddleware('admin'), (c) => educationArticleController.uploadImage(c))
+
 routes.get("/education/video", authMiddleware, (c) => educationVideoController.index(c))
 routes.get("/education/video/:id", authMiddleware, (c) => educationVideoController.show(c))
 

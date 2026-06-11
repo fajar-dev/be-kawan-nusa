@@ -1,4 +1,5 @@
 import { EducationArticle } from "../entities/education-article.entity";
+import { minio } from "../../../core/helpers/minio";
 
 export class EducationArticleSerializer {
     static single(item: EducationArticle) {
@@ -6,7 +7,7 @@ export class EducationArticleSerializer {
             id: item.id,
             title: item.title,
             content: item.content,
-            image: item.image,
+            image: item.image ? minio.getProxyUrl(item.image) : null,
             author: item.author,
             readingTime: this.calculateReadingTime(item.content),
             isView: !!item.isViewed,

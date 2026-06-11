@@ -3,6 +3,7 @@ import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, U
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
 import { IUserRepository } from "../user/interfaces/user.repository.interface"
+import { minio } from "../../core/helpers/minio"
 
 export class ProfileService {
     constructor(private readonly repository: IUserRepository) {}
@@ -54,9 +55,26 @@ export class ProfileService {
         return await this.repository.save(user)
     }
 
-    async updatePhoto(userId: number, photo: string): Promise<User> {
+    async updatePhoto(userId: number, photoFile: File): Promise<User> {
         const user = await this.getProfile(userId)
-        user.photo = photo
+
+        const rawExt = photoFile.type.split("/")[1]
+        const ext = rawExt === "jpeg" ? "jpg" : rawExt
+        const filename = `profile/${user.id}_${Date.now()}.${ext}`
+
+        const buffer = Buffer.from(await photoFile.arrayBuffer())
+        await minio.upload(filename, buffer, photoFile.type)
+
+        // Delete old profile photo if it exists
+        if (user.photo) {
+            try {
+                await minio.delete(user.photo)
+            } catch (err) {
+                console.error("[Profile] Failed to delete old photo from MinIO:", err)
+            }
+        }
+
+        user.photo = filename
         return await this.repository.save(user)
     }
 }
