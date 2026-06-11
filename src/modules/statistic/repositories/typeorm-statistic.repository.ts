@@ -4,6 +4,7 @@ import { Customer } from "../../customer/entities/customer.entity"
 import { CustomerService } from "../../customer-service/entities/customer-service.entity"
 import { Reward } from "../../reward/entities/reward.entity"
 import { Redemption } from "../../redemption/entities/redemption.entity"
+import { User } from "../../user/entities/user.entity"
 import { IStatisticRepository, MonthlyCount } from "../interfaces/statistic.repository.interface"
 
 export class TypeOrmStatisticRepository implements IStatisticRepository {
@@ -11,12 +12,14 @@ export class TypeOrmStatisticRepository implements IStatisticRepository {
     private readonly customerServiceRepository: Repository<CustomerService>
     private readonly rewardRepository: Repository<Reward>
     private readonly redemptionRepository: Repository<Redemption>
+    private readonly userRepository: Repository<User>
 
     constructor() {
         this.customerRepository = AppDataSource.getRepository(Customer)
         this.customerServiceRepository = AppDataSource.getRepository(CustomerService)
         this.rewardRepository = AppDataSource.getRepository(Reward)
         this.redemptionRepository = AppDataSource.getRepository(Redemption)
+        this.userRepository = AppDataSource.getRepository(User)
     }
 
     async getCustomerTotal(userId: number): Promise<number> {
@@ -118,5 +121,24 @@ export class TypeOrmStatisticRepository implements IStatisticRepository {
             .groupBy("redemption.status")
             .getRawMany()
         return rawData.map(r => ({ status: r.status, count: Number(r.count) }))
+    }
+
+    async getGlobalUserTotal(): Promise<number> {
+        return await this.userRepository.count()
+    }
+
+    async getGlobalCustomerTotal(): Promise<number> {
+        return await this.customerRepository.count()
+    }
+
+    async getGlobalCustomerServiceTotal(): Promise<number> {
+        return await this.customerServiceRepository.count()
+    }
+
+    async getGlobalRewardTotal(): Promise<number> {
+        const result = await this.rewardRepository.createQueryBuilder("reward")
+            .select("SUM(reward.point)", "total")
+            .getRawOne()
+        return Number(result?.total || 0)
     }
 }

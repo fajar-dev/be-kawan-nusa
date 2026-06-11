@@ -11,6 +11,11 @@ export class StatisticController {
         return ApiResponse.success(c, data, "Statistic count retrieved successfully")
     }
 
+    async adminSummary(c: Context) {
+        const data = await this.service.getAdminSummary()
+        return ApiResponse.success(c, data, "Admin summary statistic retrieved successfully")
+    }
+
     async pointPerMonth(c: Context) {
         const user = c.get("user")
         const data = await this.service.getMonthlyPoints(user.id)

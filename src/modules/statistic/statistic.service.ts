@@ -59,6 +59,36 @@ export class StatisticService {
         }
     }
 
+    async getAdminSummary() {
+        const [
+            userTotal,
+            customerTotal,
+            csTotal,
+            rewardTotal,
+        ] = await Promise.all([
+            this.repository.getGlobalUserTotal(),
+            this.repository.getGlobalCustomerTotal(),
+            this.repository.getGlobalCustomerServiceTotal(),
+            this.repository.getGlobalRewardTotal(),
+        ])
+
+        return {
+            user: {
+                value: userTotal,
+            },
+            customer: {
+                value: customerTotal,
+            },
+            customerService: {
+                value: csTotal,
+            },
+            point: {
+                value: rewardTotal,
+            },
+        }
+    }
+
+
     async getMonthlyPoints(userId: number) {
         const year = new Date().getFullYear()
         const rawData = await this.repository.getMonthlyPointSums(userId, year)

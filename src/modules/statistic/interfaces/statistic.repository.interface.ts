@@ -13,4 +13,10 @@ export interface IStatisticRepository {
     getCustomerCountByDayInMonth(userId: number, year: number, month: number): Promise<{ day: number; count: number }[]>
     getCustomerCountByMonthInYear(userId: number, year: number): Promise<MonthlyCount[]>
     getRedemptionStatusCounts(userId: number, types: string[]): Promise<{ status: string; count: number }[]>
+    
+    // Global/Admin Stats
+    getGlobalUserTotal(): Promise<number>
+    getGlobalCustomerTotal(): Promise<number>
+    getGlobalCustomerServiceTotal(): Promise<number>
+    getGlobalRewardTotal(): Promise<number>
 }

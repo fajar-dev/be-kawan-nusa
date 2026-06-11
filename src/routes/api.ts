@@ -102,6 +102,7 @@ routes.get("/statistic/count", authMiddleware, roleMiddleware('user'), (c) => st
 routes.get("/statistic/point", authMiddleware, roleMiddleware('user'), (c) => statisticController.pointPerMonth(c))
 routes.get("/statistic/customer", authMiddleware, roleMiddleware('user'), (c) => statisticController.customerStats(c))
 routes.get("/statistic/redemption-reward", authMiddleware, roleMiddleware('user'), (c) => statisticController.redemptionRewardStats(c))
+routes.get("/statistic/admin/summary", authMiddleware, roleMiddleware('admin'), (c) => statisticController.adminSummary(c))
 
 // Catalog
 routes.get("/catalog/category", authMiddleware, (c) => catalogCategoryController.index(c))
