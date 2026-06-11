@@ -112,6 +112,14 @@ export class TypeOrmRedemptionRepository implements IRedemptionRepository {
         return await this.repository.findOne({ where: { id, userId }, relations: REDEMPTION_RELATIONS })
     }
 
+    async findById(id: number): Promise<Redemption | null> {
+        return await this.repository.findOne({ where: { id }, relations: REDEMPTION_RELATIONS })
+    }
+
+    async save(redemption: Redemption): Promise<Redemption> {
+        return await this.repository.save(redemption)
+    }
+
     async findReceiptByIdAndUserId(id: number, userId: number): Promise<Redemption | null> {
         return await this.repository.findOne({
             where: { id, userId, type: RedemptionType.CASH },

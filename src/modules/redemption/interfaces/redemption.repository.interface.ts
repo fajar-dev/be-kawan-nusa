@@ -28,6 +28,10 @@ export interface IRedemptionRepository {
 
     findByIdAndUserId(id: number, userId: number): Promise<Redemption | null>
 
+    findById(id: number): Promise<Redemption | null>
+
+    save(redemption: Redemption): Promise<Redemption>
+
     findReceiptByIdAndUserId(id: number, userId: number): Promise<Redemption | null>
 
     getLatestRedempNoByDate(dateStr: string): Promise<string | null>

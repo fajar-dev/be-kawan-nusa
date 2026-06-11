@@ -192,6 +192,16 @@ export class RedemptionService {
         })
     }
 
+    async updateStatus(id: number, status: RedemptionStatus): Promise<Redemption> {
+        const redemption = await this.repository.findById(id)
+        if (!redemption) {
+            throw new NotFoundException("Redemption record not found")
+        }
+
+        redemption.status = status
+        return await this.repository.save(redemption)
+    }
+
     private async generateRedempNo(): Promise<string> {
         const date = new Date()
         const dateStr = [

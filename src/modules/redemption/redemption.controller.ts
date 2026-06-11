@@ -114,4 +114,16 @@ export class RedemptionController {
             return ApiResponse.error(c, error.message || "Failed to create product redemption", 400)
         }
     }
+
+    async updateStatus(c: any) {
+        const id = Number(c.req.param("id"))
+        const body = c.req.valid("json")
+
+        try {
+            const data = await this.service.updateStatus(id, body.status)
+            return ApiResponse.success(c, await RedemptionSerializer.single(data), "Redemption status updated successfully")
+        } catch (error: any) {
+            return ApiResponse.error(c, error.message || "Failed to update redemption status", 400)
+        }
+    }
 }

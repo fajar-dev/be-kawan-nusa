@@ -1683,6 +1683,54 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 
+  /redemption/cash/list/{id}:
+    put:
+      summary: Update cash redemption status (admin)
+      description: "Admin-only endpoint. Updates the status of a cash redemption transaction (e.g. from pending to completed)."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Redemption ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [pending, processing, completed, cancelled, expired]
+                  example: completed
+      responses:
+        "200":
+          description: Redemption status updated successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Redemption status updated successfully"
+                data:
+                  id: 1
+                  redempNo: "RED-20240301-0001"
+                  pointsUsed: 1000
+                  status: "completed"
+                  notes: null
+                  createdAt: "2024-03-01T09:00:00.000Z"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          description: Redemption record not found
+
   /redemption:
     get:
       summary: List redemption transactions (paginated)
