@@ -10,6 +10,8 @@ import { PointHelper } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { IRedemptionRepository, RedemptionListFilters } from "./interfaces/redemption.repository.interface"
+import { generateWithdrawalNote } from "../../core/helpers/pdf"
+import { minio } from "../../core/helpers/minio"
 
 export class RedemptionService {
     constructor(private readonly repository: IRedemptionRepository) {}
@@ -52,7 +54,7 @@ export class RedemptionService {
     }
 
     async createCash(userId: number, pointsUsed: number, notes?: string): Promise<Redemption> {
-        return await AppDataSource.transaction(async (manager) => {
+        const redemption = await AppDataSource.transaction(async (manager) => {
             const user = await manager.findOne(User, { where: { id: userId } })
             if (!user) throw new NotFoundException("User not found")
 
@@ -76,7 +78,7 @@ export class RedemptionService {
             const savedWithdraw = await manager.save(withdraw)
 
             const redempNo = await this.generateRedempNo()
-            const redemption = manager.create(Redemption, {
+            const r = manager.create(Redemption, {
                 redempNo,
                 userId,
                 pointsUsed,
@@ -87,8 +89,23 @@ export class RedemptionService {
                 redemptionWithdrawId: savedWithdraw.id,
             })
 
-            return await manager.save(redemption)
+            const saved = await manager.save(r)
+            saved.user = user
+            saved.redemptionWithdraw = savedWithdraw
+            return saved
         })
+
+        // Generate PDF and upload to MinIO (background)
+        generateWithdrawalNote(redemption).then(async (pdfBuffer) => {
+            const objectName = `receipts/${redemption.redempNo}.pdf`
+            await minio.upload(objectName, pdfBuffer, "application/pdf")
+            await AppDataSource.getRepository(RedemptionWithdraw).update(
+                redemption.redemptionWithdrawId!,
+                { receiptPath: objectName }
+            )
+        }).catch((err) => console.error("[Redemption] Failed to generate receipt PDF:", err))
+
+        return redemption
     }
 
     async createVoucher(userId: number, catalogId: number, notes?: string): Promise<Redemption> {

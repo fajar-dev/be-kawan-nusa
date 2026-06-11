@@ -20,6 +20,9 @@ export class RedemptionWithdraw {
     @Column({ type: "decimal", precision: 15, scale: 2, default: 0 })
     tax!: number
 
+    @Column({ name: "receipt_path", nullable: true })
+    receiptPath?: string
+
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date
 

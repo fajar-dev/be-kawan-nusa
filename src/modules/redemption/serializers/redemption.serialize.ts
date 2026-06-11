@@ -1,7 +1,13 @@
+import minio from "../../../core/helpers/minio"
 import { Redemption } from "../entities/redemption.entity"
 
 export class RedemptionSerializer {
-    static single(redemption: Redemption) {
+    private static async resolvePhotoUrl(photo?: string | null): Promise<string | null> {
+        if (!photo) return null
+        return await minio.getPresignedUrl(photo)
+    }
+
+    static async single(redemption: Redemption) {
         return {
             id: redemption.id,
             redempNo: redemption.redempNo,
@@ -14,7 +20,8 @@ export class RedemptionSerializer {
                 accountNumber: redemption.redemptionWithdraw.accountNumber,
                 accountHolderName: redemption.redemptionWithdraw.accountHolderName,
                 payout: Number(redemption.redemptionWithdraw.payout),
-                tax: Number(redemption.redemptionWithdraw.tax)
+                tax: Number(redemption.redemptionWithdraw.tax),
+                receipt: await this.resolvePhotoUrl(redemption.redemptionWithdraw.receiptPath)
             } : null,
             voucherDetails: redemption.redemptionVoucher ? {
                 catalog: redemption.redemptionVoucher.catalog ? {
@@ -59,7 +66,7 @@ export class RedemptionSerializer {
         }
     }
 
-    static collection(data: Redemption[]) {
-        return data.map(redemption => this.single(redemption))
+    static async collection(data: Redemption[]) {
+        return await Promise.all(data.map(redemption => this.single(redemption)))
     }
 }
