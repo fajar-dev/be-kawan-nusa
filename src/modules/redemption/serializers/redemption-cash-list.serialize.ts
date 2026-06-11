@@ -23,6 +23,8 @@ export class RedemptionCashListSerializer {
                 photo: this.resolvePhotoUrl(user.photo),
                 email: user.email,
                 phone: user.phone,
+                identityNumber: user.identityNumber,
+                taxNumber: user.taxNumber,
             } : null,
             withdrawDetails: withdraw ? {
                 bankName: withdraw.bankName,

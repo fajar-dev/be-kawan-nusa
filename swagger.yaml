@@ -1664,6 +1664,8 @@ paths:
                       photo: "https://example.com/api/proxy?path=profile/1_1234567890.jpg"
                       email: "budi.santoso@nusanet.id"
                       phone: "081234567890"
+                      identityNumber: 3201234567890001
+                      taxNumber: "01.234.567.8-901.000"
                     withdrawDetails:
                       bankName: "BCA"
                       accountNumber: "1234567890"
