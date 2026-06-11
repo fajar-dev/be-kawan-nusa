@@ -127,7 +127,7 @@ export class UserController {
 
         return ApiResponse.paginate(
             c,
-            RedemptionSerializer.collection(data),
+            await RedemptionSerializer.collection(data),
             total,
             page,
             limit,
