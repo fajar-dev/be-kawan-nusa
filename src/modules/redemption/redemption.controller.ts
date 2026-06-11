@@ -2,10 +2,42 @@ import { Context } from "hono"
 import { RedemptionService } from "./redemption.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { RedemptionSerializer } from "./serializers/redemption.serialize"
+import { RedemptionCashListSerializer } from "./serializers/redemption-cash-list.serialize"
 import { generateWithdrawalNote } from "../../core/helpers/pdf"
 
 export class RedemptionController {
     constructor(private readonly service: RedemptionService) {}
+
+    async cashList(c: Context) {
+        const page = Number(c.req.query("page")) || 1
+        const limit = Number(c.req.query("limit")) || 10
+        const sort = c.req.query("sort") || "createdAt"
+        const order = c.req.query("order") || "DESC"
+
+        const queries = c.req.queries()
+
+        const { data, total } = await this.service.getCashList(
+            page,
+            limit,
+            {
+                startDate: c.req.query("startDate"),
+                endDate: c.req.query("endDate"),
+                status: queries["status[]"] || queries["status"],
+                q: c.req.query("q") || "",
+            },
+            sort,
+            order
+        )
+
+        return ApiResponse.paginate(
+            c,
+            RedemptionCashListSerializer.collection(data),
+            total,
+            page,
+            limit,
+            "Cash redemptions retrieved successfully"
+        )
+    }
 
     async index(c: Context) {
         const user = c.get("user")

@@ -63,6 +63,7 @@ routes.post("/profile/photo", authMiddleware, roleMiddleware('user'), zValidator
 routes.get("/point", authMiddleware, roleMiddleware('user'), (c) => pointController.show(c))
 
 // Redemption
+routes.get("/redemption/cash/list", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.cashList(c))
 routes.get("/redemption", authMiddleware, roleMiddleware('user'), (c) => redemptionController.index(c))
 routes.get("/redemption/:id", authMiddleware, roleMiddleware('user'), (c) => redemptionController.show(c))
 routes.get("/redemption/:id/receipt", tokenAuthMiddleware, (c) => redemptionController.previewReceipt(c))

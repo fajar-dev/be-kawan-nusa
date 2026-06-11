@@ -71,6 +71,43 @@ export class TypeOrmRedemptionRepository implements IRedemptionRepository {
         return { data, total }
     }
 
+    async findCashList(
+        page: number,
+        limit: number,
+        filters: RedemptionListFilters,
+        sort: string,
+        order: string
+    ): Promise<{ data: Redemption[]; total: number }> {
+        const query = this.repository.createQueryBuilder("redemption")
+            .leftJoinAndSelect("redemption.user", "user")
+            .leftJoinAndSelect("redemption.redemptionWithdraw", "withdraw")
+            .where("redemption.type = :type", { type: RedemptionType.CASH })
+
+        if (filters.startDate) query.andWhere("redemption.createdAt >= :startDate", { startDate: filters.startDate })
+        if (filters.endDate) query.andWhere("redemption.createdAt <= :endDate", { endDate: `${filters.endDate} 23:59:59` })
+        if (filters.status?.length) query.andWhere("redemption.status IN (:...status)", { status: filters.status })
+
+        if (filters.q) {
+            query.andWhere(new Brackets(qb => {
+                qb.where("redemption.redempNo LIKE :q")
+                  .orWhere("user.firstName LIKE :q")
+                  .orWhere("user.lastName LIKE :q")
+                  .orWhere("user.email LIKE :q")
+                  .orWhere("withdraw.accountHolderName LIKE :q")
+                  .orWhere("withdraw.bankName LIKE :q")
+                  .orWhere("withdraw.accountNumber LIKE :q")
+            }), { q: `%${filters.q}%` })
+        }
+
+        const sortAlias = sort.includes(".") ? sort : `redemption.${sort}`
+        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+            .take(limit)
+            .skip((page - 1) * limit)
+
+        const [data, total] = await query.getManyAndCount()
+        return { data, total }
+    }
+
     async findByIdAndUserId(id: number, userId: number): Promise<Redemption | null> {
         return await this.repository.findOne({ where: { id, userId }, relations: REDEMPTION_RELATIONS })
     }

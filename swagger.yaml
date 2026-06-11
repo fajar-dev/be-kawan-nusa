@@ -1614,6 +1614,73 @@ paths:
   # =============================================
   # REDEMPTION ROUTES
   # =============================================
+  /redemption/cash/list:
+    get:
+      summary: List all cash redemption transactions (admin)
+      description: "Admin-only endpoint. Returns paginated list of all cash (withdraw) redemptions with user and bank details."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: sort
+          in: query
+          description: "Sort field (e.g. createdAt, pointsUsed)"
+          schema: { type: string, default: "createdAt" }
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
+        - name: "status[]"
+          in: query
+          description: "Filter by redemption status (repeatable)"
+          schema:
+            type: array
+            items:
+              {
+                type: string,
+                enum: ["pending", "processing", "completed"],
+              }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Cash redemptions retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Cash redemptions retrieved successfully"
+                data:
+                  - id: 1
+                    redempNo: "RED-20240301-0001"
+                    pointsUsed: 1000
+                    status: "pending"
+                    notes: null
+                    user:
+                      id: 1
+                      name: "Budi Santoso"
+                      photo: "https://example.com/api/proxy?path=profile/1_1234567890.jpg"
+                      email: "budi.santoso@nusanet.id"
+                      phone: "081234567890"
+                    withdrawDetails:
+                      bankName: "BCA"
+                      accountNumber: "1234567890"
+                      accountHolderName: "Budi Santoso"
+                      payout: 95000
+                      tax: 5000
+                    createdAt: "2024-03-01T09:00:00.000Z"
+                meta:
+                  total: 20
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 2
+                  from: 1
+                  to: 10
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
   /redemption:
     get:
       summary: List redemption transactions (paginated)

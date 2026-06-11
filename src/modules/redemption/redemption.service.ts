@@ -25,6 +25,16 @@ export class RedemptionService {
         return await this.repository.findAllByUserId(userId, page, limit, filters, sort, order)
     }
 
+    async getCashList(
+        page: number,
+        limit: number,
+        filters: RedemptionListFilters,
+        sort: string,
+        order: string
+    ): Promise<{ data: Redemption[]; total: number }> {
+        return await this.repository.findCashList(page, limit, filters, sort, order)
+    }
+
     async getById(id: number, userId: number): Promise<Redemption> {
         const redemption = await this.repository.findByIdAndUserId(id, userId)
         if (!redemption) {
