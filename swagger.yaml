@@ -580,7 +580,13 @@ components:
           }
         image:
           { type: string, example: "https://cdn.example.com/article-fiber.jpg" }
-        author: { type: string, example: "Tim Nusanet" }
+        author:
+          nullable: true
+          type: object
+          properties:
+            name: { type: string, example: "Tim Nusanet" }
+            employeeId: { type: string, example: "EMP-001" }
+            photo: { type: string, nullable: true, example: "https://cdn.example.com/photo.jpg" }
         readingTime: { type: string, example: "3 menit baca" }
         isView: { type: boolean, example: false }
         categoryId: { type: integer, example: 1 }
@@ -612,7 +618,13 @@ components:
             type: string,
             example: "Tutorial lengkap menggunakan fitur-fitur dashboard Kawan Nusa",
           }
-        author: { type: string, example: "Tim Nusanet" }
+        author:
+          nullable: true
+          type: object
+          properties:
+            name: { type: string, example: "Tim Nusanet" }
+            employeeId: { type: string, example: "EMP-001" }
+            photo: { type: string, nullable: true, example: "https://cdn.example.com/photo.jpg" }
         isView: { type: boolean, example: true }
         categoryId: { type: integer, example: 2 }
         category:
@@ -2909,7 +2921,10 @@ paths:
                     title: "Tips Memaksimalkan Koneksi Internet Fiber"
                     content: "Internet fiber optik adalah teknologi koneksi..."
                     image: "https://cdn.example.com/article-fiber.jpg"
-                    author: "Tim Nusanet"
+                    author:
+                      name: "Tim Nusanet"
+                      employeeId: "EMP-001"
+                      photo: "https://cdn.example.com/photo.jpg"
                     readingTime: "3 menit baca"
                     isView: false
                     categoryId: 1
@@ -3018,7 +3033,10 @@ paths:
                   title: "Tips Memaksimalkan Koneksi Internet Fiber"
                   content: "Internet fiber optik adalah teknologi koneksi yang menggunakan serat kaca..."
                   image: "https://cdn.example.com/article-fiber.jpg"
-                  author: "Tim Nusanet"
+                  author:
+                    name: "Tim Nusanet"
+                    employeeId: "EMP-001"
+                    photo: "https://cdn.example.com/photo.jpg"
                   readingTime: "3 menit baca"
                   isView: true
                   categoryId: 1
@@ -3120,7 +3138,10 @@ paths:
                     url: "https://www.youtube.com/watch?v=example"
                     thumbnail: "https://cdn.example.com/video-thumb.jpg"
                     description: "Tutorial lengkap menggunakan fitur-fitur dashboard Kawan Nusa"
-                    author: "Tim Nusanet"
+                    author:
+                      name: "Tim Nusanet"
+                      employeeId: "EMP-001"
+                      photo: "https://cdn.example.com/photo.jpg"
                     isView: false
                     categoryId: 2
                     category:
@@ -3199,7 +3220,10 @@ paths:
                   url: "https://www.youtube.com/watch?v=example"
                   thumbnail: "https://cdn.example.com/video-thumb.jpg"
                   description: "Tutorial lengkap menggunakan fitur-fitur dashboard Kawan Nusa"
-                  author: "Tim Nusanet"
+                  author:
+                    name: "Tim Nusanet"
+                    employeeId: "EMP-001"
+                    photo: "https://cdn.example.com/photo.jpg"
                   isView: true
                   categoryId: 2
                   category:
