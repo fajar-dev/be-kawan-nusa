@@ -23,6 +23,7 @@ export class ServicePromotionSerializer {
                 code: item.service.code,
                 name: item.service.name
             } : null,
+            isActive: item.isActive,
             createdAt: item.createdAt
         }
     }
