@@ -11,9 +11,10 @@ export class CatalogService {
         page: number = 1,
         limit: number = 10,
         q: string = "",
-        categoryId?: number
+        categoryIds?: number[],
+        types?: string[]
     ): Promise<{ data: Catalog[]; total: number }> {
-        return await this.repository.findAll(page, limit, q, categoryId)
+        return await this.repository.findAll(page, limit, q, categoryIds, types)
     }
 
     async getById(id: number): Promise<Catalog | null> {

@@ -14,7 +14,8 @@ export class TypeOrmCatalogRepository implements ICatalogRepository {
         page: number,
         limit: number,
         q: string,
-        categoryId?: number
+        categoryIds?: number[],
+        types?: string[]
     ): Promise<{ data: Catalog[]; total: number }> {
         const query = this.repository.createQueryBuilder("catalog")
             .leftJoinAndSelect("catalog.category", "category")
@@ -23,7 +24,12 @@ export class TypeOrmCatalogRepository implements ICatalogRepository {
                   .orWhere("catalog.expiredDate >= :today", { today: new Date().toISOString().split("T")[0] })
             }))
 
-        if (categoryId) query.andWhere("catalog.categoryId = :categoryId", { categoryId })
+        if (categoryIds && categoryIds.length > 0) {
+            query.andWhere("catalog.categoryId IN (:...categoryIds)", { categoryIds })
+        }
+        if (types && types.length > 0) {
+            query.andWhere("catalog.type IN (:...types)", { types })
+        }
         if (q) query.andWhere("catalog.name LIKE :q OR catalog.description LIKE :q", { q: `%${q}%` })
 
         query.orderBy("catalog.createdAt", "DESC")
