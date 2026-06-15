@@ -1,12 +1,21 @@
 import { ServicePromotion } from "../entities/service-promotion.entity";
+import { minio } from "../../../core/helpers/minio";
 
 export class ServicePromotionSerializer {
-    static single(item: ServicePromotion) {
+    private static async resolvePhotoUrl(photo?: string | null): Promise<string | null> {
+        if (!photo) return null
+        if (photo.startsWith("http://") || photo.startsWith("https://")) {
+            return photo
+        }
+        return await minio.getPresignedUrl(photo)
+    }
+
+    static async single(item: ServicePromotion) {
         return {
             id: item.id,
             title: item.title,
             description: item.description,
-            image: item.image,
+            image: await this.resolvePhotoUrl(item.image),
             url: item.url,
             startPeriod: item.startPeriod,
             endPeriod: item.endPeriod,
@@ -18,7 +27,7 @@ export class ServicePromotionSerializer {
         }
     }
 
-    static collection(items: ServicePromotion[]) {
-        return items.map(item => this.single(item))
+    static async collection(items: ServicePromotion[]) {
+        return Promise.all(items.map(item => this.single(item)))
     }
 }

@@ -80,11 +80,18 @@ routes.get("/customer/:id/reward", authMiddleware, roleMiddleware('user'), (c) =
 
 // Service Promotion
 routes.get("/service/promotion", authMiddleware, (c) => servicePromotionController.index(c))
+routes.get("/service/promotion/:id", authMiddleware, (c) => servicePromotionController.show(c))
+routes.post("/service/promotion", authMiddleware, roleMiddleware('admin'), (c) => servicePromotionController.store(c))
+routes.put("/service/promotion/:id", authMiddleware, roleMiddleware('admin'), (c) => servicePromotionController.update(c))
+routes.delete("/service/promotion/:id", authMiddleware, roleMiddleware('admin'), (c) => servicePromotionController.destroy(c))
 
 // Template
 routes.get("/template", authMiddleware, (c) => templateController.index(c))
-routes.get("/template/:id", authMiddleware, roleMiddleware('user'), (c) => templateController.show(c))
-routes.get("/template/:id/download", authMiddleware, roleMiddleware('user'), (c) => templateController.download(c))
+routes.get("/template/:id", authMiddleware, roleMiddleware('user', 'admin'), (c) => templateController.show(c))
+routes.get("/template/:id/download", authMiddleware, roleMiddleware('user', 'admin'), (c) => templateController.download(c))
+routes.post("/template", authMiddleware, roleMiddleware('admin'), (c) => templateController.store(c))
+routes.put("/template/:id", authMiddleware, roleMiddleware('admin'), (c) => templateController.update(c))
+routes.delete("/template/:id", authMiddleware, roleMiddleware('admin'), (c) => templateController.destroy(c))
 
 // Service
 routes.get("/service", authMiddleware, roleMiddleware('user'), (c) => serviceController.index(c))
