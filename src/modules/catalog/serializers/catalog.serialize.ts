@@ -1,7 +1,16 @@
 import { Catalog } from "../entities/catalog.entity";
+import { minio } from "../../../core/helpers/minio";
 
 export class CatalogSerializer {
-    static single(item: any) {
+    private static async resolvePhotoUrl(photo?: string | null): Promise<string | null> {
+        if (!photo) return null
+        if (photo.startsWith("http://") || photo.startsWith("https://")) {
+            return photo
+        }
+        return await minio.getPresignedUrl(photo)
+    }
+
+    static async single(item: any) {
         return {
             id: Number(item.id),
             categoryId: Number(item.categoryId),
@@ -9,7 +18,7 @@ export class CatalogSerializer {
             type: item.type,
             description: item.description,
             point: Number(item.point),
-            image: item.image,
+            image: await this.resolvePhotoUrl(item.image),
             expiredDate: item.expiredDate,
             category: item.category ? {
                 id: item.category.id,
@@ -18,7 +27,7 @@ export class CatalogSerializer {
         }
     }
 
-    static collection(items: Catalog[]) {
-        return items.map(item => this.single(item))
+    static async collection(items: Catalog[]) {
+        return Promise.all(items.map(item => this.single(item)))
     }
 }

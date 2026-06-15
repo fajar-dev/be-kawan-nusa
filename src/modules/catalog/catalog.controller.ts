@@ -45,7 +45,7 @@ export class CatalogController {
 
         return ApiResponse.paginate(
             c,
-            CatalogSerializer.collection(data),
+            await CatalogSerializer.collection(data),
             total,
             page,
             limit,
@@ -59,7 +59,7 @@ export class CatalogController {
         if (!catalog) {
             return ApiResponse.error(c, "Catalog item not found", 404)
         }
-        return ApiResponse.success(c, CatalogSerializer.single(catalog), "Catalog item retrieved successfully")
+        return ApiResponse.success(c, await CatalogSerializer.single(catalog), "Catalog item retrieved successfully")
     }
 
     async store(c: Context) {
@@ -76,7 +76,7 @@ export class CatalogController {
             imageFile: rawBody.image
         })
 
-        return ApiResponse.success(c, CatalogSerializer.single(catalog), "Catalog item created successfully")
+        return ApiResponse.success(c, await CatalogSerializer.single(catalog), "Catalog item created successfully")
     }
 
     async update(c: Context) {
@@ -94,7 +94,7 @@ export class CatalogController {
             imageFile: rawBody.image
         })
 
-        return ApiResponse.success(c, CatalogSerializer.single(catalog), "Catalog item updated successfully")
+        return ApiResponse.success(c, await CatalogSerializer.single(catalog), "Catalog item updated successfully")
     }
 
     async destroy(c: Context) {
