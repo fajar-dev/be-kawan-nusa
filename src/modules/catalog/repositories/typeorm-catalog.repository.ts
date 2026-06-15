@@ -38,4 +38,12 @@ export class TypeOrmCatalogRepository implements ICatalogRepository {
             .where("catalog.id = :id", { id })
             .getOne()
     }
+
+    async save(catalog: Catalog): Promise<Catalog> {
+        return await this.repository.save(catalog)
+    }
+
+    async delete(id: number): Promise<void> {
+        await this.repository.delete(id)
+    }
 }

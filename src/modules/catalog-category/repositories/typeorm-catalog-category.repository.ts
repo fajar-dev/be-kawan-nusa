@@ -13,4 +13,16 @@ export class TypeOrmCatalogCategoryRepository implements ICatalogCategoryReposit
     async findAll(): Promise<CatalogCategory[]> {
         return await this.repository.find({ order: { name: "ASC" } })
     }
+
+    async findById(id: number): Promise<CatalogCategory | null> {
+        return await this.repository.findOne({ where: { id } })
+    }
+
+    async save(category: CatalogCategory): Promise<CatalogCategory> {
+        return await this.repository.save(category)
+    }
+
+    async delete(id: number): Promise<void> {
+        await this.repository.delete(id)
+    }
 }

@@ -8,6 +8,7 @@ import { CreateCashRedemptionValidator, CreateRedemptionVoucherValidator, Create
 import { CreateRewardValidator } from "../modules/reward/validators/reward.validator"
 import { StoreFeedbackValidator } from "../modules/feedback/validators/feedback.validator"
 import { CreateEducationCategoryValidator, UpdateEducationCategoryValidator } from "../modules/education-category/validators/education-category.validator"
+import { CreateCatalogCategoryValidator, UpdateCatalogCategoryValidator } from "../modules/catalog-category/validators/catalog-category.validator"
 
 // ── Middlewares ──────────────────────────────────────────────────────────────
 import { authMiddleware } from "../core/middlewares/auth.middleware"
@@ -104,10 +105,19 @@ routes.get("/statistic/customer", authMiddleware, roleMiddleware('user'), (c) =>
 routes.get("/statistic/redemption-reward", authMiddleware, roleMiddleware('user'), (c) => statisticController.redemptionRewardStats(c))
 routes.get("/statistic/admin/summary", authMiddleware, roleMiddleware('admin'), (c) => statisticController.adminSummary(c))
 
-// Catalog
+// Catalog Category
 routes.get("/catalog/category", authMiddleware, (c) => catalogCategoryController.index(c))
+routes.post("/catalog/category", authMiddleware, roleMiddleware('admin'), zValidator("json", CreateCatalogCategoryValidator, validationHook), (c) => catalogCategoryController.store(c))
+routes.put("/catalog/category/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", UpdateCatalogCategoryValidator, validationHook), (c) => catalogCategoryController.update(c))
+routes.delete("/catalog/category/:id", authMiddleware, roleMiddleware('admin'), (c) => catalogCategoryController.destroy(c))
+
+// Catalog
 routes.get("/catalog", authMiddleware, (c) => catalogController.index(c))
 routes.get("/catalog/:id", authMiddleware, (c) => catalogController.show(c))
+routes.post("/catalog", authMiddleware, roleMiddleware('admin'), (c) => catalogController.store(c))
+routes.put("/catalog/:id", authMiddleware, roleMiddleware('admin'), (c) => catalogController.update(c))
+routes.delete("/catalog/:id", authMiddleware, roleMiddleware('admin'), (c) => catalogController.destroy(c))
+routes.post("/catalog/upload", authMiddleware, roleMiddleware('admin'), (c) => catalogController.uploadImage(c))
 
 // Education
 routes.get("/education/category", authMiddleware, (c) => educationCategoryController.index(c))
