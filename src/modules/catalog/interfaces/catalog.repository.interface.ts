@@ -6,7 +6,9 @@ export interface ICatalogRepository {
         limit: number,
         q: string,
         categoryIds?: number[],
-        types?: string[]
+        types?: string[],
+        sort?: string,
+        order?: string
     ): Promise<{ data: Catalog[]; total: number }>
 
     findById(id: number): Promise<Catalog | null>

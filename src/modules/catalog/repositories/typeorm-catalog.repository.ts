@@ -15,7 +15,9 @@ export class TypeOrmCatalogRepository implements ICatalogRepository {
         limit: number,
         q: string,
         categoryIds?: number[],
-        types?: string[]
+        types?: string[],
+        sort: string = "createdAt",
+        order: string = "DESC"
     ): Promise<{ data: Catalog[]; total: number }> {
         const query = this.repository.createQueryBuilder("catalog")
             .leftJoinAndSelect("catalog.category", "category")
@@ -32,7 +34,8 @@ export class TypeOrmCatalogRepository implements ICatalogRepository {
         }
         if (q) query.andWhere("catalog.name LIKE :q OR catalog.description LIKE :q", { q: `%${q}%` })
 
-        query.orderBy("catalog.createdAt", "DESC")
+        const sortAlias = sort.includes(".") ? sort : `catalog.${sort}`
+        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
 
         const [data, total] = await query.take(limit).skip((page - 1) * limit).getManyAndCount()
         return { data, total }
