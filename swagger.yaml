@@ -1731,6 +1731,403 @@ paths:
         "404":
           description: Redemption record not found
 
+  /redemption/product/list:
+    get:
+      summary: List all product redemption transactions (admin)
+      description: "Admin-only endpoint. Returns paginated list of all product redemptions with user, catalog, and shipping details."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: sort
+          in: query
+          description: "Sort field (e.g. createdAt, pointsUsed)"
+          schema: { type: string, default: "createdAt" }
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
+        - name: "status[]"
+          in: query
+          description: "Filter by redemption status (repeatable)"
+          schema:
+            type: array
+            items:
+              {
+                type: string,
+                enum: ["pending", "processing", "completed"],
+              }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Product redemptions retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Product redemptions retrieved successfully"
+                data:
+                  - id: 3
+                    redempNo: "RED-20240305-0001"
+                    pointsUsed: 500
+                    status: "pending"
+                    notes: "Tolong dikirim pagi hari"
+                    user:
+                      id: 1
+                      name: "Budi Santoso"
+                      photo: "https://example.com/api/proxy?path=profile/1_1234567890.jpg"
+                      email: "budi.santoso@nusanet.id"
+                      phone: "081234567890"
+                    productDetails:
+                      catalog:
+                        id: 7
+                        name: "Mug Kawan Nusa"
+                        image: "https://cdn.example.com/mug.jpg"
+                        category:
+                          id: 3
+                          name: "Merchandise"
+                      name: "Budi Santoso"
+                      email: "budi.santoso@nusanet.id"
+                      phone: "081234567890"
+                      address: "Jl. Raya No.10, Surabaya 60111"
+                      shipping: null
+                    createdAt: "2024-03-05T09:00:00.000Z"
+                meta:
+                  total: 15
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 2
+                  from: 1
+                  to: 10
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /redemption/product/list/{id}:
+    post:
+      summary: Process product redemption with shipping info (admin)
+      description: "Admin-only endpoint. Changes product redemption status from pending to processing and creates a shipping record in redemption_product_shippings table. Requires shipper and tracking number."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Redemption ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shipper, trackingNumber]
+              properties:
+                shipper:
+                  type: string
+                  enum: ["jne", "jnt", "sicepat", "ninja", "wahana", "pos", "others"]
+                  example: "jne"
+                trackingNumber:
+                  type: string
+                  example: "JNE001234567890"
+      responses:
+        "200":
+          description: Product redemption is now processing
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Product redemption is now processing"
+                data:
+                  id: 3
+                  redempNo: "RED-20240305-0001"
+                  pointsUsed: 500
+                  type: "product"
+                  status: "processing"
+                  notes: "Tolong dikirim pagi hari"
+                  withdrawDetails: null
+                  voucherDetails: null
+                  productDetails:
+                    catalog:
+                      id: 7
+                      name: "Mug Kawan Nusa"
+                      image: "https://cdn.example.com/mug.jpg"
+                      category:
+                        id: 3
+                        name: "Merchandise"
+                    name: "Budi Santoso"
+                    email: "budi.santoso@nusanet.id"
+                    phone: "081234567890"
+                    address: "Jl. Raya No.10, Surabaya 60111"
+                    shipping:
+                      id: 1
+                      shipper: "jne"
+                      trackingNumber: "JNE001234567890"
+                      shippedAt: "2024-03-06T10:00:00.000Z"
+                  createdAt: "2024-03-05T09:00:00.000Z"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          description: Redemption record not found
+        "422":
+          $ref: "#/components/responses/ValidationResponse"
+
+    put:
+      summary: Mark product redemption as completed (admin)
+      description: "Admin-only endpoint. Marks a processing product redemption as completed. Only redemptions with status 'processing' can be completed."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Redemption ID
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product redemption marked as completed successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Product redemption marked as completed successfully"
+                data:
+                  id: 3
+                  redempNo: "RED-20240305-0001"
+                  pointsUsed: 500
+                  type: "product"
+                  status: "completed"
+                  notes: "Tolong dikirim pagi hari"
+                  withdrawDetails: null
+                  voucherDetails: null
+                  productDetails:
+                    catalog:
+                      id: 7
+                      name: "Mug Kawan Nusa"
+                      image: "https://cdn.example.com/mug.jpg"
+                      category:
+                        id: 3
+                        name: "Merchandise"
+                    name: "Budi Santoso"
+                    email: "budi.santoso@nusanet.id"
+                    phone: "081234567890"
+                    address: "Jl. Raya No.10, Surabaya 60111"
+                    shipping:
+                      id: 1
+                      shipper: "jne"
+                      trackingNumber: "JNE001234567890"
+                      shippedAt: "2024-03-06T10:00:00.000Z"
+                  createdAt: "2024-03-05T09:00:00.000Z"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          description: Redemption record not found
+
+  /redemption/voucher/list:
+    get:
+      summary: List all voucher redemption transactions (admin)
+      description: "Admin-only endpoint. Returns paginated list of all voucher redemptions with user, catalog, and voucher detail information."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: sort
+          in: query
+          description: "Sort field (e.g. createdAt, pointsUsed)"
+          schema: { type: string, default: "createdAt" }
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
+        - name: "status[]"
+          in: query
+          description: "Filter by redemption status (repeatable)"
+          schema:
+            type: array
+            items:
+              {
+                type: string,
+                enum: ["pending", "processing", "completed"],
+              }
+          style: form
+          explode: true
+      responses:
+        "200":
+          description: Voucher redemptions retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Voucher redemptions retrieved successfully"
+                data:
+                  - id: 2
+                    redempNo: "RED-20240303-0001"
+                    pointsUsed: 500
+                    status: "pending"
+                    notes: "Voucher untuk hadiah"
+                    user:
+                      id: 1
+                      name: "Budi Santoso"
+                      photo: "https://example.com/api/proxy?path=profile/1_1234567890.jpg"
+                      email: "budi.santoso@nusanet.id"
+                      phone: "081234567890"
+                    voucherDetails:
+                      catalog:
+                        id: 5
+                        name: "Voucher Tokopedia 50K"
+                        image: "https://cdn.example.com/voucher.jpg"
+                        category:
+                          id: 2
+                          name: "E-Commerce"
+                      name: "Budi Santoso"
+                      email: "budi.santoso@nusanet.id"
+                      detail: null
+                    createdAt: "2024-03-03T09:00:00.000Z"
+                meta:
+                  total: 12
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 2
+                  from: 1
+                  to: 10
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /redemption/voucher/list/{id}:
+    post:
+      summary: Process voucher redemption with voucher detail (admin)
+      description: "Admin-only endpoint. Changes voucher redemption status from pending to processing and creates a voucher detail record in redemption_voucher_details table. Requires voucher code and optional expired date."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Redemption ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  example: "VCHRTOKO50K-ABCDE"
+                expiredDate:
+                  type: string
+                  format: date
+                  example: "2024-12-31"
+                  description: "Optional expiry date for the voucher"
+      responses:
+        "200":
+          description: Voucher redemption is now processing
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Voucher redemption is now processing"
+                data:
+                  id: 2
+                  redempNo: "RED-20240303-0001"
+                  pointsUsed: 500
+                  type: "voucher"
+                  status: "processing"
+                  notes: "Voucher untuk hadiah"
+                  withdrawDetails: null
+                  voucherDetails:
+                    catalog:
+                      id: 5
+                      name: "Voucher Tokopedia 50K"
+                      image: "https://cdn.example.com/voucher.jpg"
+                      category:
+                        id: 2
+                        name: "E-Commerce"
+                    name: "Budi Santoso"
+                    email: "budi.santoso@nusanet.id"
+                    detail:
+                      id: 1
+                      code: "VCHRTOKO50K-ABCDE"
+                      expiredDate: "2024-12-31T00:00:00.000Z"
+                  productDetails: null
+                  createdAt: "2024-03-03T09:00:00.000Z"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          description: Redemption record not found
+        "422":
+          $ref: "#/components/responses/ValidationResponse"
+
+    put:
+      summary: Mark voucher redemption as completed (admin)
+      description: "Admin-only endpoint. Marks a processing voucher redemption as completed. Only redemptions with status 'processing' can be completed."
+      tags: [Redemption]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Redemption ID
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Voucher redemption marked as completed successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Voucher redemption marked as completed successfully"
+                data:
+                  id: 2
+                  redempNo: "RED-20240303-0001"
+                  pointsUsed: 500
+                  type: "voucher"
+                  status: "completed"
+                  notes: "Voucher untuk hadiah"
+                  withdrawDetails: null
+                  voucherDetails:
+                    catalog:
+                      id: 5
+                      name: "Voucher Tokopedia 50K"
+                      image: "https://cdn.example.com/voucher.jpg"
+                      category:
+                        id: 2
+                        name: "E-Commerce"
+                    name: "Budi Santoso"
+                    email: "budi.santoso@nusanet.id"
+                    detail:
+                      id: 1
+                      code: "VCHRTOKO50K-ABCDE"
+                      expiredDate: "2024-12-31T00:00:00.000Z"
+                  productDetails: null
+                  createdAt: "2024-03-03T09:00:00.000Z"
+        "400":
+          $ref: "#/components/responses/BadRequestResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          description: Redemption record not found
+
   /redemption:
     get:
       summary: List redemption transactions (paginated)

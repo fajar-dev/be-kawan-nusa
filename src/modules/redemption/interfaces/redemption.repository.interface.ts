@@ -26,6 +26,22 @@ export interface IRedemptionRepository {
         order: string
     ): Promise<{ data: Redemption[]; total: number }>
 
+    findProductList(
+        page: number,
+        limit: number,
+        filters: RedemptionListFilters,
+        sort: string,
+        order: string
+    ): Promise<{ data: Redemption[]; total: number }>
+
+    findVoucherList(
+        page: number,
+        limit: number,
+        filters: RedemptionListFilters,
+        sort: string,
+        order: string
+    ): Promise<{ data: Redemption[]; total: number }>
+
     findByIdAndUserId(id: number, userId: number): Promise<Redemption | null>
 
     findById(id: number): Promise<Redemption | null>

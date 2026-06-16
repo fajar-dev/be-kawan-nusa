@@ -108,6 +108,89 @@ export class TypeOrmRedemptionRepository implements IRedemptionRepository {
         return { data, total }
     }
 
+    async findProductList(
+        page: number,
+        limit: number,
+        filters: RedemptionListFilters,
+        sort: string,
+        order: string
+    ): Promise<{ data: Redemption[]; total: number }> {
+        const query = this.repository.createQueryBuilder("redemption")
+            .leftJoinAndSelect("redemption.user", "user")
+            .leftJoinAndSelect("redemption.redemptionProduct", "product")
+            .leftJoinAndSelect("product.catalog", "catalog")
+            .leftJoinAndSelect("catalog.category", "category")
+            .leftJoinAndSelect("product.shipping", "shipping")
+            .where("redemption.type = :type", { type: RedemptionType.PRODUCT })
+
+        if (filters.startDate) query.andWhere("redemption.createdAt >= :startDate", { startDate: filters.startDate })
+        if (filters.endDate) query.andWhere("redemption.createdAt <= :endDate", { endDate: `${filters.endDate} 23:59:59` })
+        if (filters.status?.length) query.andWhere("redemption.status IN (:...status)", { status: filters.status })
+
+        if (filters.q) {
+            query.andWhere(new Brackets(qb => {
+                qb.where("redemption.redempNo LIKE :q")
+                  .orWhere("user.firstName LIKE :q")
+                  .orWhere("user.lastName LIKE :q")
+                  .orWhere("user.email LIKE :q")
+                  .orWhere("product.name LIKE :q")
+                  .orWhere("product.email LIKE :q")
+                  .orWhere("product.phone LIKE :q")
+                  .orWhere("catalog.name LIKE :q")
+                  .orWhere("shipping.trackingNumber LIKE :q")
+            }), { q: `%${filters.q}%` })
+        }
+
+        const sortAlias = sort.includes(".") ? sort : `redemption.${sort}`
+        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+            .take(limit)
+            .skip((page - 1) * limit)
+
+        const [data, total] = await query.getManyAndCount()
+        return { data, total }
+    }
+
+    async findVoucherList(
+        page: number,
+        limit: number,
+        filters: RedemptionListFilters,
+        sort: string,
+        order: string
+    ): Promise<{ data: Redemption[]; total: number }> {
+        const query = this.repository.createQueryBuilder("redemption")
+            .leftJoinAndSelect("redemption.user", "user")
+            .leftJoinAndSelect("redemption.redemptionVoucher", "voucher")
+            .leftJoinAndSelect("voucher.catalog", "catalog")
+            .leftJoinAndSelect("catalog.category", "category")
+            .leftJoinAndSelect("voucher.detail", "vDetail")
+            .where("redemption.type = :type", { type: RedemptionType.VOUCHER })
+
+        if (filters.startDate) query.andWhere("redemption.createdAt >= :startDate", { startDate: filters.startDate })
+        if (filters.endDate) query.andWhere("redemption.createdAt <= :endDate", { endDate: `${filters.endDate} 23:59:59` })
+        if (filters.status?.length) query.andWhere("redemption.status IN (:...status)", { status: filters.status })
+
+        if (filters.q) {
+            query.andWhere(new Brackets(qb => {
+                qb.where("redemption.redempNo LIKE :q")
+                  .orWhere("user.firstName LIKE :q")
+                  .orWhere("user.lastName LIKE :q")
+                  .orWhere("user.email LIKE :q")
+                  .orWhere("voucher.name LIKE :q")
+                  .orWhere("voucher.email LIKE :q")
+                  .orWhere("catalog.name LIKE :q")
+                  .orWhere("vDetail.code LIKE :q")
+            }), { q: `%${filters.q}%` })
+        }
+
+        const sortAlias = sort.includes(".") ? sort : `redemption.${sort}`
+        query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
+            .take(limit)
+            .skip((page - 1) * limit)
+
+        const [data, total] = await query.getManyAndCount()
+        return { data, total }
+    }
+
     async findByIdAndUserId(id: number, userId: number): Promise<Redemption | null> {
         return await this.repository.findOne({ where: { id, userId }, relations: REDEMPTION_RELATIONS })
     }

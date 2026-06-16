@@ -2,10 +2,12 @@ import { AppDataSource } from "../../config/database"
 import { Redemption } from "./entities/redemption.entity"
 import { RedemptionWithdraw } from "./entities/redemption-withdraw.entity"
 import { RedemptionVoucher } from "./entities/redemption-voucher.entity"
+import { RedemptionVoucherDetail } from "./entities/redemption-voucher-detail.entity"
 import { RedemptionProduct } from "./entities/redemption-product.entity"
+import { RedemptionProductShipping } from "./entities/redemption-product-shipping.entity"
 import { User } from "../user/entities/user.entity"
 import { Catalog } from "../catalog/entities/catalog.entity"
-import { RedemptionType, RedemptionStatus } from "./redemption.enum"
+import { RedemptionType, RedemptionStatus, Shipper } from "./redemption.enum"
 import { PointHelper } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
@@ -35,6 +37,16 @@ export class RedemptionService {
         order: string
     ): Promise<{ data: Redemption[]; total: number }> {
         return await this.repository.findCashList(page, limit, filters, sort, order)
+    }
+
+    async getProductList(
+        page: number,
+        limit: number,
+        filters: RedemptionListFilters,
+        sort: string,
+        order: string
+    ): Promise<{ data: Redemption[]; total: number }> {
+        return await this.repository.findProductList(page, limit, filters, sort, order)
     }
 
     async getById(id: number, userId: number): Promise<Redemption> {
@@ -207,6 +219,115 @@ export class RedemptionService {
         }
 
         if (redemption.status !== RedemptionStatus.PENDING && redemption.status !== RedemptionStatus.PROCESSING) {
+            throw new BadRequestException(`Cannot complete redemption with status ${redemption.status}`)
+        }
+
+        redemption.status = RedemptionStatus.COMPLETED
+        return await this.repository.save(redemption)
+    }
+
+    async processProduct(id: number, shipper: Shipper, trackingNumber: string): Promise<Redemption> {
+        const redemption = await this.repository.findById(id)
+        if (!redemption) {
+            throw new NotFoundException("Redemption record not found")
+        }
+
+        if (redemption.type !== RedemptionType.PRODUCT) {
+            throw new BadRequestException("Only product redemptions can be processed")
+        }
+
+        if (redemption.status !== RedemptionStatus.PENDING) {
+            throw new BadRequestException(`Cannot process redemption with status ${redemption.status}`)
+        }
+
+        if (!redemption.redemptionProductId) {
+            throw new BadRequestException("Redemption product data not found")
+        }
+
+        return await AppDataSource.transaction(async (manager) => {
+            const shipping = manager.create(RedemptionProductShipping, {
+                redemptionProductId: redemption.redemptionProductId!,
+                shipper,
+                trackingNumber,
+                shippedAt: new Date(),
+            })
+            await manager.save(shipping)
+
+            redemption.status = RedemptionStatus.PROCESSING
+            return await manager.save(redemption)
+        })
+    }
+
+    async completeProduct(id: number): Promise<Redemption> {
+        const redemption = await this.repository.findById(id)
+        if (!redemption) {
+            throw new NotFoundException("Redemption record not found")
+        }
+
+        if (redemption.type !== RedemptionType.PRODUCT) {
+            throw new BadRequestException("Only product redemptions can be marked as completed")
+        }
+
+        if (redemption.status !== RedemptionStatus.PROCESSING) {
+            throw new BadRequestException(`Cannot complete redemption with status ${redemption.status}`)
+        }
+
+        redemption.status = RedemptionStatus.COMPLETED
+        return await this.repository.save(redemption)
+    }
+
+    async getVoucherList(
+        page: number,
+        limit: number,
+        filters: RedemptionListFilters,
+        sort: string,
+        order: string
+    ): Promise<{ data: Redemption[]; total: number }> {
+        return await this.repository.findVoucherList(page, limit, filters, sort, order)
+    }
+
+    async processVoucher(id: number, code: string, expiredDate?: string): Promise<Redemption> {
+        const redemption = await this.repository.findById(id)
+        if (!redemption) {
+            throw new NotFoundException("Redemption record not found")
+        }
+
+        if (redemption.type !== RedemptionType.VOUCHER) {
+            throw new BadRequestException("Only voucher redemptions can be processed")
+        }
+
+        if (redemption.status !== RedemptionStatus.PENDING) {
+            throw new BadRequestException(`Cannot process redemption with status ${redemption.status}`)
+        }
+
+        if (!redemption.redemptionVoucherId) {
+            throw new BadRequestException("Redemption voucher data not found")
+        }
+
+        return await AppDataSource.transaction(async (manager) => {
+            const detail = manager.create(RedemptionVoucherDetail, {
+                redemptionVoucherId: redemption.redemptionVoucherId!,
+                code,
+                expiredDate: expiredDate ? new Date(expiredDate) : undefined,
+            })
+            await manager.save(detail)
+
+            redemption.status = RedemptionStatus.PROCESSING
+            return await manager.save(redemption)
+        })
+    }
+
+    async completeVoucher(id: number): Promise<Redemption> {
+        const redemption = await this.repository.findById(id)
+        if (!redemption) {
+            throw new NotFoundException("Redemption record not found")
+        }
+
+        if (redemption.type !== RedemptionType.VOUCHER) {
+            throw new BadRequestException("Only voucher redemptions can be marked as completed")
+        }
+
+        if (redemption.status !== RedemptionStatus.PROCESSING) {
             throw new BadRequestException(`Cannot complete redemption with status ${redemption.status}`)
         }
 

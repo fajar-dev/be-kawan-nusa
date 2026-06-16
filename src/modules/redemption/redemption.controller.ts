@@ -3,6 +3,8 @@ import { RedemptionService } from "./redemption.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { RedemptionSerializer } from "./serializers/redemption.serialize"
 import { RedemptionCashListSerializer } from "./serializers/redemption-cash-list.serialize"
+import { RedemptionProductListSerializer } from "./serializers/redemption-product-list.serialize"
+import { RedemptionVoucherListSerializer } from "./serializers/redemption-voucher-list.serialize"
 
 export class RedemptionController {
     constructor(private readonly service: RedemptionService) {}
@@ -35,6 +37,37 @@ export class RedemptionController {
             page,
             limit,
             "Cash redemptions retrieved successfully"
+        )
+    }
+
+    async productList(c: Context) {
+        const page = Number(c.req.query("page")) || 1
+        const limit = Number(c.req.query("limit")) || 10
+        const sort = c.req.query("sort") || "createdAt"
+        const order = c.req.query("order") || "DESC"
+
+        const queries = c.req.queries()
+
+        const { data, total } = await this.service.getProductList(
+            page,
+            limit,
+            {
+                startDate: c.req.query("startDate"),
+                endDate: c.req.query("endDate"),
+                status: queries["status[]"] || queries["status"],
+                q: c.req.query("q") || "",
+            },
+            sort,
+            order
+        )
+
+        return ApiResponse.paginate(
+            c,
+            await RedemptionProductListSerializer.collection(data),
+            total,
+            page,
+            limit,
+            "Product redemptions retrieved successfully"
         )
     }
 
@@ -123,6 +156,83 @@ export class RedemptionController {
             return ApiResponse.success(c, await RedemptionSerializer.single(data), "Redemption marked as completed successfully")
         } catch (error: any) {
             return ApiResponse.error(c, error.message || "Failed to complete redemption", 400)
+        }
+    }
+
+    async processProduct(c: any) {
+        const id = Number(c.req.param("id"))
+        const body = c.req.valid("json")
+
+        try {
+            const data = await this.service.processProduct(id, body.shipper, body.trackingNumber)
+            return ApiResponse.success(c, await RedemptionSerializer.single(data), "Product redemption is now processing")
+        } catch (error: any) {
+            return ApiResponse.error(c, error.message || "Failed to process product redemption", 400)
+        }
+    }
+
+    async completeProduct(c: any) {
+        const id = Number(c.req.param("id"))
+
+        try {
+            const data = await this.service.completeProduct(id)
+            return ApiResponse.success(c, await RedemptionSerializer.single(data), "Product redemption marked as completed successfully")
+        } catch (error: any) {
+            return ApiResponse.error(c, error.message || "Failed to complete product redemption", 400)
+        }
+    }
+
+    async voucherList(c: Context) {
+        const page = Number(c.req.query("page")) || 1
+        const limit = Number(c.req.query("limit")) || 10
+        const sort = c.req.query("sort") || "createdAt"
+        const order = c.req.query("order") || "DESC"
+
+        const queries = c.req.queries()
+
+        const { data, total } = await this.service.getVoucherList(
+            page,
+            limit,
+            {
+                startDate: c.req.query("startDate"),
+                endDate: c.req.query("endDate"),
+                status: queries["status[]"] || queries["status"],
+                q: c.req.query("q") || "",
+            },
+            sort,
+            order
+        )
+
+        return ApiResponse.paginate(
+            c,
+            await RedemptionVoucherListSerializer.collection(data),
+            total,
+            page,
+            limit,
+            "Voucher redemptions retrieved successfully"
+        )
+    }
+
+    async processVoucher(c: any) {
+        const id = Number(c.req.param("id"))
+        const body = c.req.valid("json")
+
+        try {
+            const data = await this.service.processVoucher(id, body.code, body.expiredDate)
+            return ApiResponse.success(c, await RedemptionSerializer.single(data), "Voucher redemption is now processing")
+        } catch (error: any) {
+            return ApiResponse.error(c, error.message || "Failed to process voucher redemption", 400)
+        }
+    }
+
+    async completeVoucher(c: any) {
+        const id = Number(c.req.param("id"))
+
+        try {
+            const data = await this.service.completeVoucher(id)
+            return ApiResponse.success(c, await RedemptionSerializer.single(data), "Voucher redemption marked as completed successfully")
+        } catch (error: any) {
+            return ApiResponse.error(c, error.message || "Failed to complete voucher redemption", 400)
         }
     }
 }
