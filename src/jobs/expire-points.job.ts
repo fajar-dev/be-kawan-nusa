@@ -1,5 +1,5 @@
 import { AppDataSource } from "../config/database"
-import { PointHelper } from "../core/helpers/point"
+import { PointCalculator } from "../core/helpers/point"
 
 async function run() {
     try {
@@ -9,8 +9,9 @@ async function run() {
         await AppDataSource.initialize()
         console.log("[Expire] Database connected")
 
+        const pointCalculator = new PointCalculator()
         const totalExpired = await AppDataSource.transaction(async (manager) => {
-            return await PointHelper.expirePoints(manager)
+            return await pointCalculator.expirePoints(manager)
         })
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2)

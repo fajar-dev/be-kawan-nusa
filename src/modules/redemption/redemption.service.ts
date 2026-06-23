@@ -1,4 +1,3 @@
-import { AppDataSource } from "../../config/database"
 import { Redemption } from "./entities/redemption.entity"
 import { RedemptionWithdraw } from "./entities/redemption-withdraw.entity"
 import { RedemptionVoucher } from "./entities/redemption-voucher.entity"
@@ -8,15 +7,20 @@ import { RedemptionProductShipping } from "./entities/redemption-product-shippin
 import { User } from "../user/entities/user.entity"
 import { Catalog } from "../catalog/entities/catalog.entity"
 import { RedemptionType, RedemptionStatus, Shipper } from "./redemption.enum"
-import { PointHelper } from "../../core/helpers/point"
+import { PointCalculator } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { IRedemptionRepository, RedemptionListFilters } from "./interfaces/redemption.repository.interface"
 import { generateWithdrawalNote } from "../../core/helpers/pdf"
 import { minio } from "../../core/helpers/minio"
+import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
 
 export class RedemptionService {
-    constructor(private readonly repository: IRedemptionRepository) {}
+    constructor(
+        private readonly repository: IRedemptionRepository,
+        private readonly unitOfWork: IUnitOfWork,
+        private readonly pointCalculator: PointCalculator,
+    ) {}
 
     async getAll(
         userId: number,
@@ -66,18 +70,18 @@ export class RedemptionService {
     }
 
     async createCash(userId: number, pointsUsed: number, notes?: string): Promise<Redemption> {
-        const redemption = await AppDataSource.transaction(async (manager) => {
+        const redemption = await this.unitOfWork.runInTransaction(async (manager) => {
             const user = await manager.findOne(User, { where: { id: userId } })
             if (!user) throw new NotFoundException("User not found")
 
-            const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
+            const availablePoints = await this.pointCalculator.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
                 throw new BadRequestException(
                     `Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`
                 )
             }
 
-            const rewardOutDetail = await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
+            const rewardOutDetail = await this.pointCalculator.subtractPointsFIFO(manager, userId, pointsUsed)
 
             const { tax, payout } = calculateWithdrawal(pointsUsed)
             const withdraw = manager.create(RedemptionWithdraw, {
@@ -111,7 +115,9 @@ export class RedemptionService {
         generateWithdrawalNote(redemption).then(async (pdfBuffer) => {
             const objectName = `receipts/${redemption.redempNo}.pdf`
             await minio.upload(objectName, pdfBuffer, "application/pdf")
-            await AppDataSource.getRepository(RedemptionWithdraw).update(
+            const uow = this.unitOfWork
+            const mgr = uow.getManager()
+            await mgr.getRepository(RedemptionWithdraw).update(
                 redemption.redemptionWithdrawId!,
                 { receiptPath: objectName }
             )
@@ -121,7 +127,7 @@ export class RedemptionService {
     }
 
     async createVoucher(userId: number, catalogId: number, notes?: string): Promise<Redemption> {
-        return await AppDataSource.transaction(async (manager) => {
+        return await this.unitOfWork.runInTransaction(async (manager) => {
             const user = await manager.findOne(User, { where: { id: userId } })
             if (!user) throw new NotFoundException("User not found")
 
@@ -129,14 +135,14 @@ export class RedemptionService {
             if (!catalog) throw new NotFoundException("Catalog item not found")
 
             const pointsUsed = Number(catalog.point)
-            const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
+            const availablePoints = await this.pointCalculator.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
                 throw new BadRequestException(
                     `Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`
                 )
             }
 
-            const rewardOutDetail = await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
+            const rewardOutDetail = await this.pointCalculator.subtractPointsFIFO(manager, userId, pointsUsed)
 
             const voucher = manager.create(RedemptionVoucher, {
                 catalogId,
@@ -162,7 +168,7 @@ export class RedemptionService {
     }
 
     async createProduct(userId: number, catalogId: number, address: string, notes?: string): Promise<Redemption> {
-        return await AppDataSource.transaction(async (manager) => {
+        return await this.unitOfWork.runInTransaction(async (manager) => {
             const user = await manager.findOne(User, { where: { id: userId } })
             if (!user) throw new NotFoundException("User not found")
 
@@ -170,14 +176,14 @@ export class RedemptionService {
             if (!catalog) throw new NotFoundException("Catalog item not found")
 
             const pointsUsed = Number(catalog.point)
-            const availablePoints = await PointHelper.getAvailablePoints(manager, userId)
+            const availablePoints = await this.pointCalculator.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
                 throw new BadRequestException(
                     `Insufficient point balance. Available: ${availablePoints}, Required: ${pointsUsed}`
                 )
             }
 
-            const rewardOutDetail = await PointHelper.subtractPointsFIFO(manager, userId, pointsUsed)
+            const rewardOutDetail = await this.pointCalculator.subtractPointsFIFO(manager, userId, pointsUsed)
 
             const product = manager.create(RedemptionProduct, {
                 catalogId,
@@ -244,7 +250,7 @@ export class RedemptionService {
             throw new BadRequestException("Redemption product data not found")
         }
 
-        return await AppDataSource.transaction(async (manager) => {
+        return await this.unitOfWork.runInTransaction(async (manager) => {
             const shipping = manager.create(RedemptionProductShipping, {
                 redemptionProductId: redemption.redemptionProductId!,
                 shipper,
@@ -304,7 +310,7 @@ export class RedemptionService {
             throw new BadRequestException("Redemption voucher data not found")
         }
 
-        return await AppDataSource.transaction(async (manager) => {
+        return await this.unitOfWork.runInTransaction(async (manager) => {
             const detail = manager.create(RedemptionVoucherDetail, {
                 redemptionVoucherId: redemption.redemptionVoucherId!,
                 code,

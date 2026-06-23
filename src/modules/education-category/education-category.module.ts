@@ -2,7 +2,6 @@ import { TypeOrmEducationCategoryRepository } from "./repositories/typeorm-educa
 import { EducationCategoryService } from "./education-category.service"
 import { EducationCategoryController } from "./education-category.controller"
 
-const educationCategoryRepository = new TypeOrmEducationCategoryRepository()
-const educationCategoryService = new EducationCategoryService(educationCategoryRepository)
-
-export const educationCategoryController = new EducationCategoryController(educationCategoryService)
+const repository = new TypeOrmEducationCategoryRepository()
+const service = new EducationCategoryService(repository)
+export const educationCategoryController = new EducationCategoryController(service)

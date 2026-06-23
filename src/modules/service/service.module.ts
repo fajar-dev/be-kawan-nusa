@@ -2,7 +2,6 @@ import { TypeOrmServiceRepository } from "./repositories/typeorm-service.reposit
 import { ServiceService } from "./service.service"
 import { ServiceController } from "./service.controller"
 
-const serviceRepository = new TypeOrmServiceRepository()
-
-export const serviceService = new ServiceService(serviceRepository)
+const repository = new TypeOrmServiceRepository()
+export const serviceService = new ServiceService(repository)
 export const serviceController = new ServiceController(serviceService)

@@ -11,7 +11,9 @@
     "sync-employees": "bun run src/jobs/sync-employees.job.ts",
     "sync-sheets:all": "bun run src/jobs/sync-point-sheet.job.ts --all",
     "sync-sheets": "bun run src/jobs/sync-point-sheet.job.ts --current",
-    "expire-points": "bun run src/jobs/expire-points.job.ts"
+    "expire-points": "bun run src/jobs/expire-points.job.ts",
+    "test": "bun test",
+    "test:watch": "bun test --watch"
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.6.1",

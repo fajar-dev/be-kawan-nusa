@@ -1,9 +1,12 @@
 import { EntityManager } from "typeorm"
-import { PointHelper } from "../../core/helpers/point"
+import { PointCalculator } from "../../core/helpers/point"
 import { IPointRepository } from "./interfaces/point.repository.interface"
 
 export class PointService {
-    constructor(private readonly repository: IPointRepository) {}
+    constructor(
+        private readonly repository: IPointRepository,
+        private readonly pointCalculator: PointCalculator,
+    ) {}
 
     async getByUserId(userId: number): Promise<{ value: number }> {
         const value = await this.repository.getTotalAvailablePoints(userId)
@@ -11,6 +14,6 @@ export class PointService {
     }
 
     async subtractPoints(userId: number, points: number, manager: EntityManager): Promise<void> {
-        await PointHelper.subtractPointsFIFO(manager, userId, points)
+        await this.pointCalculator.subtractPointsFIFO(manager, userId, points)
     }
 }

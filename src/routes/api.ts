@@ -13,6 +13,7 @@ import { CreateCatalogCategoryValidator, UpdateCatalogCategoryValidator } from "
 // ── Middlewares ──────────────────────────────────────────────────────────────
 import { authMiddleware } from "../core/middlewares/auth.middleware"
 import { apiKeyMiddleware } from "../core/middlewares/api-key.middleware"
+import { roleMiddleware } from "../core/middlewares/role.middleware"
 import { validationHook } from "../core/helpers/validator"
 
 // ── Modules (controllers wired with their dependencies) ──────────────────────
@@ -35,7 +36,6 @@ import { additionalController } from "../modules/additional/additional.module"
 import { feedbackController } from "../modules/feedback/feedback.module"
 import { templateController } from "../modules/template/template.module"
 import { userController } from "../modules/user/user.module"
-import { roleMiddleware } from "../core/middlewares/role.middleware"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const routes = new Hono()
@@ -63,7 +63,7 @@ routes.post("/profile/photo", authMiddleware, roleMiddleware('user'), zValidator
 // Point
 routes.get("/point", authMiddleware, roleMiddleware('user'), (c) => pointController.show(c))
 
-// Redemption
+// Redemption — Admin
 routes.get("/redemption/cash/list", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.cashList(c))
 routes.put("/redemption/cash/list/:id", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.completeCash(c))
 routes.get("/redemption/product/list", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.productList(c))
@@ -72,6 +72,8 @@ routes.put("/redemption/product/list/:id", authMiddleware, roleMiddleware('admin
 routes.get("/redemption/voucher/list", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.voucherList(c))
 routes.post("/redemption/voucher/list/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", ProcessVoucherRedemptionValidator, validationHook), (c) => redemptionController.processVoucher(c))
 routes.put("/redemption/voucher/list/:id", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.completeVoucher(c))
+
+// Redemption — User
 routes.get("/redemption", authMiddleware, roleMiddleware('user'), (c) => redemptionController.index(c))
 routes.get("/redemption/:id", authMiddleware, roleMiddleware('user'), (c) => redemptionController.show(c))
 routes.post("/redemption/cash", authMiddleware, roleMiddleware('user'), zValidator("json", CreateCashRedemptionValidator, validationHook), (c) => redemptionController.storeCash(c))
@@ -155,7 +157,7 @@ routes.delete("/education/video/:id", authMiddleware, roleMiddleware('admin'), (
 routes.get("/feedback", authMiddleware, (c) => feedbackController.index(c))
 routes.post("/feedback", authMiddleware, zValidator("form", StoreFeedbackValidator, validationHook), (c) => feedbackController.store(c))
 
-// User
+// User (Admin)
 routes.get("/user", authMiddleware, roleMiddleware('admin'), (c) => userController.index(c))
 routes.get("/user/:id", authMiddleware, roleMiddleware('admin'), (c) => userController.show(c))
 routes.get("/user/:id/services", authMiddleware, roleMiddleware('admin'), (c) => userController.services(c))

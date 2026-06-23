@@ -2,8 +2,14 @@ import { sign } from "hono/jwt"
 import { OAuth2Client } from "google-auth-library"
 import { config } from "../../config/config"
 
-export class AuthHelper {
-    static async generateTokens(user: any, role: 'user' | 'admin' = 'user') {
+/**
+ * Authentication token management service.
+ *
+ * Injectable service — replaces the old static AuthHelper class.
+ * Handles JWT generation and Google OAuth verification.
+ */
+export class AuthTokenService {
+    async generateTokens(user: any, role: 'user' | 'admin' = 'user') {
         const accessToken = await sign(
             { 
                 sub: user.id, 
@@ -28,7 +34,7 @@ export class AuthHelper {
         return { accessToken, refreshToken }
     }
 
-    private static getOauth2Client() {
+    private getOauth2Client() {
         const oAuth2Client = new OAuth2Client(
             config.google.clientId,
             config.google.clientSecret,
@@ -37,7 +43,7 @@ export class AuthHelper {
         return oAuth2Client;
     }
 
-    static async verifyGoogleCode(code: string): Promise<any> {
+    async verifyGoogleCode(code: string): Promise<any> {
         const oAuth2Client = this.getOauth2Client();
         const result = await oAuth2Client.getToken(code);
         const ticket = await oAuth2Client.verifyIdToken({

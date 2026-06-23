@@ -2,7 +2,6 @@ import { TypeOrmEducationArticleRepository } from "./repositories/typeorm-educat
 import { EducationArticleService } from "./education-article.service"
 import { EducationArticleController } from "./education-article.controller"
 
-const educationArticleRepository = new TypeOrmEducationArticleRepository()
-const educationArticleService = new EducationArticleService(educationArticleRepository)
-
-export const educationArticleController = new EducationArticleController(educationArticleService)
+const repository = new TypeOrmEducationArticleRepository()
+const service = new EducationArticleService(repository)
+export const educationArticleController = new EducationArticleController(service)

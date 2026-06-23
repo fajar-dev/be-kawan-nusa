@@ -2,7 +2,6 @@ import { TypeOrmTemplateRepository } from "./repositories/typeorm-template.repos
 import { TemplateService } from "./template.service"
 import { TemplateController } from "./template.controller"
 
-const templateRepository = new TypeOrmTemplateRepository()
-const templateService = new TemplateService(templateRepository)
-
-export const templateController = new TemplateController(templateService)
+const repository = new TypeOrmTemplateRepository()
+const service = new TemplateService(repository)
+export const templateController = new TemplateController(service)

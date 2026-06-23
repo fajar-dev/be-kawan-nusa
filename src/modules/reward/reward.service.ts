@@ -1,12 +1,16 @@
-import { AppDataSource } from "../../config/database"
 import { Reward } from "./entities/reward.entity"
 import { CustomerService } from "../customer-service/entities/customer-service.entity"
 import { NotFoundException } from "../../core/exceptions/base"
-import { PointHelper } from "../../core/helpers/point"
+import { PointCalculator } from "../../core/helpers/point"
 import { IRewardRepository, RewardListFilters } from "./interfaces/reward.repository.interface"
+import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
 
 export class RewardService {
-    constructor(private readonly repository: IRewardRepository) {}
+    constructor(
+        private readonly repository: IRewardRepository,
+        private readonly unitOfWork: IUnitOfWork,
+        private readonly pointCalculator: PointCalculator,
+    ) {}
 
     async getAll(
         userId: number,
@@ -34,7 +38,7 @@ export class RewardService {
     }
 
     async create(data: Partial<Reward>): Promise<Reward> {
-        return await AppDataSource.transaction(async (manager) => {
+        return await this.unitOfWork.runInTransaction(async (manager) => {
             const cs = await manager.createQueryBuilder(CustomerService, "cs")
                 .innerJoinAndSelect("cs.customer", "customer")
                 .where("cs.id = :id", { id: data.customerServiceId })
@@ -44,7 +48,7 @@ export class RewardService {
                 throw new NotFoundException("Customer service not found")
             }
 
-            return await PointHelper.addPointsReward(manager, data)
+            return await this.pointCalculator.addPointsReward(manager, data)
         })
     }
 }

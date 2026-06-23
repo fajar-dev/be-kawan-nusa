@@ -6,6 +6,6 @@ import { rewardService } from "../reward/reward.module"
 import { redemptionService } from "../redemption/redemption.module"
 import { statisticService } from "../statistic/statistic.module"
 
-export const userRepository = new TypeOrmUserRepository()
-export const userService = new UserService(userRepository)
+const repository = new TypeOrmUserRepository()
+export const userService = new UserService(repository)
 export const userController = new UserController(userService, customerServiceService, rewardService, redemptionService, statisticService)

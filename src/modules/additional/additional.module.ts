@@ -1,9 +1,8 @@
 import { TypeOrmAdditionalRepository } from "./repositories/typeorm-additional.repository"
-import { serviceService } from "../service/service.module"
 import { AdditionalService } from "./additional.service"
 import { AdditionalController } from "./additional.controller"
+import { serviceService } from "../service/service.module"
 
-const additionalRepository = new TypeOrmAdditionalRepository()
-const additionalService = new AdditionalService(additionalRepository)
-
+const repository = new TypeOrmAdditionalRepository()
+const additionalService = new AdditionalService(repository)
 export const additionalController = new AdditionalController(additionalService, serviceService)

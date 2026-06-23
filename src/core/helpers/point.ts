@@ -5,14 +5,17 @@ import { Redemption } from "../../modules/redemption/entities/redemption.entity"
 import { RedemptionType, RedemptionStatus } from "../../modules/redemption/redemption.enum"
 
 /**
- * Common point operations using FIFO logic.
+ * Point calculation engine using FIFO logic.
+ *
+ * Injectable service — replaces the old static PointHelper class.
+ * All methods are instance methods so this class can be injected and mocked in tests.
  */
-export class PointHelper {
+export class PointCalculator {
     /**
      * Get the total available points for a user.
      * Automatically expires any overdue rewards before calculating.
      */
-    static async getAvailablePoints(manager: EntityManager, userId: number): Promise<number> {
+    async getAvailablePoints(manager: EntityManager, userId: number): Promise<number> {
         // Lazy expiration: expire overdue rewards for this user first
         await this.expirePoints(manager, userId)
 
@@ -32,7 +35,7 @@ export class PointHelper {
      * Deduct points from oldest rewards first.
      * Automatically expires any overdue rewards before deducting.
      */
-    static async subtractPointsFIFO(manager: EntityManager, userId: number, amount: number): Promise<{ id: number; value: number }[]> {
+    async subtractPointsFIFO(manager: EntityManager, userId: number, amount: number): Promise<{ id: number; value: number }[]> {
         // Lazy expiration: expire overdue rewards for this user first
         await this.expirePoints(manager, userId)
 
@@ -82,7 +85,7 @@ export class PointHelper {
     /**
      * Add a new reward entry (this implicitly adds points to the available balance).
      */
-    static async addPointsReward(manager: EntityManager, data: Partial<Reward>) {
+    async addPointsReward(manager: EntityManager, data: Partial<Reward>) {
         const reward = manager.create(Reward, data)
         return await manager.save(reward)
     }
@@ -90,12 +93,12 @@ export class PointHelper {
     /**
      * Expire rewards that have passed their expiredDate.
      * Creates a redemption record with type "expired" for each expired reward.
-     * 
+     *
      * @param manager - EntityManager (within a transaction)
      * @param userId - Optional. If provided, only expire rewards for this user (lazy mode).
      *                 If omitted, expire all users' rewards (cron mode).
      */
-    static async expirePoints(manager: EntityManager, userId?: number): Promise<number> {
+    async expirePoints(manager: EntityManager, userId?: number): Promise<number> {
         const today = new Date().toISOString().split('T')[0]
 
         const where: FindOptionsWhere<Reward> = {

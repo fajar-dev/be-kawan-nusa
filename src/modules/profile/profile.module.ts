@@ -1,7 +1,7 @@
-import { userRepository } from "../user/user.module"
+import { TypeOrmUserRepository } from "../user/repositories/typeorm-user.repository"
 import { ProfileService } from "./profile.service"
 import { ProfileController } from "./profile.controller"
 
-const profileService = new ProfileService(userRepository)
-
-export const profileController = new ProfileController(profileService)
+const repository = new TypeOrmUserRepository()
+const service = new ProfileService(repository)
+export const profileController = new ProfileController(service)

@@ -2,7 +2,6 @@ import { TypeOrmCustomerRepository } from "./repositories/typeorm-customer.repos
 import { CustomerService } from "./customer.service"
 import { CustomerController } from "./customer.controller"
 
-const customerRepository = new TypeOrmCustomerRepository()
-const customerService = new CustomerService(customerRepository)
-
+const repository = new TypeOrmCustomerRepository()
+export const customerService = new CustomerService(repository)
 export const customerController = new CustomerController(customerService)

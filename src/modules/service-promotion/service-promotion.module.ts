@@ -2,7 +2,6 @@ import { TypeOrmServicePromotionRepository } from "./repositories/typeorm-servic
 import { ServicePromotionService } from "./service-promotion.service"
 import { ServicePromotionController } from "./service-promotion.controller"
 
-const servicePromotionRepository = new TypeOrmServicePromotionRepository()
-const servicePromotionService = new ServicePromotionService(servicePromotionRepository)
-
-export const servicePromotionController = new ServicePromotionController(servicePromotionService)
+const repository = new TypeOrmServicePromotionRepository()
+const service = new ServicePromotionService(repository)
+export const servicePromotionController = new ServicePromotionController(service)

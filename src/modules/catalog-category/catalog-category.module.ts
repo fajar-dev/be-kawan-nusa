@@ -2,7 +2,6 @@ import { TypeOrmCatalogCategoryRepository } from "./repositories/typeorm-catalog
 import { CatalogCategoryService } from "./catalog-category.service"
 import { CatalogCategoryController } from "./catalog-category.controller"
 
-const catalogCategoryRepository = new TypeOrmCatalogCategoryRepository()
-const catalogCategoryService = new CatalogCategoryService(catalogCategoryRepository)
-
-export const catalogCategoryController = new CatalogCategoryController(catalogCategoryService)
+const repository = new TypeOrmCatalogCategoryRepository()
+const service = new CatalogCategoryService(repository)
+export const catalogCategoryController = new CatalogCategoryController(service)

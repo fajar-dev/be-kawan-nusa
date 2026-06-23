@@ -1,4 +1,3 @@
-import { AppDataSource } from "../../config/database"
 import { User } from "../user/entities/user.entity"
 import { Employee } from "../employee/entities/employee.entity"
 import {
@@ -11,21 +10,24 @@ import {
 } from "./validators/auth.validator"
 import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
-import { sign, verify } from "hono/jwt"
+import { verify } from "hono/jwt"
 import { config } from "../../config/config"
 import crypto from "crypto"
-import { mail } from "../../core/helpers/mail"
 import * as fs from "fs"
 import * as path from "path"
-import { EntityManager } from "typeorm"
 import { UserService } from "../user/user.service"
 import { EmployeeService } from "../employee/employee.service"
-import { AuthHelper } from "../../core/helpers/auth"
+import { AuthTokenService } from "../../core/helpers/auth"
+import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
+import { Mail } from "../../core/helpers/mail"
 
 export class AuthService {
     constructor(
         private readonly userService: UserService,
         private readonly employeeService: EmployeeService,
+        private readonly authTokenService: AuthTokenService,
+        private readonly unitOfWork: IUnitOfWork,
+        private readonly mailHelper: Mail,
     ) {}
 
     async register(data: RegisterValidator) {
@@ -36,7 +38,7 @@ export class AuthService {
             }
         }
 
-        return AppDataSource.transaction(async (manager: EntityManager) => {
+        return this.unitOfWork.runInTransaction(async (manager) => {
             return await this.userService.save(
                 { ...data, password: await hashPassword(data.password) },
                 manager
@@ -45,7 +47,7 @@ export class AuthService {
     }
 
     async googleLogin(data: GoogleLoginValidator) {
-        const payload = await AuthHelper.verifyGoogleCode(data.code)
+        const payload = await this.authTokenService.verifyGoogleCode(data.code)
         let user = await this.userService.getByEmail(payload.email!)
 
         if (!user) {
@@ -56,13 +58,13 @@ export class AuthService {
             throw new BadRequestException("Account is inactive")
         }
 
-        const { accessToken, refreshToken } = await AuthHelper.generateTokens(user, 'user')
+        const { accessToken, refreshToken } = await this.authTokenService.generateTokens(user, 'user')
         const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user as any
         return { user: safeUser, accessToken, refreshToken }
     }
 
     async adminGoogleLogin(data: GoogleLoginValidator) {
-        const payload = await AuthHelper.verifyGoogleCode(data.code)
+        const payload = await this.authTokenService.verifyGoogleCode(data.code)
         const employee = await this.employeeService.getByEmail(payload.email!)
 
         if (!employee) {
@@ -73,7 +75,7 @@ export class AuthService {
             throw new BadRequestException("Account is inactive")
         }
 
-        const { accessToken, refreshToken } = await AuthHelper.generateTokens(employee, 'admin')
+        const { accessToken, refreshToken } = await this.authTokenService.generateTokens(employee, 'admin')
         return { employee, accessToken, refreshToken }
     }
 
@@ -96,7 +98,7 @@ export class AuthService {
             throw new UnauthorizedException("Invalid credentials")
         }
 
-        const { accessToken, refreshToken } = await AuthHelper.generateTokens(user, 'user')
+        const { accessToken, refreshToken } = await this.authTokenService.generateTokens(user, 'user')
 
         const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user
         return { user: safeUser, accessToken, refreshToken }
@@ -115,7 +117,7 @@ export class AuthService {
                 account = await this.userService.getById(decoded.sub)
             }
 
-            const { accessToken, refreshToken } = await AuthHelper.generateTokens(account, role as 'user' | 'admin')
+            const { accessToken, refreshToken } = await this.authTokenService.generateTokens(account, role as 'user' | 'admin')
 
             return { user: account, accessToken, refreshToken, role }
         } catch {
@@ -147,7 +149,7 @@ export class AuthService {
             .replace(/{{name}}/g, name)
             .replace(/{{resetLink}}/g, resetLink)
 
-        await mail.sendHtml(user.email!, "Atur Ulang Kata Sandi", html)
+        await this.mailHelper.sendHtml(user.email!, "Atur Ulang Kata Sandi", html)
         return true
     }
 
