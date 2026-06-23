@@ -15,6 +15,7 @@ Sistem ini mengelola referral pelanggan, manajemen poin, redemption reward, dan 
 - [API Endpoints](#api-endpoints)
 - [Konvensi Kode](#konvensi-kode)
 - [Menambah Module Baru](#menambah-module-baru)
+- [Dokumentasi Lengkap](#dokumentasi-lengkap)
 
 ---
 
@@ -634,3 +635,25 @@ import { invoiceController } from "../modules/invoice/invoice.module"
 
 routes.get("/invoice", authMiddleware, (c) => invoiceController.index(c))
 ```
+
+---
+
+## Dokumentasi Lengkap
+
+Dokumentasi detail tersedia di folder `docs/`:
+
+| Dokumen | Isi |
+|---------|-----|
+| [`docs/architecture.md`](docs/architecture.md) | Arsitektur, struktur project, module pattern, DI, response format |
+| [`docs/module-guide.md`](docs/module-guide.md) | Panduan step-by-step membuat module baru (13 langkah + contoh) |
+| [`docs/testing-guide.md`](docs/testing-guide.md) | Cara menulis integration test, helper API, template |
+| [`docs/swagger-guide.md`](docs/swagger-guide.md) | Cara menambah dokumentasi API di swagger.yaml |
+| [`docs/api-reference.md`](docs/api-reference.md) | Daftar semua 90+ endpoint (method, path, auth, role) |
+
+### Instruksi untuk AI Agent
+
+| File | AI Tool | Deskripsi |
+|------|---------|-----------|
+| [`.agents/AGENTS.md`](.agents/AGENTS.md) | Google Antigravity | Conventions, patterns, do/don't rules |
+| [`CLAUDE.md`](CLAUDE.md) | Claude Code | Overview, commands, architecture summary |
+
