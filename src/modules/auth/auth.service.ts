@@ -77,6 +77,7 @@ export class AuthService {
                 {
                     ...userData,
                     identityNumber: identityNumber ? Number(identityNumber) : undefined,
+                    hasWhatsapp: isWhatsapp === 'true' || isWhatsapp === true,
                     identityPath,
                     accountPath,
                     isActive: false,

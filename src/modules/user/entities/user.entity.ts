@@ -48,6 +48,9 @@ export class User {
     @Column({ unique: true, nullable: true })
     phone?: string
 
+    @Column({ name: "has_whatsapp", default: false })
+    hasWhatsapp!: boolean
+
     @Column({ name: "identity_number", type: "bigint", nullable: true })
     identityNumber?: number
 

@@ -15,6 +15,7 @@ export class UserSerializer {
             photo: await this.resolveFileUrl(user.photo),
             email: user.email,
             phone: user.phone,
+            hasWhatsapp: user.hasWhatsapp,
             identityNumber: user.identityNumber,
             taxNumber: user.taxNumber,
             company: user.company,

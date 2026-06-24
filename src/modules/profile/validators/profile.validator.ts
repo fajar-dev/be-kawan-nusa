@@ -4,6 +4,7 @@ export const UpdateAccountValidator = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
     phone: z.string().min(1, "Phone is required"),
+    hasWhatsapp: z.boolean().optional(),
     email: z.email("Invalid email format"),
     identityNumber: z.number("Identity number is required" ),
     taxNumber: z.string().min(1, "Tax number is required"),
