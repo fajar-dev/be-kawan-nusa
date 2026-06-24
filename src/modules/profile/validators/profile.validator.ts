@@ -3,15 +3,15 @@ import { z } from "zod"
 export const UpdateAccountValidator = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
-    phone: z.string().min(1, "Phone is required").optional(),
-    email: z.email("Invalid email format").optional(),
-    identityNumber: z.number().optional(),
-    taxNumber: z.string().optional(),
+    phone: z.string().min(1, "Phone is required"),
+    email: z.email("Invalid email format"),
+    identityNumber: z.number("Identity number is required" ),
+    taxNumber: z.string().min(1, "Tax number is required"),
+    birthDate: z.string().min(1, "Birth date is required"),
+    birthPlace: z.string().min(1, "Birth place is required"),
+    address: z.string().min(1, "Address is required"),
     company: z.string().optional(),
     jobPosition: z.string().optional(),
-    birthDate: z.string().optional(),
-    birthPlace: z.string().optional(),
-    address: z.string().optional(),
     companyAddress: z.string().optional(),
 })
 
