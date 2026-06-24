@@ -65,15 +65,6 @@ export class ProfileService {
         const buffer = Buffer.from(await photoFile.arrayBuffer())
         await minio.upload(filename, buffer, photoFile.type)
 
-        // Delete old profile photo if it exists
-        if (user.photo) {
-            try {
-                await minio.delete(user.photo)
-            } catch (err) {
-                console.error("[Profile] Failed to delete old photo from MinIO:", err)
-            }
-        }
-
         user.photo = filename
         return await this.repository.save(user)
     }

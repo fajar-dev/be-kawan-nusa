@@ -52,6 +52,22 @@ describe("Profile Module", () => {
             expect(res.body.success).toBe(true)
         })
 
+        it("should update account with new fields (birthDate, birthPlace, address, companyAddress)", async () => {
+            const res = await authRequest("/profile/account", userToken, {
+                method: "PUT",
+                body: {
+                    firstName: "Updated",
+                    lastName: "Name",
+                    birthDate: "1990-05-15",
+                    birthPlace: "Surabaya",
+                    address: "Jl. Raya Darmo No. 10, Surabaya",
+                    companyAddress: "Jl. Ngagel Jaya No. 88, Surabaya",
+                },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
         it("should fail with firstName too short", async () => {
             const res = await authRequest("/profile/account", userToken, {
                 method: "PUT",

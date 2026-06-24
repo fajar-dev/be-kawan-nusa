@@ -24,6 +24,24 @@ export class User {
     @Column({ name: "job_position", nullable: true })
     jobPosition?: string
 
+    @Column({ name: "birth_date", type: "date", nullable: true })
+    birthDate?: string
+
+    @Column({ name: "birth_place", nullable: true })
+    birthPlace?: string
+
+    @Column({ type: "text", nullable: true })
+    address?: string
+
+    @Column({ name: "company_address", type: "text", nullable: true })
+    companyAddress?: string
+
+    @Column({ name: "identity_path", nullable: true })
+    identityPath?: string
+
+    @Column({ name: "account_path", nullable: true })
+    accountPath?: string
+
     @Column({ unique: true, nullable: true })
     email?: string
 

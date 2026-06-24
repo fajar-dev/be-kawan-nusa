@@ -9,6 +9,10 @@ export const UpdateAccountValidator = z.object({
     taxNumber: z.string().optional(),
     company: z.string().optional(),
     jobPosition: z.string().optional(),
+    birthDate: z.string().optional(),
+    birthPlace: z.string().optional(),
+    address: z.string().optional(),
+    companyAddress: z.string().optional(),
 })
 
 export type UpdateAccountValidator = z.infer<typeof UpdateAccountValidator>

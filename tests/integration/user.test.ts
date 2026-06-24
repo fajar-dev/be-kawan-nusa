@@ -60,6 +60,18 @@ describe("User Module (Admin)", () => {
             expect(res.body.data.id).toBe(testUser.id)
         })
 
+        it("should include new profile fields in response", async () => {
+            const res = await authRequest(`/user/${testUser.id}`, adminToken)
+            expect(res.status).toBe(200)
+            const data = res.body.data
+            expect("birthDate" in data).toBe(true)
+            expect("birthPlace" in data).toBe(true)
+            expect("address" in data).toBe(true)
+            expect("companyAddress" in data).toBe(true)
+            expect("identityPath" in data).toBe(true)
+            expect("accountPath" in data).toBe(true)
+        })
+
         it("should return 404 for non-existent user", async () => {
             const res = await authRequest("/user/999999", adminToken)
             expect(res.status).toBe(404)
