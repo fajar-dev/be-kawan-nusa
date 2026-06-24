@@ -8,6 +8,7 @@ import {
     ResetPasswordValidator,
     RefreshTokenValidator,
     GoogleLoginValidator,
+    ResendVerificationValidator,
 } from "./validators/auth.validator"
 import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
@@ -22,6 +23,7 @@ import { AuthTokenService } from "../../core/helpers/auth"
 import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
 import { Mail } from "../../core/helpers/mail"
 import { IPasswordResetTokenRepository } from "./interfaces/password-reset-token.repository.interface"
+import { IEmailVerificationTokenRepository } from "./interfaces/email-verification-token.repository.interface"
 
 export class AuthService {
     constructor(
@@ -31,6 +33,7 @@ export class AuthService {
         private readonly unitOfWork: IUnitOfWork,
         private readonly mailHelper: Mail,
         private readonly passwordResetTokenRepository: IPasswordResetTokenRepository,
+        private readonly emailVerificationTokenRepository: IEmailVerificationTokenRepository,
     ) {}
 
     async register(data: RegisterValidator) {
@@ -73,7 +76,7 @@ export class AuthService {
         const { identity, account, isWhatsapp, identityNumber, ...userData } = data
 
         return this.unitOfWork.runInTransaction(async (manager) => {
-            return await this.userService.save(
+            const user = await this.userService.save(
                 {
                     ...userData,
                     identityNumber: identityNumber ? Number(identityNumber) : undefined,
@@ -81,10 +84,85 @@ export class AuthService {
                     identityPath,
                     accountPath,
                     isActive: false,
+                    isVerified: false,
                 },
                 manager
             )
+
+            // Fire-and-forget: don't block registration if email fails
+            this.sendVerificationEmail(user).catch((err) => {
+                console.error(`[Auth] Failed to send verification email to ${user.email}:`, err)
+            })
+
+            return user
         })
+    }
+
+    private async sendVerificationEmail(user: User) {
+        const token = crypto.randomBytes(32).toString("hex")
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+        await this.emailVerificationTokenRepository.create(user.id, token, expiresAt)
+
+        const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || "User"
+        const verifyLink = `${config.app.appUrl}/auth/verify-email?token=${token}`
+
+        const templatePath = path.join(process.cwd(), "public/templates/verify-email.html")
+        const html = fs.readFileSync(templatePath, "utf8")
+            .replace(/{{name}}/g, name)
+            .replace(/{{verifyLink}}/g, verifyLink)
+
+        await this.mailHelper.sendHtml(user.email!, "Verifikasi Email Anda", html)
+    }
+
+    async verifyEmail(token: string) {
+        const verificationToken = await this.emailVerificationTokenRepository.findValidToken(token)
+        if (!verificationToken) {
+            throw new BadRequestException("Invalid or expired verification token")
+        }
+
+        const user = verificationToken.user
+        if (user.isVerified) {
+            throw new BadRequestException("Email already verified")
+        }
+
+        user.isVerified = true
+        await this.userService.save(user)
+        await this.emailVerificationTokenRepository.deleteAllByUserId(user.id)
+
+        return true
+    }
+
+    async resendVerification(data: ResendVerificationValidator) {
+        const user = await this.userService.getByEmail(data.email)
+        if (!user) {
+            throw new BadRequestException("Email not found")
+        }
+
+        if (user.isVerified) {
+            throw new BadRequestException("Email already verified")
+        }
+
+        await this.sendVerificationEmail(user)
+
+        return true
+    }
+
+    async checkEmailStatus(email: string) {
+        if (!email) {
+            throw new BadRequestException("Email is required")
+        }
+
+        const user = await this.userService.getByEmail(email)
+        if (!user) {
+            throw new BadRequestException("Email not found")
+        }
+
+        if (user.isVerified) {
+            throw new BadRequestException("Email already verified")
+        }
+
+        return { needsVerification: true }
     }
 
     async googleLogin(data: GoogleLoginValidator) {
@@ -100,6 +178,10 @@ export class AuthService {
         }
 
         const { accessToken, refreshToken } = await this.authTokenService.generateTokens(user, 'user')
+
+        user.lastLoginAt = new Date()
+        await this.userService.save({ id: user.id, lastLoginAt: user.lastLoginAt })
+
         const { password, ...safeUser } = user as any
         return { user: safeUser, accessToken, refreshToken }
     }
@@ -126,6 +208,10 @@ export class AuthService {
             throw new UnauthorizedException("User not registered")
         }
 
+        if (!user.isVerified) {
+            throw new UnauthorizedException("Please verify your email first")
+        }
+
         if (!user.isActive) {
             throw new UnauthorizedException("Account is inactive")
         }
@@ -140,6 +226,9 @@ export class AuthService {
         }
 
         const { accessToken, refreshToken } = await this.authTokenService.generateTokens(user, 'user')
+
+        user.lastLoginAt = new Date()
+        await this.userService.save({ id: user.id, lastLoginAt: user.lastLoginAt })
 
         const { password, ...safeUser } = user
         return { user: safeUser, accessToken, refreshToken }

@@ -66,3 +66,9 @@ export const GoogleLoginSchema = z.object({
 })
 
 export type GoogleLoginValidator = z.infer<typeof GoogleLoginSchema>
+
+export const ResendVerificationValidator = z.object({
+  email: z.email("Invalid email format"),
+})
+
+export type ResendVerificationValidator = z.infer<typeof ResendVerificationValidator>

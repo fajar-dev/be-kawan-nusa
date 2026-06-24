@@ -137,6 +137,186 @@ describe("Auth Module", () => {
         })
     })
 
+    describe("GET /auth/verify-email", () => {
+        let verifyUserId: number | null = null
+
+        afterAll(async () => {
+            if (verifyUserId) {
+                await AppDataSource.getRepository("EmailVerificationToken").delete({ userId: verifyUserId })
+                await cleanupTestUser(verifyUserId)
+            }
+        })
+
+        it("should verify email with valid token", async () => {
+            // Create unverified user directly
+            const userRepo = AppDataSource.getRepository(User)
+            const user = userRepo.create({
+                firstName: "Verify",
+                lastName: "Test",
+                email: `verify-${Date.now()}@example.com`,
+                phone: `08${Date.now().toString().slice(-10)}`,
+                isActive: false,
+                isVerified: false,
+            })
+            const savedUser = await userRepo.save(user)
+            verifyUserId = savedUser.id
+
+            // Create verification token
+            const tokenRepo = AppDataSource.getRepository("EmailVerificationToken")
+            const token = `test-token-${Date.now()}`
+            await tokenRepo.save({
+                userId: savedUser.id,
+                token,
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            })
+
+            const res = await request(`/auth/verify-email?token=${token}`)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+
+            // Verify user is now verified
+            const updatedUser = await userRepo.findOneBy({ id: savedUser.id })
+            expect(updatedUser?.isVerified).toBe(true)
+        })
+
+        it("should fail with missing token", async () => {
+            const res = await request("/auth/verify-email")
+            expect(res.status).toBe(400)
+        })
+
+        it("should fail with invalid token", async () => {
+            const res = await request("/auth/verify-email?token=invalid-token-xxx")
+            expect(res.status).toBe(400)
+        })
+
+        it("should fail with expired token", async () => {
+            // Create expired token
+            if (verifyUserId) {
+                const userRepo = AppDataSource.getRepository(User)
+                await userRepo.update(verifyUserId, { isVerified: false })
+
+                const tokenRepo = AppDataSource.getRepository("EmailVerificationToken")
+                const token = `expired-token-${Date.now()}`
+                await tokenRepo.save({
+                    userId: verifyUserId,
+                    token,
+                    expiresAt: new Date(Date.now() - 1000), // already expired
+                })
+
+                const res = await request(`/auth/verify-email?token=${token}`)
+                expect(res.status).toBe(400)
+            }
+        })
+    })
+
+    describe("POST /auth/resend-verification", () => {
+        let resendUserId: number | null = null
+        let resendUserEmail: string
+
+        beforeAll(async () => {
+            const userRepo = AppDataSource.getRepository(User)
+            resendUserEmail = `resend-${Date.now()}@example.com`
+            const user = userRepo.create({
+                firstName: "Resend",
+                lastName: "Test",
+                email: resendUserEmail,
+                phone: `08${Date.now().toString().slice(-10)}`,
+                isActive: false,
+                isVerified: false,
+            })
+            const savedUser = await userRepo.save(user)
+            resendUserId = savedUser.id
+        })
+
+        afterAll(async () => {
+            if (resendUserId) {
+                await AppDataSource.getRepository("EmailVerificationToken").delete({ userId: resendUserId })
+                await cleanupTestUser(resendUserId)
+            }
+        })
+
+        it("should fail with non-existent email", async () => {
+            const res = await request("/auth/resend-verification", {
+                method: "POST",
+                body: { email: "nonexistent@example.com" },
+            })
+            expect(res.status).toBe(400)
+        })
+
+        it("should fail with already verified email", async () => {
+            // Make user verified
+            const userRepo = AppDataSource.getRepository(User)
+            await userRepo.update(resendUserId!, { isVerified: true })
+
+            const res = await request("/auth/resend-verification", {
+                method: "POST",
+                body: { email: resendUserEmail },
+            })
+            expect(res.status).toBe(400)
+
+            // Reset for other tests
+            await userRepo.update(resendUserId!, { isVerified: false })
+        })
+
+        it("should fail with invalid email format", async () => {
+            const res = await request("/auth/resend-verification", {
+                method: "POST",
+                body: { email: "not-an-email" },
+            })
+            expect(res.status).toBe(422)
+        })
+    })
+
+    describe("GET /auth/check-email-status", () => {
+        let checkUserId: number | null = null
+        let checkUserEmail: string
+
+        beforeAll(async () => {
+            const userRepo = AppDataSource.getRepository(User)
+            checkUserEmail = `check-${Date.now()}@example.com`
+            const user = userRepo.create({
+                firstName: "Check",
+                lastName: "Test",
+                email: checkUserEmail,
+                phone: `08${Date.now().toString().slice(-10)}`,
+                isActive: false,
+                isVerified: false,
+            })
+            const savedUser = await userRepo.save(user)
+            checkUserId = savedUser.id
+        })
+
+        afterAll(async () => {
+            if (checkUserId) await cleanupTestUser(checkUserId)
+        })
+
+        it("should return needsVerification for unverified email", async () => {
+            const res = await request(`/auth/check-email-status?email=${checkUserEmail}`)
+            expect(res.status).toBe(200)
+            expect(res.body.data.needsVerification).toBe(true)
+        })
+
+        it("should fail with already verified email", async () => {
+            const userRepo = AppDataSource.getRepository(User)
+            await userRepo.update(checkUserId!, { isVerified: true })
+
+            const res = await request(`/auth/check-email-status?email=${checkUserEmail}`)
+            expect(res.status).toBe(400)
+
+            await userRepo.update(checkUserId!, { isVerified: false })
+        })
+
+        it("should fail with non-existent email", async () => {
+            const res = await request("/auth/check-email-status?email=nonexistent@example.com")
+            expect(res.status).toBe(400)
+        })
+
+        it("should fail with missing email", async () => {
+            const res = await request("/auth/check-email-status")
+            expect(res.status).toBe(400)
+        })
+    })
+
     describe("POST /auth/login", () => {
         it("should login with email and correct password", async () => {
             const res = await request("/auth/login", {

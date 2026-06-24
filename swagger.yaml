@@ -183,7 +183,15 @@ components:
           properties:
             isSubscribe: { type: boolean, example: true }
             isAutoWithdraw: { type: boolean, example: false }
+        isVerified: { type: boolean, example: true }
         isActive: { type: boolean, example: true }
+        lastLoginAt:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            example: "2025-06-24T10:30:00.000Z",
+          }
         passwordUpdatedAt:
           {
             type: string,
@@ -967,6 +975,102 @@ paths:
                 message: "Email already in use"
         "422":
           $ref: "#/components/responses/ValidationErrorResponse"
+
+  /auth/verify-email:
+    get:
+      summary: Verify email address
+      description: "Verify the user's email using the token sent via email. Sets isVerified=true."
+      tags: [Auth]
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+          description: "Email verification token"
+      responses:
+        "200":
+          description: Email verified successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Email verified successfully"
+                data: null
+        "400":
+          description: Invalid/expired token or already verified
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Invalid or expired verification token"
+
+  /auth/resend-verification:
+    post:
+      summary: Resend email verification
+      description: "Resend the verification email to an unverified user."
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+      responses:
+        "200":
+          description: Verification email sent successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Verification email sent successfully"
+                data: null
+        "400":
+          description: Email not found or already verified
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Email already verified"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  /auth/check-email-status:
+    get:
+      summary: Check email verification status
+      description: "Lightweight check to see if an email needs verification. Does not send any email."
+      tags: [Auth]
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema: { type: string, format: email }
+          description: "Email address to check"
+      responses:
+        "200":
+          description: Email needs verification
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Success"
+                data:
+                  needsVerification: true
+        "400":
+          description: Email not found or already verified
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Email already verified"
 
   /auth/login:
     post:

@@ -3,6 +3,7 @@ import type { Relation } from "typeorm"
 import { CustomerService } from "../../customer-service/entities/customer-service.entity"
 import { Redemption } from "../../redemption/entities/redemption.entity"
 import { PasswordResetToken } from "../../auth/entities/password-reset-token.entity"
+import { EmailVerificationToken } from "../../auth/entities/email-verification-token.entity"
 
 @Entity("users")
 export class User {
@@ -81,6 +82,12 @@ export class User {
     @Column({ name: "is_active", default: true })
     isActive!: boolean
 
+    @Column({ name: "last_login_at", type: "timestamp", nullable: true })
+    lastLoginAt?: Date
+
+    @Column({ name: "is_verified", default: false })
+    isVerified!: boolean
+
     @OneToMany(() => CustomerService, (customerService) => customerService.user)
     customerServices!: Relation<CustomerService[]>
 
@@ -89,6 +96,9 @@ export class User {
 
     @OneToMany(() => PasswordResetToken, (token) => token.user)
     passwordResetTokens!: Relation<PasswordResetToken[]>
+
+    @OneToMany(() => EmailVerificationToken, (token) => token.user)
+    emailVerificationTokens!: Relation<EmailVerificationToken[]>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

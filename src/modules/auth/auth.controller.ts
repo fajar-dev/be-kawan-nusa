@@ -8,6 +8,7 @@ import {
     ResetPasswordValidator,
     RefreshTokenValidator,
     GoogleLoginValidator,
+    ResendVerificationValidator,
 } from "./validators/auth.validator"
 import { AuthSerializer } from "./serializers/auth.serialize"
 import { BadRequestException } from "../../core/exceptions/base"
@@ -20,6 +21,27 @@ export class AuthController {
         const body = RegisterValidator.parse(rawBody)
         const user = await this.service.register(body)
         return ApiResponse.success(c, await AuthSerializer.single(user, 'user'), "User registered successfully", 201)
+    }
+
+    async verifyEmail(c: Context) {
+        const token = c.req.query("token")
+        if (!token) {
+            throw new BadRequestException("Verification token is required")
+        }
+        await this.service.verifyEmail(token)
+        return ApiResponse.success(c, null, "Email verified successfully")
+    }
+
+    async resendVerification(c: Context) {
+        const body = await c.req.json() as ResendVerificationValidator
+        await this.service.resendVerification(body)
+        return ApiResponse.success(c, null, "Verification email sent successfully")
+    }
+
+    async checkEmailStatus(c: Context) {
+        const email = c.req.query("email")
+        const data = await this.service.checkEmailStatus(email || "")
+        return ApiResponse.success(c, data)
     }
 
     async login(c: Context) {

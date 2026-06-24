@@ -14,6 +14,7 @@ export async function createTestUser(overrides: Partial<User> = {}): Promise<Use
         phone: `08${Date.now().toString().slice(-10)}`,
         password: await hashPassword("password123"),
         isActive: true,
+        isVerified: true,
         ...overrides,
     })
     return await repo.save(user)
