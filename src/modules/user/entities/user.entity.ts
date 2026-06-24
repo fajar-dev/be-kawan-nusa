@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import type { Relation } from "typeorm"
 import { CustomerService } from "../../customer-service/entities/customer-service.entity"
 import { Redemption } from "../../redemption/entities/redemption.entity"
+import { PasswordResetToken } from "../../auth/entities/password-reset-token.entity"
 
 @Entity("users")
 export class User {
@@ -53,12 +54,6 @@ export class User {
     @Column({ name: "is_auto_withdraw", default: false })
     isAutoWithdraw!: boolean
 
-    @Column({ name: "reset_password_token", nullable: true })
-    resetPasswordToken?: string
-
-    @Column({ name: "reset_password_expires", type: "timestamp", nullable: true })
-    resetPasswordExpires?: Date
-
     @Column({ name: "password_updated_at", type: "timestamp", nullable: true })
     passwordUpdatedAt?: Date
 
@@ -70,6 +65,9 @@ export class User {
 
     @OneToMany(() => Redemption, (redemption) => redemption.user)
     redemptions!: Relation<Redemption[]>
+
+    @OneToMany(() => PasswordResetToken, (token) => token.user)
+    passwordResetTokens!: Relation<PasswordResetToken[]>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

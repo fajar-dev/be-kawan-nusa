@@ -20,6 +20,7 @@ import { EmployeeService } from "../employee/employee.service"
 import { AuthTokenService } from "../../core/helpers/auth"
 import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
 import { Mail } from "../../core/helpers/mail"
+import { IPasswordResetTokenRepository } from "./interfaces/password-reset-token.repository.interface"
 
 export class AuthService {
     constructor(
@@ -28,6 +29,7 @@ export class AuthService {
         private readonly authTokenService: AuthTokenService,
         private readonly unitOfWork: IUnitOfWork,
         private readonly mailHelper: Mail,
+        private readonly passwordResetTokenRepository: IPasswordResetTokenRepository,
     ) {}
 
     async register(data: RegisterValidator) {
@@ -59,7 +61,7 @@ export class AuthService {
         }
 
         const { accessToken, refreshToken } = await this.authTokenService.generateTokens(user, 'user')
-        const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user as any
+        const { password, ...safeUser } = user as any
         return { user: safeUser, accessToken, refreshToken }
     }
 
@@ -100,7 +102,7 @@ export class AuthService {
 
         const { accessToken, refreshToken } = await this.authTokenService.generateTokens(user, 'user')
 
-        const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user
+        const { password, ...safeUser } = user
         return { user: safeUser, accessToken, refreshToken }
     }
 
@@ -136,13 +138,12 @@ export class AuthService {
         }
 
         const resetToken = crypto.randomBytes(32).toString("hex")
-        user.resetPasswordToken = resetToken
-        user.resetPasswordExpires = new Date(Date.now() + 36000000)
+        const expiresAt = new Date(Date.now() + 36000000) // 10 hours
 
-        await this.userService.save(user)
+        await this.passwordResetTokenRepository.create(user.id, resetToken, expiresAt)
 
         const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || "User"
-        const resetLink = `${config.app.appUrl}/auth/reset-password?email=${user.email}&token=${resetToken}`
+        const resetLink = `${config.app.appUrl}/auth/reset-password?token=${resetToken}`
 
         const templatePath = path.join(process.cwd(), "public/templates/forgot-password.html")
         const html = fs.readFileSync(templatePath, "utf8")
@@ -154,22 +155,23 @@ export class AuthService {
     }
 
     async resetPassword(data: ResetPasswordValidator) {
-        const user = await this.userService.getByResetToken(data.token)
-        if (!user) {
+        const resetToken = await this.passwordResetTokenRepository.findValidToken(data.token)
+        if (!resetToken) {
             throw new BadRequestException("Invalid or expired reset token")
         }
 
+        const user = resetToken.user
         user.password = await hashPassword(data.newPassword)
-        user.resetPasswordToken = null as any
-        user.resetPasswordExpires = null as any
 
         await this.userService.save(user)
+        this.passwordResetTokenRepository.deleteAllByUserId(user.id)
+
         return true
     }
 
-    async validateResetToken(email: string, token: string) {
-        const user = await this.userService.getByEmailAndResetToken(email, token)
-        if (!user) {
+    async validateResetToken(token: string) {
+        const resetToken = await this.passwordResetTokenRepository.findValidToken(token)
+        if (!resetToken) {
             throw new BadRequestException("Invalid or expired reset token")
         }
         return true
@@ -179,3 +181,4 @@ export class AuthService {
         return true
     }
 }
+

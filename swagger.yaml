@@ -1093,6 +1093,10 @@ paths:
   /auth/forgot-password:
     post:
       summary: Request password reset link via email
+      description: |
+        Generates a new reset token stored in a separate `password_reset_tokens` table.
+        Multiple tokens can exist per user (each forgot-password request creates a new one).
+        Tokens expire after 10 hours.
       tags: [Auth]
       requestBody:
         required: true
@@ -1125,13 +1129,11 @@ paths:
   /auth/validate-reset-token:
     get:
       summary: Validate a password reset token
+      description: |
+        Validates the token from the `password_reset_tokens` table.
+        Only the token is required — the user is resolved from the token's relation.
       tags: [Auth]
       parameters:
-        - name: email
-          in: query
-          required: true
-          schema: { type: string, format: email }
-          example: "budi.santoso@nusanet.id"
         - name: token
           in: query
           required: true
@@ -1160,6 +1162,9 @@ paths:
   /auth/reset-password:
     post:
       summary: Reset password using token from email
+      description: |
+        Validates the token from the `password_reset_tokens` table, updates the user's password,
+        then deletes **all** reset tokens for that user.
       tags: [Auth]
       requestBody:
         required: true

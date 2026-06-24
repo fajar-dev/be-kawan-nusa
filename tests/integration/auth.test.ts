@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from "bun:test"
 import { request, authRequest } from "../helpers/test-client"
 import { createTestUser, generateUserToken, cleanupTestUser } from "../helpers/auth.helper"
 import { User } from "../../src/modules/user/entities/user.entity"
+import { AppDataSource } from "../../src/config/database"
+import { PasswordResetToken } from "../../src/modules/auth/entities/password-reset-token.entity"
 
 describe("Auth Module", () => {
     let testUser: User
@@ -13,7 +15,11 @@ describe("Auth Module", () => {
     })
 
     afterAll(async () => {
-        if (testUser?.id) await cleanupTestUser(testUser.id)
+        // Cleanup any leftover reset tokens
+        if (testUser?.id) {
+            await AppDataSource.getRepository(PasswordResetToken).delete({ userId: testUser.id })
+            await cleanupTestUser(testUser.id)
+        }
     })
 
     describe("POST /auth/register", () => {
@@ -219,6 +225,57 @@ describe("Auth Module", () => {
     })
 
     describe("POST /auth/forgot-password", () => {
+        afterAll(async () => {
+            // Cleanup reset tokens created by these tests
+            if (testUser?.id) {
+                await AppDataSource.getRepository(PasswordResetToken).delete({ userId: testUser.id })
+            }
+        })
+
+        it("should send reset email and create token in database", async () => {
+            const res = await request("/auth/forgot-password", {
+                method: "POST",
+                body: { email: testUser.email },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+
+            // Verify token was created in the password_reset_tokens table
+            const tokens = await AppDataSource.getRepository(PasswordResetToken).find({
+                where: { userId: testUser.id },
+            })
+            expect(tokens.length).toBeGreaterThanOrEqual(1)
+        })
+
+        it("should create multiple tokens for multiple requests", async () => {
+            // Clear existing tokens first
+            await AppDataSource.getRepository(PasswordResetToken).delete({ userId: testUser.id })
+
+            // Make two forgot-password requests
+            await request("/auth/forgot-password", {
+                method: "POST",
+                body: { email: testUser.email },
+            })
+            await request("/auth/forgot-password", {
+                method: "POST",
+                body: { email: testUser.email },
+            })
+
+            // Verify multiple tokens exist
+            const tokens = await AppDataSource.getRepository(PasswordResetToken).find({
+                where: { userId: testUser.id },
+            })
+            expect(tokens.length).toBe(2)
+        })
+
+        it("should fail with non-existent email", async () => {
+            const res = await request("/auth/forgot-password", {
+                method: "POST",
+                body: { email: "nonexistent@example.com" },
+            })
+            expect(res.status).toBe(400)
+        })
+
         it("should fail with invalid email format", async () => {
             const res = await request("/auth/forgot-password", {
                 method: "POST",
@@ -233,7 +290,138 @@ describe("Auth Module", () => {
         })
     })
 
+    describe("GET /auth/validate-reset-token", () => {
+        let validToken: string
+
+        beforeAll(async () => {
+            // Clear and create a fresh token
+            await AppDataSource.getRepository(PasswordResetToken).delete({ userId: testUser.id })
+            const tokenEntity = AppDataSource.getRepository(PasswordResetToken).create({
+                userId: testUser.id,
+                token: "test-valid-token-" + Date.now(),
+                expiresAt: new Date(Date.now() + 36000000),
+            })
+            const saved = await AppDataSource.getRepository(PasswordResetToken).save(tokenEntity)
+            validToken = saved.token
+        })
+
+        afterAll(async () => {
+            await AppDataSource.getRepository(PasswordResetToken).delete({ userId: testUser.id })
+        })
+
+        it("should validate a valid token", async () => {
+            const res = await request(`/auth/validate-reset-token?token=${validToken}`)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("should fail with missing token query", async () => {
+            const res = await request("/auth/validate-reset-token")
+            expect(res.status).toBeGreaterThanOrEqual(400)
+        })
+
+        it("should fail with invalid token", async () => {
+            const res = await request(`/auth/validate-reset-token?token=invalid-token`)
+            expect(res.status).toBe(400)
+        })
+
+        it("should fail with expired token", async () => {
+            // Create an expired token
+            const expiredTokenEntity = AppDataSource.getRepository(PasswordResetToken).create({
+                userId: testUser.id,
+                token: "expired-token-" + Date.now(),
+                expiresAt: new Date(Date.now() - 1000), // already expired
+            })
+            const saved = await AppDataSource.getRepository(PasswordResetToken).save(expiredTokenEntity)
+
+            const res = await request(`/auth/validate-reset-token?token=${saved.token}`)
+            expect(res.status).toBe(400)
+        })
+    })
+
     describe("POST /auth/reset-password", () => {
+        it("should reset password with valid token and delete all tokens", async () => {
+            // Create multiple tokens for the user
+            const tokenRepo = AppDataSource.getRepository(PasswordResetToken)
+            await tokenRepo.delete({ userId: testUser.id })
+
+            const token1 = tokenRepo.create({
+                userId: testUser.id,
+                token: "reset-token-1-" + Date.now(),
+                expiresAt: new Date(Date.now() + 36000000),
+            })
+            const token2 = tokenRepo.create({
+                userId: testUser.id,
+                token: "reset-token-2-" + Date.now(),
+                expiresAt: new Date(Date.now() + 36000000),
+            })
+            await tokenRepo.save([token1, token2])
+
+            // Reset password using token1
+            const res = await request("/auth/reset-password", {
+                method: "POST",
+                body: { token: token1.token, newPassword: "newpassword123" },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+
+            // Verify ALL tokens for this user are deleted
+            const remainingTokens = await tokenRepo.find({ where: { userId: testUser.id } })
+            expect(remainingTokens.length).toBe(0)
+
+            // Verify login works with new password
+            const loginRes = await request("/auth/login", {
+                method: "POST",
+                body: { identifier: testUser.email, password: "newpassword123" },
+            })
+            expect(loginRes.status).toBe(200)
+
+            // Restore original password for other tests
+            await request("/auth/reset-password", {
+                method: "POST",
+                // This will fail since tokens are deleted, so we create a new one
+            }).catch(() => {})
+
+            // Create a new token and reset back to original password
+            const restoreToken = tokenRepo.create({
+                userId: testUser.id,
+                token: "restore-token-" + Date.now(),
+                expiresAt: new Date(Date.now() + 36000000),
+            })
+            await tokenRepo.save(restoreToken)
+            await request("/auth/reset-password", {
+                method: "POST",
+                body: { token: restoreToken.token, newPassword: "password123" },
+            })
+        })
+
+        it("should fail with invalid token", async () => {
+            const res = await request("/auth/reset-password", {
+                method: "POST",
+                body: { token: "invalid-token", newPassword: "newpassword123" },
+            })
+            expect(res.status).toBe(400)
+        })
+
+        it("should fail with expired token", async () => {
+            const tokenRepo = AppDataSource.getRepository(PasswordResetToken)
+            const expiredToken = tokenRepo.create({
+                userId: testUser.id,
+                token: "expired-reset-" + Date.now(),
+                expiresAt: new Date(Date.now() - 1000),
+            })
+            await tokenRepo.save(expiredToken)
+
+            const res = await request("/auth/reset-password", {
+                method: "POST",
+                body: { token: expiredToken.token, newPassword: "newpassword123" },
+            })
+            expect(res.status).toBe(400)
+
+            // Cleanup
+            await tokenRepo.delete({ id: expiredToken.id })
+        })
+
         it("should fail with missing fields", async () => {
             const res = await request("/auth/reset-password", { method: "POST", body: {} })
             expect(res.status).toBe(422)
@@ -245,18 +433,6 @@ describe("Auth Module", () => {
                 body: { token: "some-token", password: "newpass123", passwordConfirmation: "different" },
             })
             expect(res.status).toBe(422)
-        })
-    })
-
-    describe("GET /auth/validate-reset-token", () => {
-        it("should fail with missing token query", async () => {
-            const res = await request("/auth/validate-reset-token")
-            expect(res.status).toBeGreaterThanOrEqual(400)
-        })
-
-        it("should fail with invalid token", async () => {
-            const res = await request("/auth/validate-reset-token?token=invalid-token")
-            expect(res.status).toBeGreaterThanOrEqual(400)
         })
     })
 
@@ -272,3 +448,4 @@ describe("Auth Module", () => {
         })
     })
 })
+
