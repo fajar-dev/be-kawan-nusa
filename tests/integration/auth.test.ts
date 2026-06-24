@@ -1,9 +1,43 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test"
-import { request, authRequest } from "../helpers/test-client"
+import { request, authRequest, formRequest } from "../helpers/test-client"
 import { createTestUser, generateUserToken, cleanupTestUser } from "../helpers/auth.helper"
 import { User } from "../../src/modules/user/entities/user.entity"
 import { AppDataSource } from "../../src/config/database"
 import { PasswordResetToken } from "../../src/modules/auth/entities/password-reset-token.entity"
+
+// Helper to create a dummy image file for testing
+function createTestFile(name: string = "test.jpg", type: string = "image/jpeg"): File {
+    const buffer = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0]) // minimal JPEG header
+    return new File([buffer], name, { type })
+}
+
+// Helper to build a valid register FormData
+function buildRegisterForm(overrides: Record<string, any> = {}): FormData {
+    const form = new FormData()
+    const defaults: Record<string, any> = {
+        firstName: "New",
+        lastName: "User",
+        birthDate: "1990-05-15",
+        birthPlace: "Surabaya",
+        identityNumber: "3201234567890001",
+        taxNumber: "01.234.567.8-901.000",
+        email: `register-${Date.now()}@example.com`,
+        phone: `08${Date.now().toString().slice(-10)}`,
+        address: "Jl. Test No. 1",
+        bankName: "BCA",
+        accountNumber: "1234567890",
+        accountHolderName: "New User",
+        identity: createTestFile("ktp.jpg"),
+        account: createTestFile("rekening.jpg"),
+    }
+    const merged = { ...defaults, ...overrides }
+    for (const [key, value] of Object.entries(merged)) {
+        if (value !== undefined && value !== null) {
+            form.append(key, value)
+        }
+    }
+    return form
+}
 
 describe("Auth Module", () => {
     let testUser: User
@@ -23,98 +57,82 @@ describe("Auth Module", () => {
     })
 
     describe("POST /auth/register", () => {
-        let createdUserId: number | null = null
+        let createdUserIds: number[] = []
 
         afterAll(async () => {
-            if (createdUserId) await cleanupTestUser(createdUserId)
+            for (const id of createdUserIds) {
+                await cleanupTestUser(id)
+            }
         })
 
         it("should register a new user with valid data", async () => {
-            const res = await request("/auth/register", {
-                method: "POST",
-                body: {
-                    firstName: "New",
-                    lastName: "User",
-                    email: `register-${Date.now()}@example.com`,
-                    phone: `08${Date.now().toString().slice(-10)}`,
-                    password: "password123",
-                    passwordConfirmation: "password123",
-                },
-            })
+            const form = buildRegisterForm()
+            const res = await formRequest("/auth/register", form)
             expect(res.status).toBe(201)
             expect(res.body.success).toBe(true)
-            if (res.body.data?.id) createdUserId = res.body.data.id
+            expect(res.body.data.id).toBeDefined()
+            if (res.body.data?.id) createdUserIds.push(res.body.data.id)
+        })
+
+        it("should register with optional company fields", async () => {
+            const form = buildRegisterForm({
+                company: "PT Test",
+                jobPosition: "Developer",
+                companyAddress: "Jl. Office No. 5",
+            })
+            const res = await formRequest("/auth/register", form)
+            expect(res.status).toBe(201)
+            expect(res.body.success).toBe(true)
+            if (res.body.data?.id) createdUserIds.push(res.body.data.id)
         })
 
         it("should fail with missing required fields", async () => {
-            const res = await request("/auth/register", {
-                method: "POST",
-                body: { firstName: "Only" },
-            })
+            const form = new FormData()
+            form.append("firstName", "Only")
+            const res = await formRequest("/auth/register", form)
             expect(res.status).toBe(422)
         })
 
         it("should fail with invalid email format", async () => {
-            const res = await request("/auth/register", {
-                method: "POST",
-                body: {
-                    firstName: "Bad",
-                    lastName: "Email",
-                    email: "not-an-email",
-                    phone: "081234567890",
-                    password: "password123",
-                    passwordConfirmation: "password123",
-                },
-            })
+            const form = buildRegisterForm({ email: "not-an-email" })
+            const res = await formRequest("/auth/register", form)
             expect(res.status).toBe(422)
         })
 
-        it("should fail when password too short", async () => {
-            const res = await request("/auth/register", {
-                method: "POST",
-                body: {
-                    firstName: "Short",
-                    lastName: "Pass",
-                    email: `short-${Date.now()}@example.com`,
-                    phone: `08${Date.now().toString().slice(-10)}`,
-                    password: "12",
-                    passwordConfirmation: "12",
-                },
-            })
-            expect(res.status).toBe(422)
-        })
-
-        it("should fail with empty firstName", async () => {
-            const res = await request("/auth/register", {
-                method: "POST",
-                body: {
-                    firstName: "",
-                    lastName: "User",
-                    email: `empty-${Date.now()}@example.com`,
-                    phone: `08${Date.now().toString().slice(-10)}`,
-                    password: "password123",
-                },
-            })
+        it("should fail with invalid identity number length", async () => {
+            const form = buildRegisterForm({ identityNumber: "12345" })
+            const res = await formRequest("/auth/register", form)
             expect(res.status).toBe(422)
         })
 
         it("should fail with duplicate email", async () => {
-            const res = await request("/auth/register", {
-                method: "POST",
-                body: {
-                    firstName: "Dup",
-                    lastName: "User",
-                    email: testUser.email,
-                    phone: `08${Date.now().toString().slice(-10)}`,
-                    password: "password123",
-                    passwordConfirmation: "password123",
-                },
-            })
+            const form = buildRegisterForm({ email: testUser.email })
+            const res = await formRequest("/auth/register", form)
             expect(res.status).toBeGreaterThanOrEqual(400)
         })
 
+        it("should fail with duplicate phone", async () => {
+            const form = buildRegisterForm({ phone: testUser.phone })
+            const res = await formRequest("/auth/register", form)
+            expect(res.status).toBeGreaterThanOrEqual(400)
+        })
+
+        it("should fail without identity file", async () => {
+            const form = buildRegisterForm()
+            form.delete("identity")
+            const res = await formRequest("/auth/register", form)
+            expect(res.status).toBe(422)
+        })
+
+        it("should fail without account file", async () => {
+            const form = buildRegisterForm()
+            form.delete("account")
+            const res = await formRequest("/auth/register", form)
+            expect(res.status).toBe(422)
+        })
+
         it("should fail with empty body", async () => {
-            const res = await request("/auth/register", { method: "POST", body: {} })
+            const res = await formRequest("/auth/register", new FormData())
             expect(res.status).toBe(422)
         })
     })

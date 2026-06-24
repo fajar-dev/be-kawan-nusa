@@ -43,4 +43,21 @@ export async function authRequest(path: string, token: string, options: RequestO
     })
 }
 
+export async function formRequest(path: string, formData: FormData, options: Omit<RequestOptions, 'body'> = {}) {
+    const { method = 'POST', headers = {} } = options
+
+    const res = await app.request(`/api${path}`, {
+        method,
+        headers: { ...headers },
+        body: formData,
+    })
+    const json = await res.json().catch(() => null)
+
+    return {
+        status: res.status,
+        body: json,
+        headers: res.headers,
+    }
+}
+
 export { app }

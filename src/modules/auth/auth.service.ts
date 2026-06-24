@@ -1,4 +1,5 @@
 import { User } from "../user/entities/user.entity"
+import { minio } from "../../core/helpers/minio"
 import { Employee } from "../employee/entities/employee.entity"
 import {
     RegisterValidator,
@@ -34,15 +35,52 @@ export class AuthService {
 
     async register(data: RegisterValidator) {
         if (data.email) {
-            const existing = await this.userService.getByEmail(data.email)
-            if (existing) {
+            const existingEmail = await this.userService.getByEmail(data.email)
+            if (existingEmail) {
                 throw new BadRequestException("Email already in use")
             }
         }
 
+        if (data.phone) {
+            const existingPhone = await this.userService.getByIdentifier(data.phone)
+            if (existingPhone) {
+                throw new BadRequestException("Phone number already in use")
+            }
+        }
+
+        // Upload identity file (KTP)
+        let identityPath: string | undefined
+        if (data.identity instanceof File) {
+            const rawExt = data.identity.type.split("/")[1]
+            const ext = rawExt === "jpeg" ? "jpg" : rawExt
+            const filename = `identity/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+            const buffer = Buffer.from(await data.identity.arrayBuffer())
+            await minio.upload(filename, buffer, data.identity.type)
+            identityPath = filename
+        }
+
+        // Upload account file (Buku Rekening)
+        let accountPath: string | undefined
+        if (data.account instanceof File) {
+            const rawExt = data.account.type.split("/")[1]
+            const ext = rawExt === "jpeg" ? "jpg" : rawExt
+            const filename = `account/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+            const buffer = Buffer.from(await data.account.arrayBuffer())
+            await minio.upload(filename, buffer, data.account.type)
+            accountPath = filename
+        }
+
+        const { identity, account, isWhatsapp, identityNumber, ...userData } = data
+
         return this.unitOfWork.runInTransaction(async (manager) => {
             return await this.userService.save(
-                { ...data, password: await hashPassword(data.password) },
+                {
+                    ...userData,
+                    identityNumber: identityNumber ? Number(identityNumber) : undefined,
+                    identityPath,
+                    accountPath,
+                    isActive: false,
+                },
                 manager
             )
         })

@@ -16,7 +16,8 @@ export class AuthController {
     constructor(private readonly service: AuthService) {}
 
     async register(c: Context) {
-        const body = await c.req.json() as RegisterValidator
+        const rawBody = await c.req.parseBody()
+        const body = RegisterValidator.parse(rawBody)
         const user = await this.service.register(body)
         return ApiResponse.success(c, await AuthSerializer.single(user, 'user'), "User registered successfully", 201)
     }

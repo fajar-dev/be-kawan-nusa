@@ -56,27 +56,32 @@ components:
     # --- Auth Schemas ---
     RegisterRequest:
       type: object
-      required: [firstName, lastName, password]
+      required: [firstName, lastName, birthDate, birthPlace, identityNumber, taxNumber, email, phone, address, bankName, accountNumber, accountHolderName, identity, account]
       properties:
         firstName: { type: string, example: "Budi" }
         lastName: { type: string, example: "Santoso" }
-        company: { type: string, example: "PT Nusanet" }
-        jobPosition: { type: string, example: "Sales Manager" }
-        birthDate: { type: string, format: date, nullable: true, example: "1990-05-15" }
-        birthPlace: { type: string, nullable: true, example: "Surabaya" }
-        address: { type: string, nullable: true, example: "Jl. Raya Darmo No. 10, Surabaya" }
-        companyAddress: { type: string, nullable: true, example: "Jl. Ngagel Jaya No. 88, Surabaya" }
-        email:
-          { type: string, format: email, nullable: true, example: "budi.santoso@nusanet.id" }
-        phone: { type: string, nullable: true, example: "081234567890" }
-        identityNumber: { type: integer, nullable: true, example: 3201234567890001 }
-        taxNumber: { type: string, nullable: true, example: "01.234.567.8-901.000" }
-        password: { type: string, minLength: 6, example: "secret123" }
-        accountHolderName: { type: string, example: "Budi Santoso" }
+        birthDate: { type: string, format: date, example: "1990-05-15" }
+        birthPlace: { type: string, example: "Surabaya" }
+        identityNumber: { type: string, example: "3201234567890001" }
+        taxNumber: { type: string, example: "01.234.567.8-901.000" }
+        email: { type: string, format: email, example: "budi.santoso@nusanet.id" }
+        phone: { type: string, example: "081234567890" }
+        address: { type: string, example: "Jl. Raya Darmo No. 10, Surabaya" }
         bankName: { type: string, example: "BCA" }
         accountNumber: { type: string, example: "1234567890" }
-        isSubscribe: { type: boolean, default: false, example: true }
-        isAutoWithdraw: { type: boolean, default: false, example: false }
+        accountHolderName: { type: string, example: "Budi Santoso" }
+        company: { type: string, nullable: true, example: "PT Nusanet" }
+        jobPosition: { type: string, nullable: true, example: "Sales Manager" }
+        companyAddress: { type: string, nullable: true, example: "Jl. Ngagel Jaya No. 88, Surabaya" }
+        isWhatsapp: { type: boolean, example: true }
+        identity:
+          type: string
+          format: binary
+          description: "Identity document image (KTP). JPG/PNG/GIF. Max 5MB."
+        account:
+          type: string
+          format: binary
+          description: "Account book image (Buku Rekening). JPG/PNG/GIF. Max 5MB."
 
     LoginRequest:
       type: object
@@ -920,25 +925,13 @@ paths:
   /auth/register:
     post:
       summary: Register new partner account
+      description: "Register a new partner account with personal info, bank details, and document uploads (KTP & bank book). Account will be set as inactive (isActive=false) until approved by admin."
       tags: [Auth]
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema: { $ref: "#/components/schemas/RegisterRequest" }
-            example:
-              firstName: "Budi"
-              lastName: "Santoso"
-              email: "budi.santoso@nusanet.id"
-              phone: "081234567890"
-              password: "secret123"
-              company: "PT Nusanet"
-              jobPosition: "Sales Manager"
-              accountHolderName: "Budi Santoso"
-              bankName: "BCA"
-              accountNumber: "1234567890"
-              isSubscribe: true
-              isAutoWithdraw: false
       responses:
         "201":
           description: User registered successfully
@@ -960,8 +953,16 @@ paths:
                   photo: null
                   email: "budi.santoso@nusanet.id"
                   phone: "081234567890"
-                  isActive: true
+                  isActive: false
                   role: "user"
+        "400":
+          description: Email or phone already in use
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Email already in use"
         "422":
           $ref: "#/components/responses/ValidationErrorResponse"
 
