@@ -184,6 +184,7 @@ components:
             isSubscribe: { type: boolean, example: true }
             isAutoWithdraw: { type: boolean, example: false }
         isVerified: { type: boolean, example: true }
+        isBoarding: { type: boolean, example: false }
         isActive: { type: boolean, example: true }
         lastLoginAt:
           {

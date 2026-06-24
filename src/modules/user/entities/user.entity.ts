@@ -88,6 +88,9 @@ export class User {
     @Column({ name: "is_verified", default: false })
     isVerified!: boolean
 
+    @Column({ name: "is_boarding", default: false })
+    isBoarding!: boolean
+
     @OneToMany(() => CustomerService, (customerService) => customerService.user)
     customerServices!: Relation<CustomerService[]>
 

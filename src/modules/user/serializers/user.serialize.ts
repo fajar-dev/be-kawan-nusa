@@ -36,6 +36,7 @@ export class UserSerializer {
                 isAutoWithdraw: user.isAutoWithdraw
             },
             isVerified: user.isVerified,
+            isBoarding: user.isBoarding,
             isActive: user.isActive,
             lastLoginAt: user.lastLoginAt,
             passwordUpdatedAt: user.passwordUpdatedAt,
