@@ -112,7 +112,9 @@ export class AuthService {
             .replace(/{{name}}/g, name)
             .replace(/{{verifyLink}}/g, verifyLink)
 
-        await this.mailHelper.sendHtml(user.email!, "Verifikasi Email Anda", html)
+        this.mailHelper.sendHtml(user.email!, "Verifikasi Email Anda", html).catch((err) => {
+            console.error(`[Mail] Failed to send verification email to ${user.email}:`, err)
+        })
     }
 
     async verifyEmail(token: string) {
@@ -261,6 +263,10 @@ export class AuthService {
             throw new BadRequestException("Email not found")
         }
 
+        if (!user.isVerified) {
+            throw new BadRequestException("Please verify your email first")
+        }
+
         if (!user.isActive) {
             throw new BadRequestException("Account is inactive")
         }
@@ -278,7 +284,9 @@ export class AuthService {
             .replace(/{{name}}/g, name)
             .replace(/{{resetLink}}/g, resetLink)
 
-        await this.mailHelper.sendHtml(user.email!, "Atur Ulang Kata Sandi", html)
+        this.mailHelper.sendHtml(user.email!, "Atur Ulang Kata Sandi", html).catch((err) => {
+            console.error(`[Mail] Failed to send reset password email to ${user.email}:`, err)
+        })
         return true
     }
 

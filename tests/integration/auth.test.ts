@@ -486,6 +486,27 @@ describe("Auth Module", () => {
             const res = await request("/auth/forgot-password", { method: "POST", body: {} })
             expect(res.status).toBe(422)
         })
+
+        it("should fail with unverified email", async () => {
+            const userRepo = AppDataSource.getRepository(User)
+            const unverifiedUser = await userRepo.save(userRepo.create({
+                firstName: "Unverified",
+                lastName: "Forgot",
+                email: `unverified-forgot-${Date.now()}@example.com`,
+                phone: `08${Date.now().toString().slice(-10)}`,
+                password: "hashed",
+                isActive: true,
+                isVerified: false,
+            }))
+
+            const res = await request("/auth/forgot-password", {
+                method: "POST",
+                body: { email: unverifiedUser.email },
+            })
+            expect(res.status).toBe(400)
+
+            await userRepo.delete(unverifiedUser.id)
+        })
     })
 
     describe("GET /auth/validate-reset-token", () => {
