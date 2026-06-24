@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test"
-import { request, authRequest } from "../helpers/test-client"
+import { request, authRequest, formRequest } from "../helpers/test-client"
 import { createTestUser, createTestAdmin, generateUserToken, generateAdminToken, cleanupTestUser, cleanupTestAdmin } from "../helpers/auth.helper"
 import { User } from "../../src/modules/user/entities/user.entity"
 import { Employee } from "../../src/modules/employee/entities/employee.entity"
@@ -43,24 +43,34 @@ describe("Profile Module", () => {
     })
 
     describe("PUT /profile/account", () => {
+        const getValidAccount = () => ({
+            firstName: "Updated",
+            lastName: "Name",
+            email: testUser.email,
+            phone: testUser.phone,
+            identityNumber: 1234567890123456,
+            taxNumber: "12.345.678.9-012.000",
+            birthDate: "1990-05-15",
+            birthPlace: "Surabaya",
+            address: "Jl. Raya Darmo No. 10, Surabaya",
+        })
+
         it("should update account with valid data", async () => {
             const res = await authRequest("/profile/account", userToken, {
                 method: "PUT",
-                body: { firstName: "Updated", lastName: "Name" },
+                body: getValidAccount(),
             })
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
         })
 
-        it("should update account with new fields (birthDate, birthPlace, address, companyAddress)", async () => {
+        it("should update account with company fields", async () => {
             const res = await authRequest("/profile/account", userToken, {
                 method: "PUT",
                 body: {
-                    firstName: "Updated",
-                    lastName: "Name",
-                    birthDate: "1990-05-15",
-                    birthPlace: "Surabaya",
-                    address: "Jl. Raya Darmo No. 10, Surabaya",
+                    ...getValidAccount(),
+                    company: "PT Nusanet",
+                    jobPosition: "Engineer",
                     companyAddress: "Jl. Ngagel Jaya No. 88, Surabaya",
                 },
             })
@@ -68,12 +78,18 @@ describe("Profile Module", () => {
             expect(res.body.success).toBe(true)
         })
 
-        it("should fail with firstName too short", async () => {
+        it("should accept null for company fields", async () => {
             const res = await authRequest("/profile/account", userToken, {
                 method: "PUT",
-                body: { firstName: "A" },
+                body: {
+                    ...getValidAccount(),
+                    company: null,
+                    jobPosition: null,
+                    companyAddress: null,
+                },
             })
-            expect(res.status).toBe(422)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
         })
 
         it("should fail with missing firstName", async () => {
@@ -87,7 +103,7 @@ describe("Profile Module", () => {
         it("should fail without auth", async () => {
             const res = await request("/profile/account", {
                 method: "PUT",
-                body: { firstName: "No Auth" },
+                body: getValidAccount(),
             })
             expect(res.status).toBe(401)
         })
@@ -129,31 +145,132 @@ describe("Profile Module", () => {
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
         })
+
+        it("should fail without auth", async () => {
+            const res = await request("/profile/preference", {
+                method: "PUT",
+                body: { isSubscribe: true },
+            })
+            expect(res.status).toBe(401)
+        })
     })
 
     describe("PUT /profile/password", () => {
-        it("should fail with wrong current password", async () => {
+        it("should change password with correct old password", async () => {
             const res = await authRequest("/profile/password", userToken, {
                 method: "PUT",
-                body: { currentPassword: "wrongpassword", newPassword: "newpass123", newPasswordConfirmation: "newpass123" },
+                body: { oldPassword: "password123", newPassword: "NewPass1!" },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("should fail with wrong old password", async () => {
+            const res = await authRequest("/profile/password", userToken, {
+                method: "PUT",
+                body: { oldPassword: "wrongpassword", newPassword: "NewPass1!" },
             })
             expect(res.status).toBe(400)
         })
 
-        it("should fail when new passwords do not match", async () => {
-            const res = await authRequest("/profile/password", userToken, {
-                method: "PUT",
-                body: { currentPassword: "password123", newPassword: "newpass123", newPasswordConfirmation: "different" },
-            })
-            expect(res.status).toBeGreaterThanOrEqual(400)
-        })
-
-        it("should fail with missing fields", async () => {
+        it("should fail with missing newPassword", async () => {
             const res = await authRequest("/profile/password", userToken, {
                 method: "PUT",
                 body: {},
             })
             expect(res.status).toBe(422)
+        })
+
+        it("should fail without auth", async () => {
+            const res = await request("/profile/password", {
+                method: "PUT",
+                body: { oldPassword: "password123", newPassword: "NewPass1!" },
+            })
+            expect(res.status).toBe(401)
+        })
+    })
+
+    describe("POST /profile/complete-boarding", () => {
+        it("should mark boarding as complete", async () => {
+            const res = await authRequest("/profile/complete-boarding", userToken, {
+                method: "POST",
+                body: {},
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+            expect(res.body.data.isBoarding).toBe(true)
+        })
+
+        it("should fail without auth", async () => {
+            const res = await request("/profile/complete-boarding", {
+                method: "POST",
+                body: {},
+            })
+            expect(res.status).toBe(401)
+        })
+
+        it("should fail for admin role", async () => {
+            const res = await authRequest("/profile/complete-boarding", adminToken, {
+                method: "POST",
+                body: {},
+            })
+            expect(res.status).toBe(403)
+        })
+    })
+
+    describe("POST /profile/documents", () => {
+        it("should upload identity document", async () => {
+            const formData = new FormData()
+            const file = new File(["fake-image-data"], "ktp.jpg", { type: "image/jpeg" })
+            formData.append("identity", file)
+
+            const res = await formRequest("/profile/documents", formData, {
+                headers: { Authorization: `Bearer ${userToken}` },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("should upload account document", async () => {
+            const formData = new FormData()
+            const file = new File(["fake-image-data"], "rekening.jpg", { type: "image/jpeg" })
+            formData.append("account", file)
+
+            const res = await formRequest("/profile/documents", formData, {
+                headers: { Authorization: `Bearer ${userToken}` },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("should upload both documents", async () => {
+            const formData = new FormData()
+            formData.append("identity", new File(["fake"], "ktp.jpg", { type: "image/jpeg" }))
+            formData.append("account", new File(["fake"], "rek.jpg", { type: "image/jpeg" }))
+
+            const res = await formRequest("/profile/documents", formData, {
+                headers: { Authorization: `Bearer ${userToken}` },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("should fail without auth", async () => {
+            const formData = new FormData()
+            formData.append("identity", new File(["fake"], "ktp.jpg", { type: "image/jpeg" }))
+
+            const res = await formRequest("/profile/documents", formData)
+            expect(res.status).toBe(401)
+        })
+
+        it("should fail for admin role", async () => {
+            const formData = new FormData()
+            formData.append("identity", new File(["fake"], "ktp.jpg", { type: "image/jpeg" }))
+
+            const res = await formRequest("/profile/documents", formData, {
+                headers: { Authorization: `Bearer ${adminToken}` },
+            })
+            expect(res.status).toBe(403)
         })
     })
 })

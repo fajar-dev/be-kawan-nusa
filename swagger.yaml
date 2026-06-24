@@ -1632,6 +1632,65 @@ paths:
           $ref: "#/components/responses/ValidationErrorResponse"
 
   # =============================================
+  /profile/complete-boarding:
+    post:
+      summary: Mark boarding as complete
+      description: "Sets isBoarding to true for the authenticated user after completing the onboarding flow."
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Boarding completed
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Boarding completed successfully"
+                data:
+                  id: 1
+                  isBoarding: true
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /profile/documents:
+    post:
+      summary: Upload identity and bank account documents
+      description: "Upload KTP (identity) and/or bank book (account) images. Both fields are optional — only provided files will be updated."
+      tags: [Profile]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                identity:
+                  type: string
+                  format: binary
+                  description: "KTP image file (JPG, PNG)"
+                account:
+                  type: string
+                  format: binary
+                  description: "Bank book image file (JPG, PNG)"
+      responses:
+        "200":
+          description: Documents uploaded successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Documents updated successfully"
+                data:
+                  id: 1
+                  identityPath: "https://minio.example.com/identity/1_123456.jpg"
+                  accountPath: "https://minio.example.com/account/1_123456.jpg"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  # =============================================
   # POINT ROUTES
   # =============================================
   /point:

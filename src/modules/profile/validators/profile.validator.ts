@@ -11,9 +11,9 @@ export const UpdateAccountValidator = z.object({
     birthDate: z.string().min(1, "Birth date is required"),
     birthPlace: z.string().min(1, "Birth place is required"),
     address: z.string().min(1, "Address is required"),
-    company: z.string().optional(),
-    jobPosition: z.string().optional(),
-    companyAddress: z.string().optional(),
+    company: z.string().nullable().optional().transform(v => v ?? undefined),
+    jobPosition: z.string().nullable().optional().transform(v => v ?? undefined),
+    companyAddress: z.string().nullable().optional().transform(v => v ?? undefined),
 })
 
 export type UpdateAccountValidator = z.infer<typeof UpdateAccountValidator>

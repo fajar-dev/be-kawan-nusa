@@ -41,7 +41,7 @@ export class ProfileService {
         }
 
         if (user.password) {
-            if (!data.oldPassword) {
+            if (!data.oldPassword || data.oldPassword.trim() === '') {
                 throw new BadRequestException("Old password is required")
             }
             const isValid = await comparePassword(data.oldPassword, user.password)
@@ -66,6 +66,35 @@ export class ProfileService {
         await minio.upload(filename, buffer, photoFile.type)
 
         user.photo = filename
+        return await this.repository.save(user)
+    }
+    async updateDocuments(userId: number, identityFile?: File, accountFile?: File): Promise<User> {
+        const user = await this.getProfile(userId)
+
+        if (identityFile) {
+            const rawExt = identityFile.type.split("/")[1]
+            const ext = rawExt === "jpeg" ? "jpg" : rawExt
+            const filename = `identity/${user.id}_${Date.now()}.${ext}`
+            const buffer = Buffer.from(await identityFile.arrayBuffer())
+            await minio.upload(filename, buffer, identityFile.type)
+            user.identityPath = filename
+        }
+
+        if (accountFile) {
+            const rawExt = accountFile.type.split("/")[1]
+            const ext = rawExt === "jpeg" ? "jpg" : rawExt
+            const filename = `account/${user.id}_${Date.now()}.${ext}`
+            const buffer = Buffer.from(await accountFile.arrayBuffer())
+            await minio.upload(filename, buffer, accountFile.type)
+            user.accountPath = filename
+        }
+
+        return await this.repository.save(user)
+    }
+
+    async completeBoarding(userId: number): Promise<User> {
+        const user = await this.getProfile(userId)
+        user.isBoarding = true
         return await this.repository.save(user)
     }
 }

@@ -54,4 +54,17 @@ export class ProfileController {
 
         return ApiResponse.success(c, await UserSerializer.single(updated), "Profile photo updated successfully")
     }
+
+    async completeBoarding(c: Context) {
+        const user = c.get("user")
+        const updated = await this.service.completeBoarding(user.id)
+        return ApiResponse.success(c, await UserSerializer.single(updated), "Boarding completed successfully")
+    }
+
+    async updateDocuments(c: Context) {
+        const user = c.get("user")
+        const { identity, account } = await c.req.parseBody() as { identity?: File, account?: File }
+        const updated = await this.service.updateDocuments(user.id, identity, account)
+        return ApiResponse.success(c, await UserSerializer.single(updated), "Documents updated successfully")
+    }
 }

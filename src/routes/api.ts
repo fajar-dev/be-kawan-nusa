@@ -62,6 +62,8 @@ routes.put("/profile/bank", authMiddleware, roleMiddleware('user'), zValidator("
 routes.put("/profile/preference", authMiddleware, roleMiddleware('user'), zValidator("json", UpdatePreferenceValidator, validationHook), (c) => profileController.updatePreference(c))
 routes.put("/profile/password", authMiddleware, roleMiddleware('user'), zValidator("json", UpdatePasswordValidator, validationHook), (c) => profileController.updatePassword(c))
 routes.post("/profile/photo", authMiddleware, roleMiddleware('user'), zValidator("form", UpdatePhotoValidator, validationHook), (c) => profileController.updatePhoto(c))
+routes.post("/profile/complete-boarding", authMiddleware, roleMiddleware('user'), (c) => profileController.completeBoarding(c))
+routes.post("/profile/documents", authMiddleware, roleMiddleware('user'), (c) => profileController.updateDocuments(c))
 
 // Point
 routes.get("/point", authMiddleware, roleMiddleware('user'), (c) => pointController.show(c))
