@@ -304,7 +304,7 @@ export class AuthService {
         user.password = await hashPassword(data.newPassword)
 
         await this.userService.save(user)
-        this.passwordResetTokenRepository.deleteAllByUserId(user.id)
+        await this.passwordResetTokenRepository.deleteAllByUserId(user.id)
 
         return true
     }

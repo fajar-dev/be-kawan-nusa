@@ -69,7 +69,7 @@ describe("User Module (Admin)", () => {
             expect("address" in data).toBe(true)
             expect("companyAddress" in data).toBe(true)
             expect("identityPath" in data).toBe(true)
-            expect("accountPath" in data).toBe(true)
+            expect("accountPath" in data.bankDetails).toBe(true)
         })
 
         it("should return 404 for non-existent user", async () => {
