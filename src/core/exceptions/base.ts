@@ -52,8 +52,8 @@ export class ConflictException extends BaseException {
     }
 }
 
-export class TooManyValidatorsException extends BaseException {
-    constructor(message: string = "Too Many Validators") {
+export class TooManyRequestsException extends BaseException {
+    constructor(message: string = "Too many requests") {
         super(message, 429)
     }
 }

@@ -14,6 +14,7 @@ import { CreateCatalogCategoryValidator, UpdateCatalogCategoryValidator } from "
 import { authMiddleware } from "../core/middlewares/auth.middleware"
 import { apiKeyMiddleware } from "../core/middlewares/api-key.middleware"
 import { roleMiddleware } from "../core/middlewares/role.middleware"
+import { rateLimitMiddleware } from "../core/middlewares/rate-limit.middleware"
 import { validationHook } from "../core/helpers/validator"
 
 // ── Modules (controllers wired with their dependencies) ──────────────────────
@@ -41,20 +42,20 @@ import { userController } from "../modules/user/user.module"
 const routes = new Hono()
 
 // Auth
-routes.post("/auth/register", (c) => authController.register(c))
+routes.post("/auth/register", rateLimitMiddleware(5), (c) => authController.register(c))
 routes.get("/auth/verify-email", (c) => authController.verifyEmail(c))
-routes.post("/auth/resend-verification", zValidator("json", ResendVerificationValidator, validationHook), (c) => authController.resendVerification(c))
+routes.post("/auth/resend-verification", rateLimitMiddleware(3), zValidator("json", ResendVerificationValidator, validationHook), (c) => authController.resendVerification(c))
 routes.get("/auth/check-email-status", (c) => authController.checkEmailStatus(c))
 routes.post("/auth/login", zValidator("json", LoginValidator, validationHook), (c) => authController.login(c))
 routes.post("/auth/google", zValidator("json", GoogleLoginSchema, validationHook), (c) => authController.google(c))
 routes.post("/auth/admin/google", zValidator("json", GoogleLoginSchema, validationHook), (c) => authController.adminGoogle(c))
-routes.post("/auth/forgot-password", zValidator("json", ForgotPasswordValidator, validationHook), (c) => authController.forgotPassword(c))
+routes.post("/auth/forgot-password", rateLimitMiddleware(3), zValidator("json", ForgotPasswordValidator, validationHook), (c) => authController.forgotPassword(c))
 routes.get("/auth/validate-reset-token", (c) => authController.validateResetToken(c))
 routes.post("/auth/reset-password", zValidator("json", ResetPasswordValidator, validationHook), (c) => authController.resetPassword(c))
 routes.post("/auth/refresh", zValidator("json", RefreshTokenValidator, validationHook), (c) => authController.refreshToken(c))
 routes.get("/auth/me", authMiddleware, (c) => authController.me(c))
 routes.post("/auth/logout", authMiddleware, (c) => authController.logout(c))
-routes.post("/auth/otp/send", zValidator("json", SendOtpValidator, validationHook), (c) => authController.sendOtp(c))
+routes.post("/auth/otp/send", rateLimitMiddleware(5), zValidator("json", SendOtpValidator, validationHook), (c) => authController.sendOtp(c))
 routes.post("/auth/otp/verify", zValidator("json", VerifyOtpValidator, validationHook), (c) => authController.verifyOtp(c))
 
 // Profile
