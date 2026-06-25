@@ -3,7 +3,7 @@ import { AppDataSource } from "../../../config/database"
 import { Reward } from "../../reward/entities/reward.entity"
 import { IPointRepository } from "../interfaces/point.repository.interface"
 
-export class TypeOrmPointRepository implements IPointRepository {
+export class PointRepository implements IPointRepository {
     private readonly rewardRepository: Repository<Reward>
 
     constructor() {

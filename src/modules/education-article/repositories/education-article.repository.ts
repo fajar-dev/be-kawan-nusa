@@ -7,7 +7,7 @@ import {
     IEducationArticleRepository,
 } from "../interfaces/education-article.repository.interface"
 
-export class TypeOrmEducationArticleRepository implements IEducationArticleRepository {
+export class EducationArticleRepository implements IEducationArticleRepository {
     private readonly repository: Repository<EducationArticle>
     private readonly viewRepository: Repository<EducationArticleView>
 

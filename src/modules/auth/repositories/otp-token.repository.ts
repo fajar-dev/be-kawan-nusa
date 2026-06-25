@@ -3,7 +3,7 @@ import { AppDataSource } from "../../../config/database"
 import { OtpToken } from "../entities/otp-token.entity"
 import { IOtpTokenRepository } from "../interfaces/otp-token.repository.interface"
 
-export class TypeOrmOtpTokenRepository implements IOtpTokenRepository {
+export class OtpTokenRepository implements IOtpTokenRepository {
     private readonly repository: Repository<OtpToken>
 
     constructor() {

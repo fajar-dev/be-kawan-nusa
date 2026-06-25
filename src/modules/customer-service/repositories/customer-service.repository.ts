@@ -10,7 +10,7 @@ import {
     ICustomerServiceRepository,
 } from "../interfaces/customer-service.repository.interface"
 
-export class TypeOrmCustomerServiceRepository implements ICustomerServiceRepository {
+export class CustomerServiceRepository implements ICustomerServiceRepository {
     private readonly repository: Repository<CustomerService>
     private readonly customerRepository: Repository<Customer>
 

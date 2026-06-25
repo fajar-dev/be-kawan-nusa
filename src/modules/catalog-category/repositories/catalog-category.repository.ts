@@ -3,7 +3,7 @@ import { AppDataSource } from "../../../config/database"
 import { CatalogCategory } from "../entities/catalog-category.entity"
 import { ICatalogCategoryRepository } from "../interfaces/catalog-category.repository.interface"
 
-export class TypeOrmCatalogCategoryRepository implements ICatalogCategoryRepository {
+export class CatalogCategoryRepository implements ICatalogCategoryRepository {
     private readonly repository: Repository<CatalogCategory>
 
     constructor() {

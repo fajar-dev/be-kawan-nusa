@@ -68,13 +68,13 @@ export interface IInvoiceRepository {
 ## Step 4: Create TypeORM Repository
 
 ```typescript
-// src/modules/invoice/repositories/typeorm-invoice.repository.ts
+// src/modules/invoice/repositories/invoice.repository.ts
 import { Repository } from "typeorm"
 import { AppDataSource } from "../../../config/database"
 import { Invoice } from "../entities/invoice.entity"
 import { IInvoiceRepository } from "../interfaces/invoice.repository.interface"
 
-export class TypeOrmInvoiceRepository implements IInvoiceRepository {
+export class InvoiceRepository implements IInvoiceRepository {
     private readonly repository: Repository<Invoice>
 
     constructor() {
@@ -247,11 +247,11 @@ export class InvoiceController {
 
 ```typescript
 // src/modules/invoice/invoice.module.ts
-import { TypeOrmInvoiceRepository } from "./repositories/typeorm-invoice.repository"
+import { InvoiceRepository } from "./repositories/invoice.repository"
 import { InvoiceService } from "./invoice.service"
 import { InvoiceController } from "./invoice.controller"
 
-const repository = new TypeOrmInvoiceRepository()
+const repository = new InvoiceRepository()
 const service = new InvoiceService(repository)
 export const invoiceController = new InvoiceController(service)
 ```

@@ -3,7 +3,7 @@ import { AppDataSource } from "../../../config/database"
 import { EmailVerificationToken } from "../entities/email-verification-token.entity"
 import { IEmailVerificationTokenRepository } from "../interfaces/email-verification-token.repository.interface"
 
-export class TypeOrmEmailVerificationTokenRepository implements IEmailVerificationTokenRepository {
+export class EmailVerificationTokenRepository implements IEmailVerificationTokenRepository {
     private readonly repository: Repository<EmailVerificationToken>
 
     constructor() {

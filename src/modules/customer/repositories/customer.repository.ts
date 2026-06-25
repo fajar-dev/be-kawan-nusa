@@ -4,7 +4,7 @@ import { Customer } from "../entities/customer.entity"
 import { CustomerService as CustomerServiceEntity } from "../../customer-service/entities/customer-service.entity"
 import { CustomerDetail, CustomerListFilters, ICustomerRepository } from "../interfaces/customer.repository.interface"
 
-export class TypeOrmCustomerRepository implements ICustomerRepository {
+export class CustomerRepository implements ICustomerRepository {
     private readonly repository: Repository<Customer>
     private readonly customerServiceRepo: Repository<CustomerServiceEntity>
 

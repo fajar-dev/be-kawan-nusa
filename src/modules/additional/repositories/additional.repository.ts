@@ -1,7 +1,7 @@
 import { AppDataSource } from "../../../config/database"
 import { IAdditionalRepository, SearchResult } from "../interfaces/additional.repository.interface"
 
-export class TypeOrmAdditionalRepository implements IAdditionalRepository {
+export class AdditionalRepository implements IAdditionalRepository {
     async search(q: string, userId?: number): Promise<SearchResult[]> {
         let customerQuery =
             "SELECT id as title, 'Customer' as module, CONCAT('/customer/', id) as route FROM customers WHERE id LIKE ? OR name LIKE ?"

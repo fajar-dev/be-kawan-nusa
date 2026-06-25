@@ -62,7 +62,7 @@ modules/reward/
 ├── interfaces/           # Repository interface (abstraction)
 │   └── reward.repository.interface.ts
 ├── repositories/         # TypeORM implementation
-│   └── typeorm-reward.repository.ts
+│   └── reward.repository.ts
 ├── validators/           # Zod validators
 │   └── reward.validator.ts
 ├── serializers/          # Response serializers
@@ -101,13 +101,13 @@ Each `*.module.ts` file wires dependencies:
 
 ```typescript
 // reward.module.ts
-import { TypeOrmRewardRepository } from "./repositories/typeorm-reward.repository"
+import { RewardRepository } from "./repositories/reward.repository"
 import { RewardService } from "./reward.service"
 import { RewardController } from "./reward.controller"
 import { TypeOrmUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
 import { PointCalculator } from "../../core/helpers/point"
 
-const repository = new TypeOrmRewardRepository()
+const repository = new RewardRepository()
 export const rewardService = new RewardService(repository, new TypeOrmUnitOfWork(), new PointCalculator())
 export const rewardController = new RewardController(rewardService)
 ```

@@ -3,7 +3,7 @@ import { AppDataSource } from "../../../config/database"
 import { PasswordResetToken } from "../entities/password-reset-token.entity"
 import { IPasswordResetTokenRepository } from "../interfaces/password-reset-token.repository.interface"
 
-export class TypeOrmPasswordResetTokenRepository implements IPasswordResetTokenRepository {
+export class PasswordResetTokenRepository implements IPasswordResetTokenRepository {
     private readonly repository: Repository<PasswordResetToken>
 
     constructor() {

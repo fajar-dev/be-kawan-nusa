@@ -3,7 +3,7 @@ import { AppDataSource } from "../../../config/database"
 import { ServicePromotion } from "../entities/service-promotion.entity"
 import { IServicePromotionRepository } from "../interfaces/service-promotion.repository.interface"
 
-export class TypeOrmServicePromotionRepository implements IServicePromotionRepository {
+export class ServicePromotionRepository implements IServicePromotionRepository {
     private readonly repository: Repository<ServicePromotion>
 
     constructor() {

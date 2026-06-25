@@ -3,7 +3,7 @@ import { AppDataSource } from "../../../config/database"
 import { Template } from "../entities/template.entity"
 import { ITemplateRepository } from "../interfaces/template.repository.interface"
 
-export class TypeOrmTemplateRepository implements ITemplateRepository {
+export class TemplateRepository implements ITemplateRepository {
     private readonly repository: Repository<Template>
 
     constructor() {

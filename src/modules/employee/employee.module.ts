@@ -1,5 +1,5 @@
-import { TypeOrmEmployeeRepository } from "./repositories/typeorm-employee.repository"
+import { EmployeeRepository } from "./repositories/employee.repository"
 import { EmployeeService } from "./employee.service"
 
-const repository = new TypeOrmEmployeeRepository()
+const repository = new EmployeeRepository()
 export const employeeService = new EmployeeService(repository)

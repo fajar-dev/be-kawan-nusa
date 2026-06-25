@@ -37,7 +37,7 @@ modules/<name>/
 Example:
 ```typescript
 // invoice.module.ts
-const repository = new TypeOrmInvoiceRepository()
+const repository = new InvoiceRepository()
 const service = new InvoiceService(repository)
 export const invoiceController = new InvoiceController(service)
 ```
@@ -72,7 +72,7 @@ From `src/core/exceptions/base`:
 | Table | snake_case plural | `rewards` |
 | Column (entity) | camelCase | `customerServiceId` |
 | Column (DB) | snake_case | `customer_service_id` |
-| Repository | `TypeOrm<Name>Repository` | `TypeOrmRewardRepository` |
+| Repository | `<Name>Repository` | `RewardRepository` |
 | Interface | `I<Name>Repository` | `IRewardRepository` |
 | Service | `<Name>Service` | `RewardService` |
 | Controller | `<Name>Controller` | `RewardController` |

@@ -17,7 +17,7 @@ const REDEMPTION_RELATIONS = [
     "redemptionProduct.shipping",
 ]
 
-export class TypeOrmRedemptionRepository implements IRedemptionRepository {
+export class RedemptionRepository implements IRedemptionRepository {
     private readonly repository: Repository<Redemption>
 
     constructor() {

@@ -7,7 +7,7 @@ import { Redemption } from "../../redemption/entities/redemption.entity"
 import { User } from "../../user/entities/user.entity"
 import { IStatisticRepository, MonthlyCount } from "../interfaces/statistic.repository.interface"
 
-export class TypeOrmStatisticRepository implements IStatisticRepository {
+export class StatisticRepository implements IStatisticRepository {
     private readonly customerRepository: Repository<Customer>
     private readonly customerServiceRepository: Repository<CustomerService>
     private readonly rewardRepository: Repository<Reward>

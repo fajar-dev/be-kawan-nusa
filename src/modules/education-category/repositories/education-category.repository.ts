@@ -3,7 +3,7 @@ import { AppDataSource } from "../../../config/database"
 import { EducationCategory } from "../entities/education-category.entity"
 import { IEducationCategoryRepository } from "../interfaces/education-category.repository.interface"
 
-export class TypeOrmEducationCategoryRepository implements IEducationCategoryRepository {
+export class EducationCategoryRepository implements IEducationCategoryRepository {
     private readonly repository: Repository<EducationCategory>
 
     constructor() {

@@ -7,7 +7,7 @@ import {
     IEducationVideoRepository,
 } from "../interfaces/education-video.repository.interface"
 
-export class TypeOrmEducationVideoRepository implements IEducationVideoRepository {
+export class EducationVideoRepository implements IEducationVideoRepository {
     private readonly repository: Repository<EducationVideo>
     private readonly viewRepository: Repository<EducationVideoView>
 
