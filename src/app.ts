@@ -8,9 +8,12 @@ import { BaseException, ValidatorException } from './core/exceptions/base'
 import { ZodError } from 'zod'
 import { config } from './config/config'
 import { logError } from './core/helpers/logger'
+import { requestLogger } from './core/middlewares/logger.middleware'
 
 export function createApp(): Hono {
     const app = new Hono()
+
+    app.use('*', requestLogger)
 
     // CORS
     app.use('*', cors({
