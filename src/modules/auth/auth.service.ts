@@ -359,7 +359,7 @@ export class AuthService {
                 console.error(`[Mail] Failed to send OTP email to ${user.email}:`, err)
             })
         } else {
-            const phone = user.phone?.replace(/^(\+62|62|0)/, '62') || ''
+            const phone = user.phone?.replace(/[\s\-]/g, '').replace(/^(\+62|62|0)/, '62') || ''
             this.nusaContactHelper.sendOTP(phone, code).catch((err) => {
                 console.error(`[NusaContact] Failed to send OTP to ${user.phone}:`, err)
             })
