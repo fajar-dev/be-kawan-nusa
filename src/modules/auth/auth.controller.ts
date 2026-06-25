@@ -28,8 +28,12 @@ export class AuthController {
         if (!token) {
             throw new BadRequestException("Verification token is required")
         }
-        await this.service.verifyEmail(token)
-        return ApiResponse.success(c, null, "Email verified successfully")
+        const data = await this.service.verifyEmail(token)
+        return ApiResponse.success(c, {
+            user: await AuthSerializer.single(data.user as any, 'user'),
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+        }, "Email verified successfully")
     }
 
     async resendVerification(c: Context) {

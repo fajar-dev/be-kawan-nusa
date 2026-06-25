@@ -147,7 +147,7 @@ describe("Auth Module", () => {
             }
         })
 
-        it("should verify email with valid token", async () => {
+        it("should verify email with valid token and return auth tokens", async () => {
             // Create unverified user directly
             const userRepo = AppDataSource.getRepository(User)
             const user = userRepo.create({
@@ -173,10 +173,15 @@ describe("Auth Module", () => {
             const res = await request(`/auth/verify-email?token=${token}`)
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
+            expect(res.body.data.accessToken).toBeDefined()
+            expect(res.body.data.refreshToken).toBeDefined()
+            expect(res.body.data.user).toBeDefined()
+            expect(res.body.data.user.email).toBe(savedUser.email)
 
-            // Verify user is now verified
+            // Verify user is now verified and active
             const updatedUser = await userRepo.findOneBy({ id: savedUser.id })
             expect(updatedUser?.isVerified).toBe(true)
+            expect(updatedUser?.isActive).toBe(true)
         })
 
         it("should fail with missing token", async () => {

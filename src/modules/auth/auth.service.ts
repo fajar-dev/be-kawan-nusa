@@ -129,10 +129,14 @@ export class AuthService {
         }
 
         user.isVerified = true
+        user.isActive = true
         await this.userService.save(user)
         await this.emailVerificationTokenRepository.deleteAllByUserId(user.id)
 
-        return true
+        const { accessToken, refreshToken } = await this.authTokenService.generateTokens(user, 'user')
+
+        const { password, ...safeUser } = user as any
+        return { user: safeUser, accessToken, refreshToken }
     }
 
     async resendVerification(data: ResendVerificationValidator) {

@@ -979,8 +979,8 @@ paths:
 
   /auth/verify-email:
     get:
-      summary: Verify email address
-      description: "Verify the user's email using the token sent via email. Sets isVerified=true."
+      summary: Verify email and auto-login
+      description: "Verify the user's email using the token sent via email. Sets isVerified=true, isActive=true, and returns auth tokens for auto-login."
       tags: [Auth]
       parameters:
         - name: token
@@ -990,14 +990,25 @@ paths:
           description: "Email verification token"
       responses:
         "200":
-          description: Email verified successfully
+          description: Email verified and logged in successfully
           content:
             application/json:
               example:
                 success: true
                 statusCode: 200
                 message: "Email verified successfully"
-                data: null
+                data:
+                  user:
+                    id: 1
+                    name: "John Doe"
+                    photo: null
+                    email: "john@example.com"
+                    phone: "081234567890"
+                    isActive: true
+                    isBoarding: false
+                    role: "user"
+                  accessToken: "eyJhbGciOiJIUzI1NiIs..."
+                  refreshToken: "eyJhbGciOiJIUzI1NiIs..."
         "400":
           description: Invalid/expired token or already verified
           content:
