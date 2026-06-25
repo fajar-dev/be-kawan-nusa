@@ -6,6 +6,7 @@ export const config = {
     app: {
         port: Number(process.env.PORT) || 3000,
         appUrl: process.env.APP_URL || 'http://localhost:4000',
+        apiUrl: process.env.API_URL || 'http://localhost:3000',
         env: process.env.NODE_ENV || 'development',
         jwtSecret: process.env.JWT_SECRET || 'supersecretkey',
         jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'superrefreshsecretkey',

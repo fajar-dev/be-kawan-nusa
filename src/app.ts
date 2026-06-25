@@ -26,6 +26,7 @@ export function createApp(): Hono {
 
     // Swagger UI
     app.get('/api/swagger.yaml', serveStatic({ path: './swagger.yaml' }))
+    app.get('/public/*', serveStatic({ root: './' }))
     app.get('/api/docs', swaggerUI({ url: '/api/swagger.yaml' }))
 
     // Global Error Handler
