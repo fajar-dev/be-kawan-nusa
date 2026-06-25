@@ -325,16 +325,8 @@ export class AuthService {
         return true
     }
 
-    private isEmail(identifier: string): boolean {
-        return identifier.includes('@')
-    }
-
-    private generateOtpCode(): string {
-        return Math.floor(100000 + Math.random() * 900000).toString()
-    }
-
     async sendOtp(data: SendOtpValidator) {
-        const isEmail = this.isEmail(data.identifier)
+        const isEmail = data.identifier.includes('@')
         const user = await this.userService.getByIdentifier(data.identifier)
         if (!user) {
             throw new BadRequestException("User not found")
@@ -348,11 +340,8 @@ export class AuthService {
             throw new BadRequestException("Account is inactive")
         }
 
-        // Delete existing OTP tokens
-        await this.otpTokenRepository.deleteAllByUserId(user.id)
-
         // Generate 6-digit OTP code
-        const code = this.generateOtpCode()
+        const code = Math.floor(100000 + Math.random() * 900000).toString()
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
 
         await this.otpTokenRepository.create(user.id, code, expiresAt)
