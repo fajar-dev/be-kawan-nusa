@@ -7,6 +7,7 @@ import { ApiResponse } from './core/helpers/response'
 import { BaseException, ValidatorException } from './core/exceptions/base'
 import { ZodError } from 'zod'
 import { config } from './config/config'
+import { logError } from './core/helpers/logger'
 
 export function createApp(): Hono {
     const app = new Hono()
@@ -44,7 +45,7 @@ export function createApp(): Hono {
             return ApiResponse.error(c, err.message, err.status, err.context)
         }
 
-        console.error("error: ", err.message)
+        logError(err, { method: c.req.method, path: c.req.path })
 
         const errors = config.app.env !== "production" ? { 
             message: err.message, 

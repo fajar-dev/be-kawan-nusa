@@ -1433,6 +1433,93 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 
+  /auth/otp/send:
+    post:
+      summary: Send OTP code for login
+      description: "Sends a 6-digit OTP code to the user's email or phone. If identifier contains '@', sends via email. Otherwise, logs to console (phone not yet implemented)."
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier]
+              properties:
+                identifier:
+                  type: string
+                  description: "Email address or phone number"
+                  example: "user@example.com"
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "OTP sent successfully"
+                data:
+                  type: "email"
+        "400":
+          description: User not found, not verified, or inactive
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "User not found"
+
+  /auth/otp/verify:
+    post:
+      summary: Verify OTP code and login
+      description: "Verifies the OTP code and returns auth tokens for auto-login. OTP codes expire after 5 minutes."
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier, code]
+              properties:
+                identifier:
+                  type: string
+                  description: "Email address or phone number used to request OTP"
+                  example: "user@example.com"
+                code:
+                  type: string
+                  description: "6-digit OTP code"
+                  example: "123456"
+      responses:
+        "200":
+          description: OTP verified, logged in successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Logged in successfully"
+                data:
+                  user:
+                    id: 1
+                    name: "John Doe"
+                    email: "user@example.com"
+                    phone: "081234567890"
+                    isActive: true
+                    isBoarding: false
+                    role: "user"
+                  accessToken: "eyJhbGciOiJIUzI1NiIs..."
+                  refreshToken: "eyJhbGciOiJIUzI1NiIs..."
+        "400":
+          description: Invalid or expired OTP code
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: "Invalid or expired OTP code"
+
   # =============================================
   # PROFILE ROUTES
   # =============================================

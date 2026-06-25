@@ -9,6 +9,8 @@ import {
     RefreshTokenValidator,
     GoogleLoginValidator,
     ResendVerificationValidator,
+    SendOtpValidator,
+    VerifyOtpValidator,
 } from "./validators/auth.validator"
 import { AuthSerializer } from "./serializers/auth.serialize"
 import { BadRequestException } from "../../core/exceptions/base"
@@ -117,5 +119,21 @@ export class AuthController {
         const body = await c.req.json() as ResetPasswordValidator
         await this.service.resetPassword(body)
         return ApiResponse.success(c, null, "Password has been successfully reset")
+    }
+
+    async sendOtp(c: Context) {
+        const body = await c.req.json() as SendOtpValidator
+        const data = await this.service.sendOtp(body)
+        return ApiResponse.success(c, data, "OTP sent successfully")
+    }
+
+    async verifyOtp(c: Context) {
+        const body = await c.req.json() as VerifyOtpValidator
+        const data = await this.service.verifyOtp(body)
+        return ApiResponse.success(c, {
+            user: await AuthSerializer.single(data.user as any, 'user'),
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+        }, "Logged in successfully")
     }
 }

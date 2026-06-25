@@ -671,5 +671,99 @@ describe("Auth Module", () => {
             expect(res.status).toBe(401)
         })
     })
+
+    describe("POST /auth/otp/send", () => {
+        it("should send OTP to email", async () => {
+            const res = await request("/auth/otp/send", {
+                method: "POST",
+                body: { identifier: testUser.email },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+            expect(res.body.data.type).toBe("email")
+        })
+
+        it("should send OTP to phone", async () => {
+            const res = await request("/auth/otp/send", {
+                method: "POST",
+                body: { identifier: testUser.phone },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+            expect(res.body.data.type).toBe("phone")
+        })
+
+        it("should fail with non-existent user", async () => {
+            const res = await request("/auth/otp/send", {
+                method: "POST",
+                body: { identifier: "nonexistent@example.com" },
+            })
+            expect(res.status).toBe(400)
+        })
+
+        it("should fail with missing identifier", async () => {
+            const res = await request("/auth/otp/send", {
+                method: "POST",
+                body: {},
+            })
+            expect(res.status).toBe(422)
+        })
+    })
+
+    describe("POST /auth/otp/verify", () => {
+        it("should verify OTP and return auth tokens", async () => {
+            // Create OTP token directly
+            const otpRepo = AppDataSource.getRepository("OtpToken")
+            await otpRepo.delete({ userId: testUser.id })
+            await otpRepo.save({
+                userId: testUser.id,
+                code: "123456",
+                expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+            })
+
+            const res = await request("/auth/otp/verify", {
+                method: "POST",
+                body: { identifier: testUser.email, code: "123456" },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+            expect(res.body.data.accessToken).toBeDefined()
+            expect(res.body.data.refreshToken).toBeDefined()
+            expect(res.body.data.user).toBeDefined()
+            expect(res.body.data.user.email).toBe(testUser.email)
+        })
+
+        it("should fail with invalid OTP code", async () => {
+            const res = await request("/auth/otp/verify", {
+                method: "POST",
+                body: { identifier: testUser.email, code: "999999" },
+            })
+            expect(res.status).toBe(400)
+        })
+
+        it("should fail with expired OTP", async () => {
+            const otpRepo = AppDataSource.getRepository("OtpToken")
+            await otpRepo.delete({ userId: testUser.id })
+            await otpRepo.save({
+                userId: testUser.id,
+                code: "654321",
+                expiresAt: new Date(Date.now() - 1000), // expired
+            })
+
+            const res = await request("/auth/otp/verify", {
+                method: "POST",
+                body: { identifier: testUser.email, code: "654321" },
+            })
+            expect(res.status).toBe(400)
+        })
+
+        it("should fail with missing fields", async () => {
+            const res = await request("/auth/otp/verify", {
+                method: "POST",
+                body: {},
+            })
+            expect(res.status).toBe(422)
+        })
+    })
 })
 

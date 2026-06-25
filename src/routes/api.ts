@@ -2,7 +2,7 @@ import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 
 // ── Validators ──────────────────────────────────────────────────────────────
-import { LoginValidator, ForgotPasswordValidator, ResetPasswordValidator, RefreshTokenValidator, GoogleLoginSchema, ResendVerificationValidator } from "../modules/auth/validators/auth.validator"
+import { LoginValidator, ForgotPasswordValidator, ResetPasswordValidator, RefreshTokenValidator, GoogleLoginSchema, ResendVerificationValidator, SendOtpValidator, VerifyOtpValidator } from "../modules/auth/validators/auth.validator"
 import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator, UpdatePhotoValidator } from "../modules/profile/validators/profile.validator"
 import { CreateCashRedemptionValidator, CreateRedemptionVoucherValidator, CreateRedemptionProductValidator, ProcessProductRedemptionValidator, ProcessVoucherRedemptionValidator } from "../modules/redemption/validators/redemption.validator"
 import { CreateRewardValidator } from "../modules/reward/validators/reward.validator"
@@ -54,6 +54,8 @@ routes.post("/auth/reset-password", zValidator("json", ResetPasswordValidator, v
 routes.post("/auth/refresh", zValidator("json", RefreshTokenValidator, validationHook), (c) => authController.refreshToken(c))
 routes.get("/auth/me", authMiddleware, (c) => authController.me(c))
 routes.post("/auth/logout", authMiddleware, (c) => authController.logout(c))
+routes.post("/auth/otp/send", zValidator("json", SendOtpValidator, validationHook), (c) => authController.sendOtp(c))
+routes.post("/auth/otp/verify", zValidator("json", VerifyOtpValidator, validationHook), (c) => authController.verifyOtp(c))
 
 // Profile
 routes.get("/profile", authMiddleware, roleMiddleware('user'), (c) => profileController.show(c))

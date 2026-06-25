@@ -72,3 +72,16 @@ export const ResendVerificationValidator = z.object({
 })
 
 export type ResendVerificationValidator = z.infer<typeof ResendVerificationValidator>
+
+export const SendOtpValidator = z.object({
+  identifier: z.string().min(1, "Email or phone is required"),
+})
+
+export type SendOtpValidator = z.infer<typeof SendOtpValidator>
+
+export const VerifyOtpValidator = z.object({
+  identifier: z.string().min(1, "Email or phone is required"),
+  code: z.string().min(6, "OTP code must be 6 digits").max(6, "OTP code must be 6 digits"),
+})
+
+export type VerifyOtpValidator = z.infer<typeof VerifyOtpValidator>

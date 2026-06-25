@@ -25,6 +25,7 @@ import { Template } from "../modules/template/entities/template.entity"
 import { Employee } from "../modules/employee/entities/employee.entity"
 import { PasswordResetToken } from "../modules/auth/entities/password-reset-token.entity"
 import { EmailVerificationToken } from "../modules/auth/entities/email-verification-token.entity"
+import { OtpToken } from "../modules/auth/entities/otp-token.entity"
 import { config } from "./config"
 
 /**
@@ -39,7 +40,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, PasswordResetToken, EmailVerificationToken],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Reward, Catalog, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, PasswordResetToken, EmailVerificationToken, OtpToken],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

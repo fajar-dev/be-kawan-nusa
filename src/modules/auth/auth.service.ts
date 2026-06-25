@@ -9,6 +9,8 @@ import {
     RefreshTokenValidator,
     GoogleLoginValidator,
     ResendVerificationValidator,
+    SendOtpValidator,
+    VerifyOtpValidator,
 } from "./validators/auth.validator"
 import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
@@ -24,6 +26,7 @@ import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
 import { Mail } from "../../core/helpers/mail"
 import { IPasswordResetTokenRepository } from "./interfaces/password-reset-token.repository.interface"
 import { IEmailVerificationTokenRepository } from "./interfaces/email-verification-token.repository.interface"
+import { IOtpTokenRepository } from "./interfaces/otp-token.repository.interface"
 
 export class AuthService {
     constructor(
@@ -34,6 +37,7 @@ export class AuthService {
         private readonly mailHelper: Mail,
         private readonly passwordResetTokenRepository: IPasswordResetTokenRepository,
         private readonly emailVerificationTokenRepository: IEmailVerificationTokenRepository,
+        private readonly otpTokenRepository: IOtpTokenRepository,
     ) {}
 
     async register(data: RegisterValidator) {
@@ -319,6 +323,77 @@ export class AuthService {
 
     async logout(_user: User) {
         return true
+    }
+
+    private isEmail(identifier: string): boolean {
+        return identifier.includes('@')
+    }
+
+    private generateOtpCode(): string {
+        return Math.floor(100000 + Math.random() * 900000).toString()
+    }
+
+    async sendOtp(data: SendOtpValidator) {
+        const isEmail = this.isEmail(data.identifier)
+        const user = await this.userService.getByIdentifier(data.identifier)
+        if (!user) {
+            throw new BadRequestException("User not found")
+        }
+
+        if (!user.isVerified) {
+            throw new BadRequestException("Please verify your email first")
+        }
+
+        if (!user.isActive) {
+            throw new BadRequestException("Account is inactive")
+        }
+
+        // Delete existing OTP tokens
+        await this.otpTokenRepository.deleteAllByUserId(user.id)
+
+        // Generate 6-digit OTP code
+        const code = this.generateOtpCode()
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+
+        await this.otpTokenRepository.create(user.id, code, expiresAt)
+
+        if (isEmail) {
+            const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || "User"
+            const templatePath = path.join(process.cwd(), "public/templates/otp-login.html")
+            const html = fs.readFileSync(templatePath, "utf8")
+                .replace(/{{name}}/g, name)
+                .replace(/{{code}}/g, code)
+
+            this.mailHelper.sendHtml(user.email!, "Kode OTP Login", html).catch((err) => {
+                console.error(`[Mail] Failed to send OTP email to ${user.email}:`, err)
+            })
+        } else {
+            console.log(`[OTP] Code for ${data.identifier}: ${code}`)
+        }
+
+        return { type: isEmail ? 'email' : 'phone' }
+    }
+
+    async verifyOtp(data: VerifyOtpValidator) {
+        const user = await this.userService.getByIdentifier(data.identifier)
+        if (!user) {
+            throw new BadRequestException("User not found")
+        }
+
+        const otpToken = await this.otpTokenRepository.findValidToken(user.id, data.code)
+        if (!otpToken) {
+            throw new BadRequestException("Invalid or expired OTP code")
+        }
+
+        await this.otpTokenRepository.deleteAllByUserId(user.id)
+
+        const { accessToken, refreshToken } = await this.authTokenService.generateTokens(user, 'user')
+
+        user.lastLoginAt = new Date()
+        await this.userService.save({ id: user.id, lastLoginAt: user.lastLoginAt })
+
+        const { password, ...safeUser } = user as any
+        return { user: safeUser, accessToken, refreshToken }
     }
 }
 
