@@ -25,14 +25,6 @@ export function createApp(): Hono {
     app.get('/api/swagger.yaml', serveStatic({ path: './swagger.yaml' }))
     app.get('/api/docs', swaggerUI({ url: '/api/swagger.yaml' }))
 
-    // Static Files
-    app.get('/api/uploads/*', (c, next) => {
-        return serveStatic({ 
-            root: './public', 
-            path: c.req.path.replace(/^\/api/, '') 
-        })(c, next)
-    })
-
     // Global Error Handler
     app.onError((err, c) => {
         if (err instanceof ZodError) {

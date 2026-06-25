@@ -38,12 +38,21 @@ export class FeedbackService {
     }
 
     async getByUser(userId: number, source: string): Promise<FeedbackItem[]> {
-        const response = await fetch(config.feedback.scriptUrl)
-        if (!response.ok) {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 3000)
+
+        try {
+            const response = await fetch(config.feedback.scriptUrl, { signal: controller.signal })
+            clearTimeout(timeout)
+            if (!response.ok) {
+                return []
+            }
+
+            const data = await response.json() as FeedbackItem[]
+            return data.filter((item) => String(item.userId) === String(userId) && item.source === source)
+        } catch {
+            clearTimeout(timeout)
             return []
         }
-
-        const data = await response.json() as FeedbackItem[]
-        return data.filter((item) => String(item.userId) === String(userId) && item.source === source)
     }
 }
