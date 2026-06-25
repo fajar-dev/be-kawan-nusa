@@ -27,6 +27,7 @@ import { Mail } from "../../core/helpers/mail"
 import { IPasswordResetTokenRepository } from "./interfaces/password-reset-token.repository.interface"
 import { IEmailVerificationTokenRepository } from "./interfaces/email-verification-token.repository.interface"
 import { IOtpTokenRepository } from "./interfaces/otp-token.repository.interface"
+import { NusaContactHelper } from "../../core/helpers/nusacontact"
 
 export class AuthService {
     constructor(
@@ -38,6 +39,7 @@ export class AuthService {
         private readonly passwordResetTokenRepository: IPasswordResetTokenRepository,
         private readonly emailVerificationTokenRepository: IEmailVerificationTokenRepository,
         private readonly otpTokenRepository: IOtpTokenRepository,
+        private readonly nusaContactHelper: NusaContactHelper,
     ) {}
 
     async register(data: RegisterValidator) {
@@ -357,7 +359,10 @@ export class AuthService {
                 console.error(`[Mail] Failed to send OTP email to ${user.email}:`, err)
             })
         } else {
-            console.log(`[OTP] Code for ${data.identifier}: ${code}`)
+            const phone = user.phone?.replace(/^(\+62|62|0)/, '62') || ''
+            this.nusaContactHelper.sendOTP(phone, code).catch((err) => {
+                console.error(`[NusaContact] Failed to send OTP to ${user.phone}:`, err)
+            })
         }
 
         return { type: isEmail ? 'email' : 'phone' }

@@ -50,6 +50,11 @@ export const config = {
         clientId: process.env.NUSAWORK_CLIENT_ID || '',
         clientSecret: process.env.NUSAWORK_CLIENT_SECRET || '',
     },
+    nusaContact: {
+        apiUrl: process.env.NUSACONTACT_API_URL || '',
+        apiKey: process.env.NUSACONTACT_API_KEY || '',
+        phoneId: process.env.NUSACONTACT_PHONE_ID || '',
+    },
     minio: {
         endPoint: process.env.MINIO_ENDPOINT || '127.0.0.1',
         port: Number(process.env.MINIO_PORT) || 9000,
