@@ -34,11 +34,6 @@ export const config = {
         clientId: process.env.GOOGLE_CLIENT_ID || '',
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     },
-    googleSheet: {
-        serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '',
-        privateKey: (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID || '',
-    },
     nis: {
         host: process.env.NIS_DB_HOST || '127.0.0.1',
         port: Number(process.env.NIS_DB_PORT) || 3306,
