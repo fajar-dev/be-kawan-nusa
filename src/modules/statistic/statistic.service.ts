@@ -139,7 +139,7 @@ export class StatisticService {
         return result
     }
 
-    async getRedemptionRewardStats(userId: number) {
+    async getRedemptionPointStats(userId: number) {
         const types = [RedemptionType.PRODUCT, RedemptionType.VOUCHER]
         const rawData = await this.repository.getRedemptionStatusCounts(userId, types)
 

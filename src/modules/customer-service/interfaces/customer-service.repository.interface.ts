@@ -17,7 +17,7 @@ export interface CustomerServiceByCustomerFilters {
 
 export interface CustomerServiceWithStats extends CustomerService {
     totalPoint: number
-    latestReward: any
+    latestPoint: any
 }
 
 export interface ICustomerServiceRepository {

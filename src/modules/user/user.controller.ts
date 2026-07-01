@@ -139,18 +139,18 @@ export class UserController {
         const userId = Number(c.req.param("id"))
         const type = c.req.query("type") || "yearly"
 
-        const [count, pointPerMonth, customerStats, redemptionRewardStats] = await Promise.all([
+        const [count, pointPerMonth, customerStats, redemptionPointStats] = await Promise.all([
             this.statisticService.getCount(userId),
             this.statisticService.getMonthlyPoints(userId),
             this.statisticService.getCustomerStatistics(userId, type),
-            this.statisticService.getRedemptionRewardStats(userId),
+            this.statisticService.getRedemptionPointStats(userId),
         ])
 
         return ApiResponse.success(c, {
             count,
             pointPerMonth,
             customerStats,
-            redemptionRewardStats,
+            redemptionPointStats,
         }, "User statistics retrieved successfully")
     }
 }

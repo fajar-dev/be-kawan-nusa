@@ -50,9 +50,9 @@ describe("Additional Module", () => {
         })
     })
 
-    describe("GET /additional/reward-point-type", () => {
-        it("should return reward point types", async () => {
-            const res = await authRequest("/additional/reward-point-type", userToken)
+    describe("GET /additional/point-type", () => {
+        it("should return point types", async () => {
+            const res = await authRequest("/additional/point-type", userToken)
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
         })

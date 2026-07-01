@@ -78,9 +78,9 @@ describe("Customer Module", () => {
         })
     })
 
-    describe("GET /customer/:id/reward", () => {
-        it("should return empty rewards for non-existent customer", async () => {
-            const res = await authRequest("/customer/999999/reward", userToken)
+    describe("GET /customer/:id/point", () => {
+        it("should return empty points for non-existent customer", async () => {
+            const res = await authRequest("/customer/999999/point", userToken)
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
         })

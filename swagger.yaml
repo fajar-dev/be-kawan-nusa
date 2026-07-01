@@ -337,7 +337,7 @@ components:
             name: { type: string, example: "Warnet Jaya" }
             company: { type: string, example: "CV Jaya Abadi" }
         totalPoint: { type: number, example: 1500 }
-        latestReward:
+        latestPoint:
           nullable: true
           type: object
           properties:
@@ -1843,7 +1843,7 @@ paths:
   # =============================================
   # REWARD ROUTES
   # =============================================
-  /reward:
+  /point/reward:
     get:
       summary: List reward transactions (paginated)
       tags: [Point]
@@ -2942,7 +2942,7 @@ paths:
                       name: "Fiber Home 20 Mbps"
                       type: "Internet"
                     totalPoint: 1500
-                    latestReward:
+                    latestPoint:
                       point: 500
                       type: "OTP"
                       createdAt: "2024-03-01T09:00:00.000Z"
@@ -2968,7 +2968,7 @@ paths:
         - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
-          description: "Sort field (e.g. referenceDate, registrationDate, activationDate, totalPoint, latestReward.point)"
+          description: "Sort field (e.g. referenceDate, registrationDate, activationDate, totalPoint, latestPoint.point)"
           schema: { type: string, default: "referenceDate" }
         - $ref: "#/components/parameters/OrderParam"
         - name: startRegistration
@@ -3024,7 +3024,7 @@ paths:
                       name: "Fiber Home 20 Mbps"
                       type: "Internet"
                     totalPoint: 1500
-                    latestReward:
+                    latestPoint:
                       point: 500
                       type: "OTP"
                       createdAt: "2024-03-01T09:00:00.000Z"
@@ -3040,7 +3040,7 @@ paths:
         "404":
           $ref: "#/components/responses/NotFoundResponse"
 
-  /customer/{id}/reward:
+  /customer/{id}/point:
     get:
       summary: Get reward transactions for a specific customer (paginated)
       tags: [Customer]
@@ -3331,14 +3331,14 @@ paths:
         - $ref: "#/components/parameters/SearchParam"
         - name: sort
           in: query
-          description: "Sort field (e.g. referenceDate, registrationDate, totalPoint, latestReward.point, latestReward.type)"
+          description: "Sort field (e.g. referenceDate, registrationDate, totalPoint, latestPoint.point, latestPoint.type)"
           schema: { type: string, default: "referenceDate" }
         - $ref: "#/components/parameters/OrderParam"
         - $ref: "#/components/parameters/StartDateParam"
         - $ref: "#/components/parameters/EndDateParam"
         - name: "type[]"
           in: query
-          description: "Filter by latest reward type (repeatable)"
+          description: "Filter by latest point type (repeatable)"
           schema:
             type: array
             items: { type: string, enum: ["OTP", "Bulanan", "Cashback"] }
@@ -3382,7 +3382,7 @@ paths:
                       name: "Fiber Home 20 Mbps"
                       type: "Internet"
                     totalPoint: 1500
-                    latestReward:
+                    latestPoint:
                       point: 500
                       type: "OTP"
                       createdAt: "2024-03-01T09:00:00.000Z"
@@ -4428,7 +4428,7 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 
-  /statistic/redemption-reward:
+  /statistic/redemption-point:
     get:
       summary: Get redemption status breakdown for voucher and product redemptions
       tags: [Statistic]
@@ -4535,7 +4535,7 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 
-  /additional/reward-point-type:
+  /additional/point-type:
     get:
       summary: List all reward point types (for dropdowns/filters)
       tags: [Additional]
@@ -4802,7 +4802,7 @@ paths:
                 statusCode: 403
                 message: "Forbidden access: admin only"
 
-  /user/{id}/reward:
+  /user/{id}/point:
     get:
       summary: List rewards for a user
       description: "Retrieve paginated reward point transactions for a specific user. Admin only."
@@ -4903,7 +4903,7 @@ paths:
   /user/{id}/statistic:
     get:
       summary: Get statistics for a user
-      description: "Retrieve combined statistics (count, monthly points, customer stats, redemption/reward stats) for a specific user. Admin only."
+      description: "Retrieve combined statistics (count, monthly points, customer stats, redemption/point stats) for a specific user. Admin only."
       tags: [User]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -4945,7 +4945,7 @@ paths:
                               properties:
                                 label: { type: string, example: "Januari" }
                                 count: { type: integer, example: 10 }
-                          redemptionRewardStats:
+                          redemptionPointStats:
                             type: array
                             items:
                               type: object

@@ -28,10 +28,10 @@ export class CustomerServiceSerializer {
                 company: item.customer.company,
             } : null,
             totalPoint: (item as any).totalPoint ?? 0,
-            latestReward: (item as any).latestReward ? {
-                point: Number((item as any).latestReward.point),
-                type: (item as any).latestReward.type,
-                createdAt: (item as any).latestReward.createdAt
+            latestPoint: (item as any).latestPoint ? {
+                point: Number((item as any).latestPoint.point),
+                type: (item as any).latestPoint.type,
+                createdAt: (item as any).latestPoint.createdAt
             } : null
         }
     }

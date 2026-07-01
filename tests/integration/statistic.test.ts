@@ -56,9 +56,9 @@ describe("Statistic Module", () => {
         })
     })
 
-    describe("GET /statistic/redemption-reward", () => {
-        it("should return redemption reward stats", async () => {
-            const res = await authRequest("/statistic/redemption-reward", userToken)
+    describe("GET /statistic/redemption-point", () => {
+        it("should return redemption point stats", async () => {
+            const res = await authRequest("/statistic/redemption-point", userToken)
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
         })

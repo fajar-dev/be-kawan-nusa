@@ -16,20 +16,20 @@ describe("Point Module (Reward)", () => {
         if (testUser?.id) await cleanupTestUser(testUser.id)
     })
 
-    describe("GET /reward", () => {
+    describe("GET /point/reward", () => {
         it("should return rewards list", async () => {
-            const res = await authRequest("/reward", userToken)
+            const res = await authRequest("/point/reward", userToken)
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
         })
 
         it("should support pagination", async () => {
-            const res = await authRequest("/reward?page=1&limit=5", userToken)
+            const res = await authRequest("/point/reward?page=1&limit=5", userToken)
             expect(res.status).toBe(200)
         })
 
         it("should fail without auth", async () => {
-            const res = await request("/reward")
+            const res = await request("/point/reward")
             expect(res.status).toBe(401)
         })
     })

@@ -29,9 +29,9 @@ export class StatisticController {
         return ApiResponse.success(c, data, `Customer ${type} statistics retrieved successfully`)
     }
 
-    async redemptionRewardStats(c: Context) {
+    async redemptionPointStats(c: Context) {
         const user = c.get("user")
-        const data = await this.service.getRedemptionRewardStats(user.id)
-        return ApiResponse.success(c, data, "Redemption reward statistics retrieved successfully")
+        const data = await this.service.getRedemptionPointStats(user.id)
+        return ApiResponse.success(c, data, "Redemption point statistics retrieved successfully")
     }
 }

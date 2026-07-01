@@ -101,15 +101,15 @@ describe("User Module (Admin)", () => {
         })
     })
 
-    describe("GET /user/:id/reward", () => {
-        it("should return user rewards as admin", async () => {
-            const res = await authRequest(`/user/${testUser.id}/reward`, adminToken)
+    describe("GET /user/:id/point", () => {
+        it("should return user points as admin", async () => {
+            const res = await authRequest(`/user/${testUser.id}/point`, adminToken)
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
         })
 
         it("should support pagination", async () => {
-            const res = await authRequest(`/user/${testUser.id}/reward?page=1&limit=5`, adminToken)
+            const res = await authRequest(`/user/${testUser.id}/point?page=1&limit=5`, adminToken)
             expect(res.status).toBe(200)
         })
     })

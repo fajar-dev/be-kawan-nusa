@@ -27,13 +27,13 @@ export class CustomerServiceRepository implements ICustomerServiceRepository {
             return {
                 ...item,
                 totalPoint: (item.rewards || []).reduce((sum, r) => sum + Number(r.point), 0),
-                latestReward: sortedRewards[0] || null,
+                latestPoint: sortedRewards[0] || null,
             }
         })
     }
 
     private applyRewardSort(query: any, sort: string, order: string) {
-        if (sort === "latestReward.point" || sort === "latestReward.type") {
+        if (sort === "latestPoint.point" || sort === "latestPoint.type") {
             const field = sort.split(".")[1]
             query.addSelect(
                 (subQuery: any) =>

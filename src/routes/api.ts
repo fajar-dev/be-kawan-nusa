@@ -92,7 +92,7 @@ routes.post("/redemption/product", authMiddleware, roleMiddleware('user'), zVali
 routes.get("/customer", authMiddleware, roleMiddleware('user'), (c) => customerController.index(c))
 routes.get("/customer/:id", authMiddleware, roleMiddleware('user'), (c) => customerController.show(c))
 routes.get("/customer/:id/service", authMiddleware, roleMiddleware('user'), (c) => customerServiceController.byCustomer(c))
-routes.get("/customer/:id/reward", authMiddleware, roleMiddleware('user'), (c) => pointController.byCustomer(c))
+routes.get("/customer/:id/point", authMiddleware, roleMiddleware('user'), (c) => pointController.byCustomer(c))
 
 // Service Promotion
 routes.get("/service/promotion", authMiddleware, (c) => servicePromotionController.index(c))
@@ -117,15 +117,15 @@ routes.get("/service/:code/customer", authMiddleware, roleMiddleware('user'), (c
 // Customer Service
 routes.get("/customer-service", authMiddleware, roleMiddleware('user'), (c) => customerServiceController.index(c))
 
-// Reward
-routes.get("/reward", authMiddleware, roleMiddleware('user'), (c) => pointController.index(c))
-routes.post("/reward", apiKeyMiddleware, roleMiddleware('admin'), zValidator("json", CreatePointValidator, validationHook), (c) => pointController.store(c))
+// Point (Reward)
+routes.get("/point/reward", authMiddleware, roleMiddleware('user'), (c) => pointController.index(c))
+routes.post("/point/reward", apiKeyMiddleware, roleMiddleware('admin'), zValidator("json", CreatePointValidator, validationHook), (c) => pointController.store(c))
 
 // Statistic
 routes.get("/statistic/count", authMiddleware, roleMiddleware('user'), (c) => statisticController.count(c))
 routes.get("/statistic/point", authMiddleware, roleMiddleware('user'), (c) => statisticController.pointPerMonth(c))
 routes.get("/statistic/customer", authMiddleware, roleMiddleware('user'), (c) => statisticController.customerStats(c))
-routes.get("/statistic/redemption-reward", authMiddleware, roleMiddleware('user'), (c) => statisticController.redemptionRewardStats(c))
+routes.get("/statistic/redemption-point", authMiddleware, roleMiddleware('user'), (c) => statisticController.redemptionPointStats(c))
 routes.get("/statistic/admin/summary", authMiddleware, roleMiddleware('admin'), (c) => statisticController.adminSummary(c))
 
 // Catalog Category
@@ -170,7 +170,7 @@ routes.post("/feedback", authMiddleware, zValidator("form", StoreFeedbackValidat
 routes.get("/user", authMiddleware, roleMiddleware('admin'), (c) => userController.index(c))
 routes.get("/user/:id", authMiddleware, roleMiddleware('admin'), (c) => userController.show(c))
 routes.get("/user/:id/services", authMiddleware, roleMiddleware('admin'), (c) => userController.services(c))
-routes.get("/user/:id/reward", authMiddleware, roleMiddleware('admin'), (c) => userController.rewards(c))
+routes.get("/user/:id/point", authMiddleware, roleMiddleware('admin'), (c) => userController.rewards(c))
 routes.get("/user/:id/redeem", authMiddleware, roleMiddleware('admin'), (c) => userController.redemptions(c))
 routes.get("/user/:id/statistic", authMiddleware, roleMiddleware('admin'), (c) => userController.statistic(c))
 
@@ -178,7 +178,7 @@ routes.get("/user/:id/statistic", authMiddleware, roleMiddleware('admin'), (c) =
 routes.get("/additional/service", authMiddleware, (c) => additionalController.getServices(c))
 routes.get("/additional/customer-type", authMiddleware, (c) => additionalController.getCustomerTypes(c))
 routes.get("/additional/customer-service-status", authMiddleware, (c) => additionalController.getCustomerServiceStatus(c))
-routes.get("/additional/reward-point-type", authMiddleware, (c) => additionalController.getPointTypes(c))
+routes.get("/additional/point-type", authMiddleware, (c) => additionalController.getPointTypes(c))
 routes.get("/additional/service-category", authMiddleware, (c) => additionalController.getServiceCategories(c))
 routes.get("/additional/search", authMiddleware, (c) => additionalController.search(c))
 
