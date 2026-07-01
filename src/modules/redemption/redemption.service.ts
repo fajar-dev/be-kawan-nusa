@@ -6,6 +6,8 @@ import { RedemptionProduct } from "./entities/redemption-product.entity"
 import { RedemptionProductShipping } from "./entities/redemption-product-shipping.entity"
 import { User } from "../user/entities/user.entity"
 import { Catalog } from "../catalog/entities/catalog.entity"
+import { CatalogStockHistory } from "../catalog/entities/catalog-stock-history.entity"
+import { StockHistoryType } from "../catalog/catalog.enum"
 import { RedemptionType, RedemptionStatus, Shipper } from "./redemption.enum"
 import { PointCalculator } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
@@ -134,6 +136,24 @@ export class RedemptionService {
             const catalog = await manager.findOne(Catalog, { where: { id: catalogId } })
             if (!catalog) throw new NotFoundException("Catalog item not found")
 
+            // Check stock availability
+            if (catalog.stock <= 0) {
+                throw new BadRequestException("This catalog item is out of stock")
+            }
+            await manager.decrement(Catalog, { id: catalogId }, "stock", 1)
+            await manager.increment(Catalog, { id: catalogId }, "stockUsed", 1)
+
+            // Record stock history
+            const stockHistory = manager.create(CatalogStockHistory, {
+                catalogId,
+                type: StockHistoryType.REDEMPTION,
+                quantity: -1,
+                stockBefore: catalog.stock,
+                stockAfter: catalog.stock - 1,
+                notes: `Penukaran voucher oleh user #${userId}`,
+            })
+            await manager.save(stockHistory)
+
             const pointsUsed = Number(catalog.point)
             const availablePoints = await this.pointCalculator.getAvailablePoints(manager, userId)
             if (availablePoints < pointsUsed) {
@@ -174,6 +194,24 @@ export class RedemptionService {
 
             const catalog = await manager.findOne(Catalog, { where: { id: catalogId } })
             if (!catalog) throw new NotFoundException("Catalog item not found")
+
+            // Check stock availability
+            if (catalog.stock <= 0) {
+                throw new BadRequestException("This catalog item is out of stock")
+            }
+            await manager.decrement(Catalog, { id: catalogId }, "stock", 1)
+            await manager.increment(Catalog, { id: catalogId }, "stockUsed", 1)
+
+            // Record stock history
+            const stockHistory = manager.create(CatalogStockHistory, {
+                catalogId,
+                type: StockHistoryType.REDEMPTION,
+                quantity: -1,
+                stockBefore: catalog.stock,
+                stockAfter: catalog.stock - 1,
+                notes: `Penukaran produk oleh user #${userId}`,
+            })
+            await manager.save(stockHistory)
 
             const pointsUsed = Number(catalog.point)
             const availablePoints = await this.pointCalculator.getAvailablePoints(manager, userId)

@@ -21,6 +21,7 @@ export class CatalogRepository implements ICatalogRepository {
     ): Promise<{ data: Catalog[]; total: number }> {
         const query = this.repository.createQueryBuilder("catalog")
             .leftJoinAndSelect("catalog.category", "category")
+            .leftJoinAndSelect("catalog.createdBy", "createdBy")
             .where(new Brackets(qb => {
                 qb.where("catalog.expiredDate IS NULL")
                   .orWhere("catalog.expiredDate >= :today", { today: new Date().toISOString().split("T")[0] })
@@ -44,6 +45,7 @@ export class CatalogRepository implements ICatalogRepository {
     async findById(id: number): Promise<Catalog | null> {
         return await this.repository.createQueryBuilder("catalog")
             .leftJoinAndSelect("catalog.category", "category")
+            .leftJoinAndSelect("catalog.createdBy", "createdBy")
             .where("catalog.id = :id", { id })
             .getOne()
     }
@@ -54,5 +56,9 @@ export class CatalogRepository implements ICatalogRepository {
 
     async delete(id: number): Promise<void> {
         await this.repository.delete(id)
+    }
+
+    async incrementStockUsed(id: number, amount: number = 1): Promise<void> {
+        await this.repository.increment({ id }, "stockUsed", amount)
     }
 }

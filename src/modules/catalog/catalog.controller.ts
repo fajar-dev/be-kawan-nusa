@@ -63,6 +63,7 @@ export class CatalogController {
     }
 
     async store(c: Context) {
+        const user = c.get("user")
         const rawBody = await c.req.parseBody()
         const body = CreateCatalogValidator.parse(rawBody)
 
@@ -72,7 +73,9 @@ export class CatalogController {
             type: body.type,
             description: body.description,
             point: body.point,
+            stock: body.stock,
             expiredDate: body.expiredDate,
+            createdById: user?.id,
             imageFile: rawBody.image
         })
 
@@ -81,6 +84,7 @@ export class CatalogController {
 
     async update(c: Context) {
         const id = Number(c.req.param("id"))
+        const user = c.get("user")
         const rawBody = await c.req.parseBody()
         const body = UpdateCatalogValidator.parse(rawBody)
 
@@ -90,7 +94,9 @@ export class CatalogController {
             type: body.type,
             description: body.description,
             point: body.point,
+            stock: body.stock,
             expiredDate: body.expiredDate,
+            createdById: user?.id,
             imageFile: rawBody.image
         })
 
@@ -112,5 +118,35 @@ export class CatalogController {
 
         const url = await this.service.uploadImage(file)
         return ApiResponse.success(c, { url }, "Image uploaded successfully")
+    }
+
+    async stockHistory(c: Context) {
+        const catalogId = Number(c.req.param("id"))
+        const page = Number(c.req.query("page")) || 1
+        const limit = Number(c.req.query("limit")) || 10
+
+        const catalog = await this.service.getById(catalogId)
+        if (!catalog) {
+            return ApiResponse.error(c, "Catalog item not found", 404)
+        }
+
+        const { data, total } = await this.service.getStockHistory(catalogId, page, limit)
+
+        const serialized = data.map(item => ({
+            id: item.id,
+            catalogId: item.catalogId,
+            type: item.type,
+            quantity: item.quantity,
+            stockBefore: item.stockBefore,
+            stockAfter: item.stockAfter,
+            notes: item.notes,
+            createdBy: item.createdBy ? {
+                id: item.createdBy.id,
+                name: item.createdBy.name,
+            } : null,
+            createdAt: item.createdAt,
+        }))
+
+        return ApiResponse.paginate(c, serialized, total, page, limit, "Stock history retrieved successfully")
     }
 }

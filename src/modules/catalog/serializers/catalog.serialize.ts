@@ -19,11 +19,18 @@ export class CatalogSerializer {
             description: item.description,
             point: Number(item.point),
             image: await this.resolvePhotoUrl(item.image),
+            stock: Number(item.stock) || 0,
+            stockUsed: Number(item.stockUsed) || 0,
             expiredDate: item.expiredDate,
             category: item.category ? {
                 id: item.category.id,
                 name: item.category.name
-            } : null
+            } : null,
+            createdBy: item.createdBy ? {
+                id: item.createdBy.id,
+                name: item.createdBy.name,
+                employeeId: item.createdBy.employeeId,
+            } : null,
         }
     }
 

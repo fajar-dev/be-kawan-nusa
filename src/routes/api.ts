@@ -137,6 +137,7 @@ routes.delete("/catalog/category/:id", authMiddleware, roleMiddleware('admin'), 
 // Catalog
 routes.get("/catalog", authMiddleware, (c) => catalogController.index(c))
 routes.get("/catalog/:id", authMiddleware, (c) => catalogController.show(c))
+routes.get("/catalog/:id/stock-history", authMiddleware, roleMiddleware('admin'), (c) => catalogController.stockHistory(c))
 routes.post("/catalog", authMiddleware, roleMiddleware('admin'), (c) => catalogController.store(c))
 routes.put("/catalog/:id", authMiddleware, roleMiddleware('admin'), (c) => catalogController.update(c))
 routes.delete("/catalog/:id", authMiddleware, roleMiddleware('admin'), (c) => catalogController.destroy(c))

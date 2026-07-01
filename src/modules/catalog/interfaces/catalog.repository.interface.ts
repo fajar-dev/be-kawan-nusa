@@ -16,4 +16,6 @@ export interface ICatalogRepository {
     save(catalog: Catalog): Promise<Catalog>
 
     delete(id: number): Promise<void>
+
+    incrementStockUsed(id: number, amount?: number): Promise<void>
 }
