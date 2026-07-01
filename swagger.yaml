@@ -587,7 +587,9 @@ components:
       type: object
       properties:
         id: { type: integer, example: 5 }
+        categoryId: { type: integer, example: 2 }
         name: { type: string, example: "Voucher Tokopedia 50K" }
+        type: { type: string, enum: ["product", "voucher"], example: "voucher" }
         description:
           {
             type: string,
@@ -599,12 +601,39 @@ components:
             type: string,
             example: "https://cdn.example.com/voucher-tokopedia.jpg",
           }
-        type: { type: string, example: "voucher" }
+        stock: { type: integer, example: 47, description: "Sisa stok (remaining)" }
+        stockUsed: { type: integer, example: 3, description: "Jumlah yang sudah ditukar" }
+        expiredDate: { type: string, format: date, nullable: true, example: "2025-12-31" }
         category:
           type: object
           properties:
             id: { type: integer, example: 2 }
             name: { type: string, example: "E-Commerce" }
+        createdBy:
+          nullable: true
+          type: object
+          properties:
+            id: { type: integer, example: 1 }
+            name: { type: string, example: "Admin Nusanet" }
+            employeeId: { type: string, example: "EMP-001" }
+
+    CatalogStockHistory:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        catalogId: { type: integer, example: 5 }
+        type: { type: string, enum: ["initial", "addition", "reduction", "opname", "redemption"], example: "redemption" }
+        quantity: { type: integer, example: -1, description: "Delta (positive = add, negative = subtract)" }
+        stockBefore: { type: integer, example: 48 }
+        stockAfter: { type: integer, example: 47 }
+        notes: { type: string, nullable: true, example: "Penukaran voucher oleh user #1" }
+        createdBy:
+          nullable: true
+          type: object
+          properties:
+            id: { type: integer, example: 1 }
+            name: { type: string, example: "Admin Nusanet" }
+        createdAt: { type: string, format: date-time, example: "2024-06-01T08:00:00.000Z" }
 
     # --- Education Schemas ---
     EducationArticle:
@@ -3507,18 +3536,32 @@ paths:
                     point: 500
                     image: "https://cdn.example.com/voucher-tokopedia.jpg"
                     type: "voucher"
+                    stock: 47
+                    stockUsed: 3
+                    expiredDate: "2025-12-31"
                     category:
                       id: 2
                       name: "E-Commerce"
+                    createdBy:
+                      id: 1
+                      name: "Admin Nusanet"
+                      employeeId: "EMP-001"
                   - id: 7
                     name: "Mug Kawan Nusa"
                     description: "Mug eksklusif berlogo Kawan Nusa"
                     point: 750
                     image: "https://cdn.example.com/mug.jpg"
                     type: "product"
+                    stock: 20
+                    stockUsed: 5
+                    expiredDate: null
                     category:
                       id: 3
                       name: "Merchandise"
+                    createdBy:
+                      id: 1
+                      name: "Admin Nusanet"
+                      employeeId: "EMP-001"
                 meta:
                   total: 20
                   perPage: 10
@@ -3528,6 +3571,48 @@ paths:
                   to: 10
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
+    post:
+      summary: Create a new catalog item (admin only)
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [name, categoryId, type, stock]
+              properties:
+                name: { type: string, example: "Voucher Tokopedia 50K" }
+                categoryId: { type: integer, example: 2 }
+                type: { type: string, enum: ["product", "voucher"], example: "voucher" }
+                point: { type: number, example: 500 }
+                stock: { type: integer, example: 50 }
+                description: { type: string, example: "Voucher belanja Tokopedia" }
+                expiredDate: { type: string, format: date, example: "2025-12-31" }
+                image: { type: string, format: binary }
+      responses:
+        "200":
+          description: Catalog item created successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Catalog item created successfully"
+                data:
+                  id: 5
+                  name: "Voucher Tokopedia 50K"
+                  type: "voucher"
+                  point: 500
+                  stock: 50
+                  stockUsed: 0
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /catalog/{id}:
     get:
@@ -3556,11 +3641,146 @@ paths:
                   point: 500
                   image: "https://cdn.example.com/voucher-tokopedia.jpg"
                   type: "voucher"
+                  stock: 47
+                  stockUsed: 3
+                  expiredDate: "2025-12-31"
                   category:
                     id: 2
                     name: "E-Commerce"
+                  createdBy:
+                    id: 1
+                    name: "Admin Nusanet"
+                    employeeId: "EMP-001"
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    put:
+      summary: Update a catalog item (admin only)
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 5
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name: { type: string, example: "Voucher Tokopedia 100K" }
+                categoryId: { type: integer, example: 2 }
+                type: { type: string, enum: ["product", "voucher"], example: "voucher" }
+                point: { type: number, example: 1000 }
+                stock: { type: integer, example: 30, description: "Sisa stok baru" }
+                description: { type: string }
+                expiredDate: { type: string, format: date }
+                image: { type: string, format: binary }
+      responses:
+        "200":
+          description: Catalog item updated successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Catalog item updated successfully"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    delete:
+      summary: Delete a catalog item (admin only)
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 5
+      responses:
+        "200":
+          description: Catalog item deleted successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Catalog item deleted successfully"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+
+  /catalog/{id}/stock-history:
+    get:
+      summary: Get stock movement history for a catalog item (admin only)
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 5
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Stock history retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Stock history retrieved successfully"
+                data:
+                  - id: 1
+                    catalogId: 5
+                    type: "initial"
+                    quantity: 50
+                    stockBefore: 0
+                    stockAfter: 50
+                    notes: "Stok awal"
+                    createdBy:
+                      id: 1
+                      name: "Admin Nusanet"
+                    createdAt: "2024-06-01T08:00:00.000Z"
+                  - id: 2
+                    catalogId: 5
+                    type: "redemption"
+                    quantity: -1
+                    stockBefore: 50
+                    stockAfter: 49
+                    notes: "Penukaran voucher oleh user #3"
+                    createdBy: null
+                    createdAt: "2024-06-02T10:30:00.000Z"
+                meta:
+                  total: 2
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 1
+                  from: 1
+                  to: 2
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 403
+                message: "Forbidden"
         "404":
           $ref: "#/components/responses/NotFoundResponse"
 
