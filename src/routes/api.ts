@@ -5,7 +5,7 @@ import { zValidator } from "@hono/zod-validator"
 import { LoginValidator, ForgotPasswordValidator, ResetPasswordValidator, RefreshTokenValidator, GoogleLoginSchema, ResendVerificationValidator, SendOtpValidator, VerifyOtpValidator } from "../modules/auth/validators/auth.validator"
 import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator, UpdatePhotoValidator } from "../modules/profile/validators/profile.validator"
 import { CreateCashRedemptionValidator, CreateRedemptionVoucherValidator, CreateRedemptionProductValidator, ProcessProductRedemptionValidator, ProcessVoucherRedemptionValidator } from "../modules/redemption/validators/redemption.validator"
-import { CreateRewardValidator } from "../modules/reward/validators/reward.validator"
+import { CreatePointValidator } from "../modules/point/validators/point.validator"
 import { StoreFeedbackValidator } from "../modules/feedback/validators/feedback.validator"
 import { CreateEducationCategoryValidator, UpdateEducationCategoryValidator } from "../modules/education-category/validators/education-category.validator"
 import { CreateCatalogCategoryValidator, UpdateCatalogCategoryValidator } from "../modules/catalog-category/validators/catalog-category.validator"
@@ -23,7 +23,7 @@ import { profileController } from "../modules/profile/profile.module"
 import { pointController } from "../modules/point/point.module"
 import { customerController } from "../modules/customer/customer.module"
 import { customerServiceController } from "../modules/customer-service/customer-service.module"
-import { rewardController } from "../modules/reward/reward.module"
+
 import { redemptionController } from "../modules/redemption/redemption.module"
 import { catalogController } from "../modules/catalog/catalog.module"
 import { catalogCategoryController } from "../modules/catalog-category/catalog-category.module"
@@ -92,7 +92,7 @@ routes.post("/redemption/product", authMiddleware, roleMiddleware('user'), zVali
 routes.get("/customer", authMiddleware, roleMiddleware('user'), (c) => customerController.index(c))
 routes.get("/customer/:id", authMiddleware, roleMiddleware('user'), (c) => customerController.show(c))
 routes.get("/customer/:id/service", authMiddleware, roleMiddleware('user'), (c) => customerServiceController.byCustomer(c))
-routes.get("/customer/:id/reward", authMiddleware, roleMiddleware('user'), (c) => rewardController.byCustomer(c))
+routes.get("/customer/:id/reward", authMiddleware, roleMiddleware('user'), (c) => pointController.byCustomer(c))
 
 // Service Promotion
 routes.get("/service/promotion", authMiddleware, (c) => servicePromotionController.index(c))
@@ -118,8 +118,8 @@ routes.get("/service/:code/customer", authMiddleware, roleMiddleware('user'), (c
 routes.get("/customer-service", authMiddleware, roleMiddleware('user'), (c) => customerServiceController.index(c))
 
 // Reward
-routes.get("/reward", authMiddleware, roleMiddleware('user'), (c) => rewardController.index(c))
-routes.post("/reward", apiKeyMiddleware, roleMiddleware('admin'), zValidator("json", CreateRewardValidator, validationHook), (c) => rewardController.store(c))
+routes.get("/reward", authMiddleware, roleMiddleware('user'), (c) => pointController.index(c))
+routes.post("/reward", apiKeyMiddleware, roleMiddleware('admin'), zValidator("json", CreatePointValidator, validationHook), (c) => pointController.store(c))
 
 // Statistic
 routes.get("/statistic/count", authMiddleware, roleMiddleware('user'), (c) => statisticController.count(c))
@@ -178,7 +178,7 @@ routes.get("/user/:id/statistic", authMiddleware, roleMiddleware('admin'), (c) =
 routes.get("/additional/service", authMiddleware, (c) => additionalController.getServices(c))
 routes.get("/additional/customer-type", authMiddleware, (c) => additionalController.getCustomerTypes(c))
 routes.get("/additional/customer-service-status", authMiddleware, (c) => additionalController.getCustomerServiceStatus(c))
-routes.get("/additional/reward-point-type", authMiddleware, (c) => additionalController.getRewardPointTypes(c))
+routes.get("/additional/reward-point-type", authMiddleware, (c) => additionalController.getPointTypes(c))
 routes.get("/additional/service-category", authMiddleware, (c) => additionalController.getServiceCategories(c))
 routes.get("/additional/search", authMiddleware, (c) => additionalController.search(c))
 

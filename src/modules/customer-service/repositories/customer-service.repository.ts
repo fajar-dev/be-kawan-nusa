@@ -2,7 +2,7 @@ import { Brackets, Repository } from "typeorm"
 import { AppDataSource } from "../../../config/database"
 import { CustomerService } from "../entities/customer-service.entity"
 import { Customer } from "../../customer/entities/customer.entity"
-import { Reward } from "../../reward/entities/reward.entity"
+import { Point } from "../../point/entities/point.entity"
 import {
     CustomerServiceByCustomerFilters,
     CustomerServiceListFilters,
@@ -39,7 +39,7 @@ export class CustomerServiceRepository implements ICustomerServiceRepository {
                 (subQuery: any) =>
                     subQuery
                         .select(`r.${field}`)
-                        .from(Reward, "r")
+                        .from(Point, "r")
                         .where("r.customerServiceId = cs.id")
                         .orderBy("r.createdAt", "DESC")
                         .limit(1),
@@ -51,7 +51,7 @@ export class CustomerServiceRepository implements ICustomerServiceRepository {
                 (subQuery: any) =>
                     subQuery
                         .select("COALESCE(SUM(r2.point), 0)")
-                        .from(Reward, "r2")
+                        .from(Point, "r2")
                         .where("r2.customerServiceId = cs.id"),
                 "total_point_sort"
             )
@@ -96,7 +96,7 @@ export class CustomerServiceRepository implements ICustomerServiceRepository {
             query.andWhere(qb => {
                 const subQuery = qb.subQuery()
                     .select("r.type")
-                    .from(Reward, "r")
+                    .from(Point, "r")
                     .where("r.customerServiceId = cs.id")
                     .orderBy("r.createdAt", "DESC")
                     .limit(1)

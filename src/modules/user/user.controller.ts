@@ -5,8 +5,8 @@ import { UserListSerializer } from "./serializers/user-list.serialize"
 import { UserSerializer } from "./serializers/user.serialize"
 import { CustomerServiceService } from "../customer-service/customer-service.service"
 import { CustomerServiceSerializer } from "../customer-service/serializers/customer-service.serialize"
-import { RewardService } from "../reward/reward.service"
-import { RewardSerializer } from "../reward/serializers/reward.serialize"
+import { PointService } from "../point/point.service"
+import { PointSerializer } from "../point/serializers/point.serialize"
 import { RedemptionService } from "../redemption/redemption.service"
 import { RedemptionSerializer } from "../redemption/serializers/redemption.serialize"
 import { StatisticService } from "../statistic/statistic.service"
@@ -15,7 +15,7 @@ export class UserController {
     constructor(
         private readonly service: UserService,
         private readonly customerServiceService: CustomerServiceService,
-        private readonly rewardService: RewardService,
+        private readonly pointService: PointService,
         private readonly redemptionService: RedemptionService,
         private readonly statisticService: StatisticService,
     ) {}
@@ -86,7 +86,7 @@ export class UserController {
         const endDate = c.req.query("endDate")
         const types = c.req.queries("type[]")
 
-        const { data, total } = await this.rewardService.getAll(userId, page, limit, q, sort, order, {
+        const { data, total } = await this.pointService.getAll(userId, page, limit, q, sort, order, {
             startDate,
             endDate,
             types,
@@ -94,7 +94,7 @@ export class UserController {
 
         return ApiResponse.paginate(
             c,
-            RewardSerializer.collection(data),
+            PointSerializer.collection(data),
             total,
             page,
             limit,

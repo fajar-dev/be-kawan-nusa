@@ -3,7 +3,7 @@ import type { Relation } from "typeorm"
 import { Customer } from "../../customer/entities/customer.entity"
 import { Service } from "../../service/entities/service.entity"
 import { CustomerServiceStatus } from "../customer-service.enum"
-import { Reward } from "../../reward/entities/reward.entity"
+import { Point } from "../../point/entities/point.entity"
 import { User } from "../../user/entities/user.entity"
 import { Employee } from "../../employee/entities/employee.entity"
 
@@ -65,8 +65,8 @@ export class CustomerService {
     @JoinColumn({ name: "service_code", referencedColumnName: "code" })
     service!: Relation<Service>
 
-    @OneToMany(() => Reward, (reward) => reward.customerService)
-    rewards!: Relation<Reward[]>
+    @OneToMany(() => Point, (point) => point.customerService)
+    rewards!: Relation<Point[]>
 
     @ManyToOne(() => User, (user) => user.customerServices)
     @JoinColumn({ name: "user_id" })

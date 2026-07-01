@@ -3,7 +3,7 @@ import { authRequest, request } from "../helpers/test-client"
 import { createTestUser, generateUserToken, cleanupTestUser } from "../helpers/auth.helper"
 import { User } from "../../src/modules/user/entities/user.entity"
 
-describe("Reward Module", () => {
+describe("Point Module (Reward)", () => {
     let testUser: User
     let userToken: string
 

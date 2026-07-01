@@ -2,7 +2,7 @@ import { Repository } from "typeorm"
 import { AppDataSource } from "../../../config/database"
 import { Customer } from "../../customer/entities/customer.entity"
 import { CustomerService } from "../../customer-service/entities/customer-service.entity"
-import { Reward } from "../../reward/entities/reward.entity"
+import { Point } from "../../point/entities/point.entity"
 import { Redemption } from "../../redemption/entities/redemption.entity"
 import { User } from "../../user/entities/user.entity"
 import { IStatisticRepository, MonthlyCount } from "../interfaces/statistic.repository.interface"
@@ -10,14 +10,14 @@ import { IStatisticRepository, MonthlyCount } from "../interfaces/statistic.repo
 export class StatisticRepository implements IStatisticRepository {
     private readonly customerRepository: Repository<Customer>
     private readonly customerServiceRepository: Repository<CustomerService>
-    private readonly rewardRepository: Repository<Reward>
+    private readonly pointRepository: Repository<Point>
     private readonly redemptionRepository: Repository<Redemption>
     private readonly userRepository: Repository<User>
 
     constructor() {
         this.customerRepository = AppDataSource.getRepository(Customer)
         this.customerServiceRepository = AppDataSource.getRepository(CustomerService)
-        this.rewardRepository = AppDataSource.getRepository(Reward)
+        this.pointRepository = AppDataSource.getRepository(Point)
         this.redemptionRepository = AppDataSource.getRepository(Redemption)
         this.userRepository = AppDataSource.getRepository(User)
     }
@@ -55,7 +55,7 @@ export class StatisticRepository implements IStatisticRepository {
     }
 
     async getPointsByMonth(userId: number, month: number, year: number): Promise<number> {
-        const result = await this.rewardRepository.createQueryBuilder("reward")
+        const result = await this.pointRepository.createQueryBuilder("reward")
             .innerJoin("reward.customerService", "cs")
             .select("SUM(reward.point)", "total")
             .where("cs.userId = :userId", { userId })
@@ -66,7 +66,7 @@ export class StatisticRepository implements IStatisticRepository {
     }
 
     async getMonthlyPointSums(userId: number, year: number): Promise<MonthlyCount[]> {
-        const rawData = await this.rewardRepository.createQueryBuilder("reward")
+        const rawData = await this.pointRepository.createQueryBuilder("reward")
             .innerJoin("reward.customerService", "cs")
             .select("MONTH(reward.createdAt)", "month")
             .addSelect("SUM(reward.point)", "total")
@@ -136,7 +136,7 @@ export class StatisticRepository implements IStatisticRepository {
     }
 
     async getGlobalRewardTotal(): Promise<number> {
-        const result = await this.rewardRepository.createQueryBuilder("reward")
+        const result = await this.pointRepository.createQueryBuilder("reward")
             .select("SUM(reward.point)", "total")
             .getRawOne()
         return Number(result?.total || 0)

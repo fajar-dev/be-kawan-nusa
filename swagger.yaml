@@ -382,8 +382,8 @@ components:
         totalCustomerServices: { type: integer, example: 25 }
         totalPoint: { type: number, example: 12500 }
 
-    # --- Reward Schemas ---
-    Reward:
+    # --- Point (Reward) Schemas ---
+    Point:
       type: object
       properties:
         id: { type: integer, example: 101 }
@@ -441,7 +441,7 @@ components:
             example: "2024-03-01T09:00:00.000Z",
           }
 
-    CreateRewardRequest:
+    CreatePointRequest:
       type: object
       required: [customerServiceId, price, point, type]
       properties:
@@ -1846,7 +1846,7 @@ paths:
   /reward:
     get:
       summary: List reward transactions (paginated)
-      tags: [Reward]
+      tags: [Point]
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: "#/components/parameters/PageParam"
@@ -1912,13 +1912,13 @@ paths:
     post:
       summary: Create a new reward (Internal use only)
       description: "Requires API Key authentication via `X-API-KEY` header. Used by internal systems to register reward points when a customer pays their bill."
-      tags: [Reward]
+      tags: [Point]
       security: [{ apiKeyAuth: [] }]
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CreateRewardRequest" }
+            schema: { $ref: "#/components/schemas/CreatePointRequest" }
             example:
               customerServiceId: 42
               price: 250000
@@ -4834,7 +4834,7 @@ paths:
                       data:
                         type: array
                         items:
-                          $ref: "#/components/schemas/Reward"
+                          $ref: "#/components/schemas/Point"
                       meta:
                         $ref: "#/components/schemas/PaginationMeta"
         "401":
@@ -5031,7 +5031,7 @@ tags:
     description: Manage authenticated user's profile, bank info, and preferences
   - name: Point
     description: View current point balance
-  - name: Reward
+  - name: Point
     description: View and create reward point transactions
   - name: Redemption
     description: Create and view redemption requests (cash, voucher, product)

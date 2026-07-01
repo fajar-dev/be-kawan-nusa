@@ -1,6 +1,6 @@
 import { EntityManager, LessThanOrEqual, MoreThan, FindOptionsWhere } from "typeorm"
 import { BadRequestException } from "../exceptions/base"
-import { Reward } from "../../modules/reward/entities/reward.entity"
+import { Point } from "../../modules/point/entities/point.entity"
 import { Redemption } from "../../modules/redemption/entities/redemption.entity"
 import { RedemptionType, RedemptionStatus } from "../../modules/redemption/redemption.enum"
 
@@ -20,7 +20,7 @@ export class PointCalculator {
         await this.expirePoints(manager, userId)
 
         const today = new Date().toISOString().split('T')[0]
-        const rewards = await manager.find(Reward, {
+        const rewards = await manager.find(Point, {
             where: {
                 customerService: { userId },
                 remainingPoint: MoreThan(0),
@@ -44,7 +44,7 @@ export class PointCalculator {
 
         // Fetch eligible rewards: not expired and has remaining points
         // Sorted by expiredDate (ASC) to use points that will expire sooner
-        const rewards = await manager.find(Reward, {
+        const rewards = await manager.find(Point, {
             where: {
                 customerService: { userId },
                 remainingPoint: MoreThan(0),
@@ -85,8 +85,8 @@ export class PointCalculator {
     /**
      * Add a new reward entry (this implicitly adds points to the available balance).
      */
-    async addPointsReward(manager: EntityManager, data: Partial<Reward>) {
-        const reward = manager.create(Reward, data)
+    async addPointsReward(manager: EntityManager, data: Partial<Point>) {
+        const reward = manager.create(Point, data)
         return await manager.save(reward)
     }
 
@@ -101,7 +101,7 @@ export class PointCalculator {
     async expirePoints(manager: EntityManager, userId?: number): Promise<number> {
         const today = new Date().toISOString().split('T')[0]
 
-        const where: FindOptionsWhere<Reward> = {
+        const where: FindOptionsWhere<Point> = {
             remainingPoint: MoreThan(0),
             expiredDate: LessThanOrEqual(today as any),
         }
@@ -111,7 +111,7 @@ export class PointCalculator {
         }
 
         // Find rewards with remaining points that have expired
-        const expiredRewards = await manager.find(Reward, {
+        const expiredRewards = await manager.find(Point, {
             where,
             relations: ["customerService"],
         })

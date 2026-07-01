@@ -1,6 +1,6 @@
 import { CustomerType } from "../customer/customer.enum"
 import { CustomerServiceStatus } from "../customer-service/customer-service.enum"
-import { RewardPointType } from "../reward/reward.enum"
+import { PointType } from "../point/point.enum"
 import { ServiceCategory } from "../service/service.enum"
 import { IAdditionalRepository, SearchResult } from "./interfaces/additional.repository.interface"
 
@@ -21,8 +21,8 @@ export class AdditionalService {
         return Object.entries(CustomerServiceStatus).map(([key, value]) => ({ code: key, name: value }))
     }
 
-    async getRewardPointTypes() {
-        return Object.entries(RewardPointType).map(([key, value]) => ({ code: key, name: value }))
+    async getPointTypes() {
+        return Object.entries(PointType).map(([key, value]) => ({ code: key, name: value }))
     }
 
     async search(q: string, userId?: number): Promise<SearchResult[]> {

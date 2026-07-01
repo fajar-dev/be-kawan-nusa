@@ -1,10 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index, BeforeInsert } from "typeorm"
 import type { Relation } from "typeorm"
 import { CustomerService } from "../../customer-service/entities/customer-service.entity"
-import { RewardPointType } from "../reward.enum"
+import { PointType } from "../point.enum"
 
 @Entity("rewards")
-export class Reward {
+export class Point {
     @PrimaryGeneratedColumn()
     id!: number
 
@@ -27,10 +27,10 @@ export class Reward {
     @Index()
     @Column({
         type: "enum",
-        enum: RewardPointType,
-        default: RewardPointType.OTC
+        enum: PointType,
+        default: PointType.OTC
     })
-    type!: RewardPointType
+    type!: PointType
 
     // Relations
     @ManyToOne(() => CustomerService, (customerService) => customerService.rewards, { onDelete: 'CASCADE' })
