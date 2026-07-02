@@ -1,6 +1,7 @@
 import { AppDataSource } from "../config/database"
 import { NisDataSource } from "../config/nis-database"
 import { User } from "../modules/user/entities/user.entity"
+import { UserStatus } from "../modules/user/user.enum"
 
 /**
  * Sync users from NIS database.
@@ -48,10 +49,10 @@ async function syncUsers() {
             r.BankAccountType AS bank_name,
             r.IdentityNumber AS identity_number,
             CASE 
-                WHEN r.Status = 'AC' THEN 1
-                WHEN r.Status = 'NA' THEN 0
-                ELSE 0
-            END AS is_active
+                WHEN r.Status = 'AC' THEN 'active'
+                WHEN r.Status = 'NA' THEN 'inactive'
+                ELSE 'inactive'
+            END AS status
         FROM Reseller r
     `)
 
@@ -77,7 +78,7 @@ async function syncUsers() {
     const phoneSeen = new Map<string, any>()
 
     // Sort: active users first so they take priority
-    const sorted = [...sourceRows].sort((a, b) => (b.is_active ?? 0) - (a.is_active ?? 0))
+    const sorted = [...sourceRows].sort((a, b) => (b.status === 'active' ? 1 : 0) - (a.status === 'active' ? 1 : 0))
 
     for (const row of sorted) {
         let email = row.email?.trim().toLowerCase() || null
@@ -138,9 +139,9 @@ async function syncUsers() {
                     accountHolderName: row.account_holder_name || null,
                     bankName: row.bank_name || null,
                     identityNumber: row.identity_number || null,
-                    isActive: row.is_active === 1,
+                    status: row.status === 'active' ? UserStatus.ACTIVE : UserStatus.INACTIVE,
                 })
-                .orUpdate(["is_active"], ["id"])
+                .orUpdate(["status"], ["id"])
                 .execute()
             synced++
         } catch (error: any) {

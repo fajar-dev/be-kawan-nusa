@@ -2,7 +2,7 @@ import { EntityManager } from "typeorm"
 import { User } from "../entities/user.entity"
 
 export interface UserListFilters {
-    isActive?: string
+    status?: string
 }
 
 export interface IUserRepository {

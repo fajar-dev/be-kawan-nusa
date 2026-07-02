@@ -26,9 +26,9 @@ export class UserController {
         const q = c.req.query("q") || ""
         const sort = c.req.query("sort") || "createdAt"
         const order = c.req.query("order") || "DESC"
-        const isActive = c.req.query("isActive")
+        const status = c.req.query("status")
 
-        const { data, total } = await this.service.getAll(page, limit, q, sort, order, { isActive })
+        const { data, total } = await this.service.getAll(page, limit, q, sort, order, { status })
 
         return ApiResponse.paginate(
             c,
@@ -152,5 +152,12 @@ export class UserController {
             customerStats,
             redemptionPointStats,
         }, "User statistics retrieved successfully")
+    }
+
+    async updateStatus(c: Context) {
+        const id = Number(c.req.param("id"))
+        const { status, note } = c.req.valid("json" as never)
+        const user = await this.service.updateStatus(id, status, note)
+        return ApiResponse.success(c, await UserSerializer.single(user), "User status updated successfully")
     }
 }

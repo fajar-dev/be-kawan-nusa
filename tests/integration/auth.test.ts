@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "bun:test"
 import { request, authRequest, formRequest } from "../helpers/test-client"
 import { createTestUser, generateUserToken, cleanupTestUser } from "../helpers/auth.helper"
 import { User } from "../../src/modules/user/entities/user.entity"
+import { UserStatus } from "../../src/modules/user/user.enum"
 import { AppDataSource } from "../../src/config/database"
 import { PasswordResetToken } from "../../src/modules/auth/entities/password-reset-token.entity"
 
@@ -155,7 +156,7 @@ describe("Auth Module", () => {
                 lastName: "Test",
                 email: `verify-${Date.now()}@example.com`,
                 phone: `08${Date.now().toString().slice(-10)}`,
-                isActive: false,
+                status: null,
                 isVerified: false,
             })
             const savedUser = await userRepo.save(user)
@@ -181,7 +182,7 @@ describe("Auth Module", () => {
             // Verify user is now verified and active
             const updatedUser = await userRepo.findOneBy({ id: savedUser.id })
             expect(updatedUser?.isVerified).toBe(true)
-            expect(updatedUser?.isActive).toBe(true)
+            expect(updatedUser?.status).toBeNull()
         })
 
         it("should fail with missing token", async () => {
@@ -226,7 +227,7 @@ describe("Auth Module", () => {
                 lastName: "Test",
                 email: resendUserEmail,
                 phone: `08${Date.now().toString().slice(-10)}`,
-                isActive: false,
+                status: null,
                 isVerified: false,
             })
             const savedUser = await userRepo.save(user)
@@ -284,7 +285,7 @@ describe("Auth Module", () => {
                 lastName: "Test",
                 email: checkUserEmail,
                 phone: `08${Date.now().toString().slice(-10)}`,
-                isActive: false,
+                status: null,
                 isVerified: false,
             })
             const savedUser = await userRepo.save(user)
@@ -500,7 +501,7 @@ describe("Auth Module", () => {
                 email: `unverified-forgot-${Date.now()}@example.com`,
                 phone: `08${Date.now().toString().slice(-10)}`,
                 password: "hashed",
-                isActive: true,
+                status: UserStatus.ACTIVE,
                 isVerified: false,
             }))
 

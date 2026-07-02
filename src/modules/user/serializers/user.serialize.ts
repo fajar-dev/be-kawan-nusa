@@ -37,7 +37,9 @@ export class UserSerializer {
             },
             isVerified: user.isVerified,
             isBoarding: user.isBoarding,
-            isActive: user.isActive,
+            status: user.status,
+            statusNote: user.statusNote || null,
+            statusUpdatedAt: user.statusUpdatedAt || null,
             lastLoginAt: user.lastLoginAt,
             passwordUpdatedAt: user.passwordUpdatedAt,
             createdAt: user.createdAt

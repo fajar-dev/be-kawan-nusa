@@ -29,7 +29,7 @@ export class AuthSerializer {
             photo: await this.resolvePhotoUrl(user.photo),
             email: user.email,
             phone: user.phone,
-            isActive: user.isActive,
+            status: user.status,
             isBoarding: user.isBoarding,
             role,
         }
