@@ -30,6 +30,8 @@ export class AuthSerializer {
             email: user.email,
             phone: user.phone,
             status: user.status,
+            statusNote: user.statusNote,
+            isVerified: user.isVerified,
             isBoarding: user.isBoarding,
             role,
         }

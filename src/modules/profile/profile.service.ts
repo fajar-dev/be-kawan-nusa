@@ -96,7 +96,7 @@ export class ProfileService {
     async completeBoarding(userId: number): Promise<User> {
         const user = await this.getProfile(userId)
         user.isBoarding = true
-        if (!user.status) {
+        if (!user.status || user.status === UserStatus.REVISION) {
             user.status = UserStatus.PENDING
         }
         return await this.repository.save(user)

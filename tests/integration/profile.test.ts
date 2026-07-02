@@ -3,6 +3,7 @@ import { request, authRequest, formRequest } from "../helpers/test-client"
 import { createTestUser, createTestAdmin, generateUserToken, generateAdminToken, cleanupTestUser, cleanupTestAdmin } from "../helpers/auth.helper"
 import { User } from "../../src/modules/user/entities/user.entity"
 import { Employee } from "../../src/modules/employee/entities/employee.entity"
+import { UserStatus } from "../../src/modules/user/user.enum"
 
 describe("Profile Module", () => {
     let testUser: User
@@ -201,6 +202,22 @@ describe("Profile Module", () => {
             expect(res.body.data.isBoarding).toBe(true)
         })
 
+        it("should set status to pending from revision", async () => {
+            const revisionUser = await createTestUser({ status: UserStatus.REVISION, isBoarding: false, statusNote: "Foto KTP kurang jelas" })
+            const revisionToken = await generateUserToken(revisionUser)
+            try {
+                const res = await authRequest("/profile/complete-boarding", revisionToken, {
+                    method: "POST",
+                    body: {},
+                })
+                expect(res.status).toBe(200)
+                expect(res.body.data.isBoarding).toBe(true)
+                expect(res.body.data.status).toBe("pending")
+            } finally {
+                await cleanupTestUser(revisionUser.id)
+            }
+        })
+
         it("should fail without auth", async () => {
             const res = await request("/profile/complete-boarding", {
                 method: "POST",
@@ -215,6 +232,16 @@ describe("Profile Module", () => {
                 body: {},
             })
             expect(res.status).toBe(403)
+        })
+    })
+
+    describe("GET /auth/me", () => {
+        it("should return isVerified and statusNote in user response", async () => {
+            const res = await authRequest("/auth/me", userToken)
+            expect(res.status).toBe(200)
+            expect(res.body.data).toHaveProperty("isVerified")
+            expect(res.body.data).toHaveProperty("statusNote")
+            expect(res.body.data).toHaveProperty("isBoarding")
         })
     })
 

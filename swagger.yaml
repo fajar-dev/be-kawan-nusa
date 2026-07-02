@@ -130,6 +130,9 @@ components:
           { type: string, format: email, nullable: true, example: "budi.santoso@nusanet.id" }
         phone: { type: string, nullable: true, example: "081234567890" }
         status: { type: string, enum: [pending, active, inactive, reject, revision], nullable: true, example: active }
+        statusNote: { type: string, nullable: true, example: "Foto KTP kurang jelas", description: "Catatan dari admin saat approve/revisi/tolak" }
+        isVerified: { type: boolean, example: true, description: "Apakah email sudah diverifikasi" }
+        isBoarding: { type: boolean, example: true, description: "Apakah sudah menyelesaikan onboarding" }
         role:
           type: string
           enum: ["user", "admin"]
@@ -1851,7 +1854,10 @@ paths:
   /profile/complete-boarding:
     post:
       summary: Mark boarding as complete
-      description: "Sets isBoarding to true for the authenticated user after completing the onboarding flow."
+      description: |
+        Sets isBoarding to true for the authenticated user after completing the onboarding flow.
+        - First-time boarding: sets status from null to 'pending'.
+        - Revision flow: sets status from 'revision' back to 'pending' (user re-submits data without setting password again).
       tags: [Profile]
       security: [{ bearerAuth: [] }]
       responses:
@@ -4845,7 +4851,9 @@ paths:
   /user/{id}/status:
     patch:
       summary: Update user registration status
-      description: "Approve, reject, or request revision for a user registration. Only users with status pending, revision, or reject can be updated. Admin only."
+      description: |
+        Approve, reject, or request revision for a user registration. Only users with status pending, revision, or reject can be updated. Admin only.
+        A status change email notification is automatically sent to the user (fire-and-forget).
       tags: [User]
       security: [{ bearerAuth: [] }]
       parameters:
