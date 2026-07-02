@@ -27,6 +27,4 @@ export interface IPointSubmissionRepository {
     delete(id: number): Promise<void>
 
     existsByCustServId(custServId: number, excludeId?: number): Promise<boolean>
-
-    findUnprocessed(limit: number, maxRetries: number): Promise<PointSubmission[]>
 }

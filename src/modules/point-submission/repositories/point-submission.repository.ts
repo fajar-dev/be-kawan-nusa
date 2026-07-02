@@ -1,4 +1,4 @@
-import { Brackets, In, IsNull, Repository } from "typeorm"
+import { Brackets, In, Repository } from "typeorm"
 import { AppDataSource } from "../../../config/database"
 import { PointSubmission } from "../entities/point-submission.entity"
 import { PointSubmissionStatus } from "../point-submission.enum"
@@ -91,17 +91,5 @@ export class PointSubmissionRepository implements IPointSubmissionRepository {
 
         const count = await query.getCount()
         return count > 0
-    }
-
-    async findUnprocessed(limit: number, maxRetries: number): Promise<PointSubmission[]> {
-        return await this.repository.find({
-            where: {
-                status: PointSubmissionStatus.APPROVED,
-                processedAt: IsNull(),
-            },
-            order: { approvedAt: "ASC" },
-            relations: ["user"],
-            take: limit,
-        }).then(results => results.filter(r => r.retryCount < maxRetries))
     }
 }

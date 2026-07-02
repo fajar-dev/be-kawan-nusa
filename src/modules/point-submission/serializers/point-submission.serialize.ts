@@ -26,9 +26,6 @@ export class PointSubmissionSerializer {
                 name: item.approvedBy.name,
             } : null,
             approvedAt: item.approvedAt,
-            processedAt: item.processedAt,
-            retryCount: item.retryCount,
-            lastError: item.lastError,
             createdAt: item.createdAt,
         }
     }

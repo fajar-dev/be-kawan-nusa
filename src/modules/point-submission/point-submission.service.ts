@@ -2,15 +2,13 @@ import { PointSubmission } from "./entities/point-submission.entity"
 import { PointSubmissionStatus } from "./point-submission.enum"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { IPointSubmissionRepository, PointSubmissionListFilters } from "./interfaces/point-submission.repository.interface"
-import { NisHelper } from "../../core/helpers/nis"
-import { PointCalculator } from "../../core/helpers/point"
+import { JobQueue } from "../../core/queue/entities/job-queue.entity"
+import { QueueType } from "../../core/queue/queue.constants"
 import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
 
 export class PointSubmissionService {
     constructor(
         private readonly repository: IPointSubmissionRepository,
-        private readonly nisHelper: NisHelper,
-        private readonly pointCalculator: PointCalculator,
         private readonly unitOfWork: IUnitOfWork,
     ) {}
 
@@ -56,6 +54,10 @@ export class PointSubmissionService {
     async approve(ids: number[], approvedById: number, notes?: string): Promise<void> {
         const submissions = await this.repository.findByIds(ids)
 
+        if (submissions.length !== ids.length) {
+            throw new NotFoundException("Some submissions were not found")
+        }
+
         // Validate all are pending
         const nonPending = submissions.filter(s => s.status !== PointSubmissionStatus.PENDING)
         if (nonPending.length > 0) {
@@ -64,60 +66,35 @@ export class PointSubmissionService {
             )
         }
 
-        if (submissions.length !== ids.length) {
-            throw new NotFoundException("Some submissions were not found")
-        }
-
-        // Update status — processedAt stays null (queue marker)
-        await this.repository.updateMany(ids, {
-            status: PointSubmissionStatus.APPROVED,
-            approvedById,
-            approvedAt: new Date(),
-            notes: notes || null,
-        } as any)
-    }
-
-    /**
-     * Process a single approved submission: sync NIS data and create point.
-     * Called by the process-submissions job.
-     */
-    async processSubmission(submission: PointSubmission): Promise<void> {
-        // Step 1: Sync account from NIS to local DB (already transactional internally)
-        const syncResult = await this.nisHelper.syncAccountToLocal(
-            submission.nisData.custServId,
-            submission.userId
-        )
-
-        if (!syncResult) {
-            throw new Error(`Failed to sync NIS account for custServId ${submission.nisData.custServId}`)
-        }
-
-        // Step 2: Create Point + mark processed in ONE transaction
+        // Approve + create queue entries in one transaction
         await this.unitOfWork.runInTransaction(async (manager) => {
-            await this.pointCalculator.addPointsReward(manager, {
-                customerServiceId: syncResult.customerServiceId,
-                price: submission.price,
-                point: submission.point,
-                remainingPoint: submission.point,
-                type: submission.type,
-                pointSubmissionId: submission.id,
+            const now = new Date()
+            const period = new Date(now.getFullYear(), now.getMonth(), 1) // first of current month
+
+            // Update submission status
+            await manager.getRepository(PointSubmission).update(ids, {
+                status: PointSubmissionStatus.APPROVED,
+                approvedById,
+                approvedAt: now,
+                notes: notes || null,
             })
 
-            // Mark as processed inside same transaction
-            await manager.getRepository(PointSubmission).update(submission.id, {
-                processedAt: new Date(),
-                lastError: null,
-            })
+            // Create queue entry for each submission
+            const queueRepo = manager.getRepository(JobQueue)
+            const queueEntries = submissions.map(submission => queueRepo.create({
+                type: QueueType.POINT_SUBMISSION,
+                referenceId: submission.id,
+                payload: {
+                    customerServiceId: submission.nisData.custServId,
+                    userId: submission.userId,
+                    price: Number(submission.price),
+                    point: Math.floor(Number(submission.price) / 100),
+                    pointType: submission.type,
+                },
+                period: period,
+            }))
+
+            await queueRepo.save(queueEntries)
         })
-    }
-
-    /**
-     * Mark a submission as failed with error message and increment retry count.
-     */
-    async markFailed(id: number, error: string): Promise<void> {
-        await this.repository.update(id, {
-            retryCount: () => "retry_count + 1",
-            lastError: error,
-        } as any)
     }
 }

@@ -65,15 +65,6 @@ export class PointSubmission {
     @Column({ name: "approved_at", type: "datetime", nullable: true })
     approvedAt!: Date | null
 
-    @Column({ name: "processed_at", type: "datetime", nullable: true })
-    processedAt!: Date | null
-
-    @Column({ name: "retry_count", type: "int", default: 0 })
-    retryCount!: number
-
-    @Column({ name: "last_error", type: "text", nullable: true })
-    lastError!: string | null
-
     // Relations
     @ManyToOne(() => User)
     @JoinColumn({ name: "user_id" })
