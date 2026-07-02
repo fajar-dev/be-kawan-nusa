@@ -932,9 +932,6 @@ components:
             id: { type: integer, example: 2 }
             name: { type: string, example: "Manager Nusanet" }
         approvedAt: { type: string, format: date-time, nullable: true, example: "2024-06-01T08:00:00.000Z" }
-        processedAt: { type: string, format: date-time, nullable: true, example: "2024-06-01T08:01:00.000Z" }
-        retryCount: { type: integer, example: 0 }
-        lastError: { type: string, nullable: true, example: null }
         createdAt: { type: string, format: date-time, example: "2024-06-01T07:00:00.000Z" }
 
     CreatePointSubmissionRequest:
@@ -5171,9 +5168,6 @@ paths:
                       name: "Admin Nusanet"
                     approvedBy: null
                     approvedAt: null
-                    processedAt: null
-                    retryCount: 0
-                    lastError: null
                     createdAt: "2024-06-01T07:00:00.000Z"
                 meta:
                   total: 1
@@ -5328,9 +5322,6 @@ paths:
                     name: "Admin Nusanet"
                   approvedBy: null
                   approvedAt: null
-                  processedAt: null
-                  retryCount: 0
-                  lastError: null
                   createdAt: "2024-06-01T07:00:00.000Z"
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
