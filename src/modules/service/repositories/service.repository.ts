@@ -27,7 +27,7 @@ export class ServiceRepository implements IServiceRepository {
 
         const query = this.repository.createQueryBuilder("service")
             .leftJoin("customer_services", "cs", "cs.service_code = service.code AND cs.user_id = :userId", { userId })
-            .leftJoin("rewards", "r", "r.customer_service_id = cs.id")
+            .leftJoin("points", "r", "r.customer_service_id = cs.id")
             .select("service")
             .addSelect("COUNT(DISTINCT cs.id)", "totalCustomerServices")
             .addSelect("MAX(cs.reference_date)", "lastReferanceDate")
