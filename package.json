@@ -7,11 +7,10 @@
     "seed": "bun run src/database/seed.ts",
     "sync-users": "bun run src/jobs/sync-users.job.ts",
     "sync-customers": "bun run src/jobs/sync-customers.job.ts",
-    "sync": "bun run sync-users && bun run sync-customers",
     "sync-employees": "bun run src/jobs/sync-employees.job.ts",
-    "sync-sheets:all": "bun run src/jobs/sync-point-sheet.job.ts --all",
-    "sync-sheets": "bun run src/jobs/sync-point-sheet.job.ts --current",
     "expire-points": "bun run src/jobs/expire-points.job.ts",
+    "process-submissions": "bun run src/jobs/process-submissions.job.ts",
+    "recurring-points": "bun run src/jobs/process-recurring-points.job.ts",
     "test": "bun test",
     "test:watch": "bun test --watch"
   },

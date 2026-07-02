@@ -37,7 +37,7 @@ export class UserRepository implements IUserRepository {
             .addSelect(subQuery => {
                 return subQuery
                     .select("COALESCE(SUM(r.remaining_point), 0)", "total")
-                    .from("rewards", "r")
+                    .from("points", "r")
                     .innerJoin("customer_services", "rcs", "rcs.id = r.customer_service_id")
                     .where("rcs.user_id = user.id")
                     .andWhere("r.expired_date > :today", { today })

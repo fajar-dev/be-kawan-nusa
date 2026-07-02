@@ -9,6 +9,7 @@ import { CreatePointValidator } from "../modules/point/validators/point.validato
 import { StoreFeedbackValidator } from "../modules/feedback/validators/feedback.validator"
 import { CreateEducationCategoryValidator, UpdateEducationCategoryValidator } from "../modules/education-category/validators/education-category.validator"
 import { CreateCatalogCategoryValidator, UpdateCatalogCategoryValidator } from "../modules/catalog-category/validators/catalog-category.validator"
+import { CreatePointSubmissionValidator, UpdatePointSubmissionValidator, ApprovePointSubmissionValidator } from "../modules/point-submission/validators/point-submission.validator"
 
 // ── Middlewares ──────────────────────────────────────────────────────────────
 import { authMiddleware } from "../core/middlewares/auth.middleware"
@@ -37,6 +38,7 @@ import { additionalController } from "../modules/additional/additional.module"
 import { feedbackController } from "../modules/feedback/feedback.module"
 import { templateController } from "../modules/template/template.module"
 import { userController } from "../modules/user/user.module"
+import { pointSubmissionController } from "../modules/point-submission/point-submission.module"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const routes = new Hono()
@@ -173,6 +175,18 @@ routes.get("/user/:id/services", authMiddleware, roleMiddleware('admin'), (c) =>
 routes.get("/user/:id/point", authMiddleware, roleMiddleware('admin'), (c) => userController.rewards(c))
 routes.get("/user/:id/redeem", authMiddleware, roleMiddleware('admin'), (c) => userController.redemptions(c))
 routes.get("/user/:id/statistic", authMiddleware, roleMiddleware('admin'), (c) => userController.statistic(c))
+
+// Point Submission (Admin)
+routes.get("/point-submission", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.index(c))
+routes.get("/point-submission/check-account", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.checkAccount(c))
+routes.get("/point-submission/:id", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.show(c))
+routes.post("/point-submission", authMiddleware, roleMiddleware('admin'), zValidator("json", CreatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.store(c))
+routes.put("/point-submission/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", UpdatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.update(c))
+routes.delete("/point-submission/:id", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.destroy(c))
+routes.post("/point-submission/approve", authMiddleware, roleMiddleware('admin'), zValidator("json", ApprovePointSubmissionValidator, validationHook), (c) => pointSubmissionController.approve(c))
+
+// NIS (Admin)
+routes.get("/nis/account", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.searchNisAccounts(c))
 
 // Additional
 routes.get("/additional/service", authMiddleware, (c) => additionalController.getServices(c))
