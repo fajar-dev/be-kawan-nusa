@@ -129,7 +129,7 @@ components:
         email:
           { type: string, format: email, nullable: true, example: "budi.santoso@nusanet.id" }
         phone: { type: string, nullable: true, example: "081234567890" }
-        status: { type: string, enum: [pending, active, inactive, reject, revision], example: active }
+        status: { type: string, enum: [pending, active, inactive, reject, revision], nullable: true, example: active }
         role:
           type: string
           enum: ["user", "admin"]
@@ -185,7 +185,7 @@ components:
             isAutoWithdraw: { type: boolean, example: false }
         isVerified: { type: boolean, example: true }
         isBoarding: { type: boolean, example: false }
-        status: { type: string, enum: [pending, active, inactive, reject, revision], example: active }
+        status: { type: string, enum: [pending, active, inactive, reject, revision], nullable: true, example: active }
         statusNote: { type: string, nullable: true, example: "Data lengkap dan valid." }
         statusUpdatedAt: { type: string, format: date-time, nullable: true, example: "2025-01-15T10:30:00.000Z" }
         lastLoginAt:
@@ -888,7 +888,7 @@ components:
             holderName: { type: string, nullable: true, example: "Budi Santoso" }
             name: { type: string, nullable: true, example: "BCA" }
             number: { type: string, nullable: true, example: "1234567890" }
-        status: { type: string, enum: [pending, active, inactive, reject, revision], example: active }
+        status: { type: string, enum: [pending, active, inactive, reject, revision], nullable: true, example: active }
         lastReferanceDate: { type: string, format: date, nullable: true, example: "2024-03-15" }
         point: { type: number, example: 25500 }
 
@@ -1054,7 +1054,7 @@ paths:
   /auth/register:
     post:
       summary: Register new partner account
-      description: "Register a new partner account with personal info, bank details, and document uploads (KTP & bank book). Account will be set as pending (status=pending) until approved by admin."
+      description: "Register a new partner account with personal info, bank details, and document uploads (KTP & bank book). Account will be created with status=null. Status becomes pending after completing onboarding."
       tags: [Auth]
       requestBody:
         required: true
@@ -1082,7 +1082,7 @@ paths:
                   photo: null
                   email: "budi.santoso@nusanet.id"
                   phone: "081234567890"
-                  status: pending
+                  status: null
                   role: "user"
         "400":
           description: Email or phone already in use
@@ -1098,7 +1098,7 @@ paths:
   /auth/verify-email:
     get:
       summary: Verify email and auto-login
-      description: "Verify the user's email using the token sent via email. Sets isVerified=true (status remains pending until admin approves) and returns auth tokens for auto-login."
+      description: "Verify the user's email using the token sent via email. Sets isVerified=true (status remains null until onboarding is completed) and returns auth tokens for auto-login."
       tags: [Auth]
       parameters:
         - name: token
