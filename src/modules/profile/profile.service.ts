@@ -1,4 +1,5 @@
 import { User } from "../user/entities/user.entity"
+import { UserStatus } from "../user/user.enum"
 import { UpdateAccountValidator, UpdateBankValidator, UpdatePasswordValidator, UpdatePreferenceValidator } from "./validators/profile.validator"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
@@ -95,6 +96,9 @@ export class ProfileService {
     async completeBoarding(userId: number): Promise<User> {
         const user = await this.getProfile(userId)
         user.isBoarding = true
+        if (!user.status || user.status === UserStatus.REVISION) {
+            user.status = UserStatus.PENDING
+        }
         return await this.repository.save(user)
     }
 }

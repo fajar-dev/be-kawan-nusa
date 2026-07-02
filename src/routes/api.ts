@@ -10,6 +10,7 @@ import { StoreFeedbackValidator } from "../modules/feedback/validators/feedback.
 import { CreateEducationCategoryValidator, UpdateEducationCategoryValidator } from "../modules/education-category/validators/education-category.validator"
 import { CreateCatalogCategoryValidator, UpdateCatalogCategoryValidator } from "../modules/catalog-category/validators/catalog-category.validator"
 import { CreatePointSubmissionValidator, UpdatePointSubmissionValidator, ApprovePointSubmissionValidator } from "../modules/point-submission/validators/point-submission.validator"
+import { UpdateUserStatusValidator } from "../modules/user/validators/user.validator"
 
 // ── Middlewares ──────────────────────────────────────────────────────────────
 import { authMiddleware } from "../core/middlewares/auth.middleware"
@@ -175,6 +176,7 @@ routes.get("/user/:id/services", authMiddleware, roleMiddleware('admin'), (c) =>
 routes.get("/user/:id/point", authMiddleware, roleMiddleware('admin'), (c) => userController.rewards(c))
 routes.get("/user/:id/redeem", authMiddleware, roleMiddleware('admin'), (c) => userController.redemptions(c))
 routes.get("/user/:id/statistic", authMiddleware, roleMiddleware('admin'), (c) => userController.statistic(c))
+routes.patch("/user/:id/status", authMiddleware, roleMiddleware('admin'), zValidator("json", UpdateUserStatusValidator, validationHook), (c) => userController.updateStatus(c))
 
 // Point Submission (Admin)
 routes.get("/point-submission", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.index(c))

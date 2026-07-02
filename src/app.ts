@@ -18,7 +18,7 @@ export function createApp(): Hono {
     // CORS
     app.use('*', cors({
         origin: '*',
-        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     }))
 
     // Application Routes

@@ -1,4 +1,5 @@
 import { User } from "../user/entities/user.entity"
+import { UserStatus } from "../user/user.enum"
 import { minio } from "../../core/helpers/minio"
 import { Employee } from "../employee/entities/employee.entity"
 import {
@@ -89,7 +90,6 @@ export class AuthService {
                     hasWhatsapp: isWhatsapp === 'true' || isWhatsapp === true,
                     identityPath,
                     accountPath,
-                    isActive: false,
                     isVerified: false,
                 },
                 manager
@@ -135,7 +135,6 @@ export class AuthService {
         }
 
         user.isVerified = true
-        user.isActive = true
         await this.userService.save(user)
         await this.emailVerificationTokenRepository.deleteAllByUserId(user.id)
 
@@ -185,7 +184,7 @@ export class AuthService {
             throw new BadRequestException("User not registered")
         }
 
-        if (!user.isActive) {
+        if (user.status === UserStatus.INACTIVE || user.status === UserStatus.REJECT) {
             throw new BadRequestException("Account is inactive")
         }
 
@@ -224,7 +223,7 @@ export class AuthService {
             throw new UnauthorizedException("Please verify your email first")
         }
 
-        if (!user.isActive) {
+        if (user.status === UserStatus.INACTIVE || user.status === UserStatus.REJECT) {
             throw new UnauthorizedException("Account is inactive")
         }
 
@@ -277,7 +276,7 @@ export class AuthService {
             throw new BadRequestException("Please verify your email first")
         }
 
-        if (!user.isActive) {
+        if (user.status === UserStatus.INACTIVE || user.status === UserStatus.REJECT) {
             throw new BadRequestException("Account is inactive")
         }
 
@@ -338,7 +337,7 @@ export class AuthService {
             throw new BadRequestException("Please verify your email first")
         }
 
-        if (!user.isActive) {
+        if (user.status === UserStatus.INACTIVE || user.status === UserStatus.REJECT) {
             throw new BadRequestException("Account is inactive")
         }
 

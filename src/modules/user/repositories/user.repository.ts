@@ -26,7 +26,10 @@ export class UserRepository implements IUserRepository {
                 "user.account_holder_name AS accountHolderName",
                 "user.bank_name AS bankName",
                 "user.account_number AS accountNumber",
-                "user.is_active AS isActive",
+                "user.status AS status",
+                "user.status_note AS statusNote",
+                "user.company AS company",
+                "user.created_at AS createdAt",
             ])
             .addSelect(subQuery => {
                 return subQuery
@@ -50,8 +53,13 @@ export class UserRepository implements IUserRepository {
             )
         }
 
-        if (filters.isActive !== undefined && filters.isActive !== "") {
-            query.andWhere("user.is_active = :isActive", { isActive: filters.isActive === "1" })
+        if (filters.status !== undefined && filters.status !== "") {
+            const statuses = filters.status.split(",").map(s => s.trim()).filter(Boolean)
+            if (statuses.length === 1) {
+                query.andWhere("user.status = :status", { status: statuses[0] })
+            } else if (statuses.length > 1) {
+                query.andWhere("user.status IN (:...statuses)", { statuses })
+            }
         }
 
         // Get total count
@@ -66,7 +74,7 @@ export class UserRepository implements IUserRepository {
             phone: "user.phone",
             identityNumber: "user.identity_number",
             taxNumber: "user.tax_number",
-            isActive: "user.is_active",
+            status: "user.status",
             lastReferanceDate: "lastReferanceDate",
             point: "point",
             createdAt: "user.created_at",

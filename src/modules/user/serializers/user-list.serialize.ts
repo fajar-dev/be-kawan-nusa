@@ -20,9 +20,12 @@ export class UserListSerializer {
                 name: row.bankName || null,
                 number: row.accountNumber || null,
             },
-            isActive: Boolean(row.isActive),
+            status: row.status,
+            statusNote: row.statusNote || null,
             lastReferanceDate: row.lastReferanceDate || null,
             point: Number(row.point || 0),
+            company: row.company || null,
+            createdAt: row.createdAt,
         }
     }
 

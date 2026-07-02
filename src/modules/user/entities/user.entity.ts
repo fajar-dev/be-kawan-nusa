@@ -4,6 +4,7 @@ import { CustomerService } from "../../customer-service/entities/customer-servic
 import { Redemption } from "../../redemption/entities/redemption.entity"
 import { PasswordResetToken } from "../../auth/entities/password-reset-token.entity"
 import { EmailVerificationToken } from "../../auth/entities/email-verification-token.entity"
+import { UserStatus } from "../user.enum"
 
 @Entity("users")
 export class User {
@@ -79,8 +80,19 @@ export class User {
     @Column({ name: "password_updated_at", type: "timestamp", nullable: true })
     passwordUpdatedAt?: Date
 
-    @Column({ name: "is_active", default: true })
-    isActive!: boolean
+    @Column({
+        type: "enum",
+        enum: UserStatus,
+        nullable: true,
+        default: null,
+    })
+    status!: UserStatus | null
+
+    @Column({ name: "status_note", type: "text", nullable: true })
+    statusNote?: string
+
+    @Column({ name: "status_updated_at", type: "timestamp", nullable: true })
+    statusUpdatedAt?: Date
 
     @Column({ name: "last_login_at", type: "timestamp", nullable: true })
     lastLoginAt?: Date

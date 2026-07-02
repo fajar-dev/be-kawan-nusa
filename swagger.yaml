@@ -129,7 +129,10 @@ components:
         email:
           { type: string, format: email, nullable: true, example: "budi.santoso@nusanet.id" }
         phone: { type: string, nullable: true, example: "081234567890" }
-        isActive: { type: boolean, example: true }
+        status: { type: string, enum: [pending, active, inactive, reject, revision], nullable: true, example: active }
+        statusNote: { type: string, nullable: true, example: "Foto KTP kurang jelas", description: "Catatan dari admin saat approve/revisi/tolak" }
+        isVerified: { type: boolean, example: true, description: "Apakah email sudah diverifikasi" }
+        isBoarding: { type: boolean, example: true, description: "Apakah sudah menyelesaikan onboarding" }
         role:
           type: string
           enum: ["user", "admin"]
@@ -185,7 +188,9 @@ components:
             isAutoWithdraw: { type: boolean, example: false }
         isVerified: { type: boolean, example: true }
         isBoarding: { type: boolean, example: false }
-        isActive: { type: boolean, example: true }
+        status: { type: string, enum: [pending, active, inactive, reject, revision], nullable: true, example: active }
+        statusNote: { type: string, nullable: true, example: "Data lengkap dan valid." }
+        statusUpdatedAt: { type: string, format: date-time, nullable: true, example: "2025-01-15T10:30:00.000Z" }
         lastLoginAt:
           {
             type: string,
@@ -886,7 +891,7 @@ components:
             holderName: { type: string, nullable: true, example: "Budi Santoso" }
             name: { type: string, nullable: true, example: "BCA" }
             number: { type: string, nullable: true, example: "1234567890" }
-        isActive: { type: boolean, example: true }
+        status: { type: string, enum: [pending, active, inactive, reject, revision], nullable: true, example: active }
         lastReferanceDate: { type: string, format: date, nullable: true, example: "2024-03-15" }
         point: { type: number, example: 25500 }
 
@@ -1052,7 +1057,7 @@ paths:
   /auth/register:
     post:
       summary: Register new partner account
-      description: "Register a new partner account with personal info, bank details, and document uploads (KTP & bank book). Account will be set as inactive (isActive=false) until approved by admin."
+      description: "Register a new partner account with personal info, bank details, and document uploads (KTP & bank book). Account will be created with status=null. Status becomes pending after completing onboarding."
       tags: [Auth]
       requestBody:
         required: true
@@ -1080,7 +1085,7 @@ paths:
                   photo: null
                   email: "budi.santoso@nusanet.id"
                   phone: "081234567890"
-                  isActive: false
+                  status: null
                   role: "user"
         "400":
           description: Email or phone already in use
@@ -1096,7 +1101,7 @@ paths:
   /auth/verify-email:
     get:
       summary: Verify email and auto-login
-      description: "Verify the user's email using the token sent via email. Sets isVerified=true, isActive=true, and returns auth tokens for auto-login."
+      description: "Verify the user's email using the token sent via email. Sets isVerified=true (status remains null until onboarding is completed) and returns auth tokens for auto-login."
       tags: [Auth]
       parameters:
         - name: token
@@ -1120,7 +1125,7 @@ paths:
                     photo: null
                     email: "john@example.com"
                     phone: "081234567890"
-                    isActive: true
+                    status: active
                     isBoarding: false
                     role: "user"
                   accessToken: "eyJhbGciOiJIUzI1NiIs..."
@@ -1234,7 +1239,7 @@ paths:
                     photo: null
                     email: "budi.santoso@nusanet.id"
                     phone: "081234567890"
-                    isActive: true
+                    status: active
                     role: "user"
                   accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -1286,7 +1291,7 @@ paths:
                     photo: null
                     email: "budi.santoso@nusanet.id"
                     phone: "081234567890"
-                    isActive: true
+                    status: active
                     role: "user"
                   accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -1336,7 +1341,7 @@ paths:
                     photo: null
                     email: "admin@nusanet.id"
                     phone: "081234567890"
-                    isActive: true
+                    status: active
                     role: "admin"
                   accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -1487,7 +1492,7 @@ paths:
                     photo: null
                     email: "budi.santoso@nusanet.id"
                     phone: "081234567890"
-                    isActive: true
+                    status: active
                     role: "user"
                   accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new..."
                   refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new..."
@@ -1526,7 +1531,7 @@ paths:
                   photo: null
                   email: "budi.santoso@nusanet.id"
                   phone: "081234567890"
-                  isActive: true
+                  status: active
                   role: "user"
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
@@ -1622,7 +1627,7 @@ paths:
                     name: "John Doe"
                     email: "user@example.com"
                     phone: "081234567890"
-                    isActive: true
+                    status: active
                     isBoarding: false
                     role: "user"
                   accessToken: "eyJhbGciOiJIUzI1NiIs..."
@@ -1849,7 +1854,10 @@ paths:
   /profile/complete-boarding:
     post:
       summary: Mark boarding as complete
-      description: "Sets isBoarding to true for the authenticated user after completing the onboarding flow."
+      description: |
+        Sets isBoarding to true for the authenticated user after completing the onboarding flow.
+        - First-time boarding: sets status from null to 'pending'.
+        - Revision flow: sets status from 'revision' back to 'pending' (user re-submits data without setting password again).
       tags: [Profile]
       security: [{ bearerAuth: [] }]
       responses:
@@ -4713,12 +4721,12 @@ paths:
         - name: sort
           in: query
           description: "Sort field"
-          schema: { type: string, default: createdAt, enum: [name, email, phone, identityNumber, taxNumber, isActive, lastReferanceDate, point, createdAt] }
+          schema: { type: string, default: createdAt, enum: [name, email, phone, identityNumber, taxNumber, status, lastReferanceDate, point, createdAt] }
         - $ref: "#/components/parameters/OrderParam"
-        - name: isActive
+        - name: status
           in: query
-          description: "Filter by active status (1 = active, 0 = inactive)"
-          schema: { type: string, enum: ["1", "0"] }
+          description: "Filter by user status. Supports comma-separated values (e.g. active,inactive)"
+          schema: { type: string, example: "active,inactive" }
       responses:
         "200":
           description: User list retrieved successfully
@@ -4751,7 +4759,7 @@ paths:
                       holderName: "Budi Santoso"
                       name: "BCA"
                       number: "1234567890"
-                    isActive: true
+                    status: active
                     lastReferanceDate: "2024-03-15"
                     point: 25500
                 meta:
@@ -4821,7 +4829,7 @@ paths:
                   settings:
                     isSubscribe: true
                     isAutoWithdraw: false
-                  isActive: true
+                  status: active
                   passwordUpdatedAt: "2025-01-15T10:30:00.000Z"
                   createdAt: "2024-06-01T08:00:00.000Z"
         "401":
@@ -4839,6 +4847,82 @@ paths:
                 message: "Forbidden access: admin only"
         "404":
           $ref: "#/components/responses/NotFoundResponse"
+
+  /user/{id}/status:
+    patch:
+      summary: Update user registration status
+      description: |
+        Approve, reject, or request revision for a user registration. Only users with status pending, revision, or reject can be updated. Admin only.
+        A status change email notification is automatically sent to the user (fire-and-forget).
+      tags: [User]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, note]
+              properties:
+                status:
+                  type: string
+                  enum: [active, reject, revision]
+                  description: "Target status"
+                note:
+                  type: string
+                  minLength: 1
+                  maxLength: 110
+                  description: "Approval/rejection note"
+            example:
+              status: active
+              note: "Data lengkap dan valid."
+      responses:
+        "200":
+          description: User status updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserProfile"
+              example:
+                success: true
+                statusCode: 200
+                message: "User status updated successfully"
+                data:
+                  id: 1
+                  firstName: "Budi"
+                  lastName: "Santoso"
+                  status: active
+                  statusNote: "Data lengkap dan valid."
+                  statusUpdatedAt: "2025-01-15T10:30:00.000Z"
+        "400":
+          description: Invalid status transition
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+              example:
+                success: false
+                statusCode: 400
+                message: "Cannot change status from 'active'"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin only
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationResponse"
 
   /user/{id}/services:
     get:
