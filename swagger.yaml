@@ -890,6 +890,96 @@ components:
         lastReferanceDate: { type: string, format: date, nullable: true, example: "2024-03-15" }
         point: { type: number, example: 25500 }
 
+    # --- Point Submission Schemas ---
+    PointSubmission:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        userId: { type: integer, example: 5 }
+        type: { type: string, enum: [OTC, Bulanan], example: "OTC" }
+        point: { type: number, example: 100 }
+        price: { type: number, example: 10000 }
+        nisData:
+          type: object
+          properties:
+            custServId: { type: integer, example: 12345 }
+            custId: { type: string, example: "CUST001" }
+            accountName: { type: string, example: "PT Nusanet" }
+            serviceCode: { type: string, example: "SVC001" }
+            serviceName: { type: string, example: "Internet 50Mbps" }
+            accountManager: { type: string, nullable: true, example: "John Doe" }
+            salesEmployeeId: { type: string, nullable: true, example: "EMP-001" }
+        status: { type: string, enum: [pending, approved, rejected], example: "pending" }
+        isRecurring: { type: boolean, example: false }
+        recurringEndDate: { type: string, format: date, nullable: true, example: "2025-12-31" }
+        notes: { type: string, nullable: true, example: "Approved by admin" }
+        user:
+          nullable: true
+          type: object
+          properties:
+            id: { type: integer, example: 5 }
+            name: { type: string, example: "Budi Santoso" }
+        createdBy:
+          nullable: true
+          type: object
+          properties:
+            id: { type: integer, example: 1 }
+            name: { type: string, example: "Admin Nusanet" }
+        approvedBy:
+          nullable: true
+          type: object
+          properties:
+            id: { type: integer, example: 2 }
+            name: { type: string, example: "Manager Nusanet" }
+        approvedAt: { type: string, format: date-time, nullable: true, example: "2024-06-01T08:00:00.000Z" }
+        processedAt: { type: string, format: date-time, nullable: true, example: "2024-06-01T08:01:00.000Z" }
+        retryCount: { type: integer, example: 0 }
+        lastError: { type: string, nullable: true, example: null }
+        createdAt: { type: string, format: date-time, example: "2024-06-01T07:00:00.000Z" }
+
+    CreatePointSubmissionRequest:
+      type: object
+      required: [userId, type, price, nisData]
+      properties:
+        userId: { type: integer, example: 5 }
+        type: { type: string, enum: [OTC, Bulanan], example: "OTC" }
+        price: { type: number, minimum: 0, example: 10000 }
+        nisData:
+          type: object
+          required: [custServId, custId, accountName, serviceCode, serviceName]
+          properties:
+            custServId: { type: integer, example: 12345 }
+            custId: { type: string, example: "CUST001" }
+            accountName: { type: string, example: "PT Nusanet" }
+            serviceCode: { type: string, example: "SVC001" }
+            serviceName: { type: string, example: "Internet 50Mbps" }
+            accountManager: { type: string, nullable: true, example: "John Doe" }
+            salesEmployeeId: { type: string, nullable: true, example: "EMP-001" }
+        isRecurring: { type: boolean, default: false }
+        recurringEndDate: { type: string, format: date, nullable: true }
+
+    ApprovePointSubmissionRequest:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          items: { type: integer }
+          minItems: 1
+          example: [1, 2, 3]
+        notes: { type: string, example: "Approved batch" }
+
+    NisAccountResult:
+      type: object
+      properties:
+        custServId: { type: integer, example: 12345 }
+        custId: { type: string, example: "CUST001" }
+        accountName: { type: string, example: "PT Nusanet" }
+        serviceCode: { type: string, example: "SVC001" }
+        serviceName: { type: string, example: "Internet 50Mbps" }
+        accountManager: { type: string, nullable: true, example: "John Doe" }
+        salesEmployeeId: { type: string, nullable: true, example: "EMP-001" }
+
   parameters:
     PageParam:
       name: page
@@ -5024,6 +5114,342 @@ paths:
         "422":
           $ref: "#/components/responses/ValidationErrorResponse"
 
+  # =============================================
+  # POINT SUBMISSION ROUTES (Admin)
+  # =============================================
+  /point-submission:
+    get:
+      summary: List point submissions (admin only)
+      tags: [PointSubmission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - $ref: "#/components/parameters/SortParam"
+        - $ref: "#/components/parameters/OrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, approved, rejected] }
+        - name: type
+          in: query
+          schema: { type: string, enum: [OTC, Bulanan] }
+      responses:
+        "200":
+          description: Point submissions retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Point submissions retrieved successfully"
+                data:
+                  - id: 1
+                    userId: 5
+                    type: "OTC"
+                    point: 100
+                    price: 10000
+                    nisData:
+                      custServId: 12345
+                      custId: "CUST001"
+                      accountName: "PT Nusanet"
+                      serviceCode: "SVC001"
+                      serviceName: "Internet 50Mbps"
+                      accountManager: "John Doe"
+                      salesEmployeeId: "EMP-001"
+                    status: "pending"
+                    isRecurring: false
+                    recurringEndDate: null
+                    notes: null
+                    user:
+                      id: 5
+                      name: "Budi Santoso"
+                    createdBy:
+                      id: 1
+                      name: "Admin Nusanet"
+                    approvedBy: null
+                    approvedAt: null
+                    processedAt: null
+                    retryCount: 0
+                    lastError: null
+                    createdAt: "2024-06-01T07:00:00.000Z"
+                meta:
+                  total: 1
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 1
+                  from: 1
+                  to: 1
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+    post:
+      summary: Create a new point submission (admin only)
+      tags: [PointSubmission]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePointSubmissionRequest"
+      responses:
+        "201":
+          description: Point submission created successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 201
+                message: "Point submission created successfully"
+                data:
+                  id: 1
+                  userId: 5
+                  type: "OTC"
+                  point: 100
+                  price: 10000
+                  status: "pending"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  /point-submission/check-account:
+    get:
+      summary: Check if a NIS account is already submitted (admin only)
+      tags: [PointSubmission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: custServId
+          in: query
+          required: true
+          schema: { type: integer }
+          example: 12345
+        - name: excludeId
+          in: query
+          schema: { type: integer }
+          description: Exclude this submission ID from the check (for edit)
+      responses:
+        "200":
+          description: Account check completed
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Account check completed"
+                data:
+                  exists: false
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+
+  /point-submission/approve:
+    post:
+      summary: Approve one or more pending submissions (admin only)
+      tags: [PointSubmission]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovePointSubmissionRequest"
+      responses:
+        "200":
+          description: Point submissions approved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Point submissions approved successfully"
+                data: null
+        "400":
+          description: Some submissions already processed
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  /point-submission/{id}:
+    get:
+      summary: Get point submission detail (admin only)
+      tags: [PointSubmission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Point submission retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Point submission retrieved successfully"
+                data:
+                  id: 1
+                  userId: 5
+                  type: "OTC"
+                  point: 100
+                  price: 10000
+                  nisData:
+                    custServId: 12345
+                    custId: "CUST001"
+                    accountName: "PT Nusanet"
+                    serviceCode: "SVC001"
+                    serviceName: "Internet 50Mbps"
+                    accountManager: "John Doe"
+                    salesEmployeeId: "EMP-001"
+                  status: "pending"
+                  isRecurring: false
+                  recurringEndDate: null
+                  notes: null
+                  user:
+                    id: 5
+                    name: "Budi Santoso"
+                  createdBy:
+                    id: 1
+                    name: "Admin Nusanet"
+                  approvedBy: null
+                  approvedAt: null
+                  processedAt: null
+                  retryCount: 0
+                  lastError: null
+                  createdAt: "2024-06-01T07:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    put:
+      summary: Update a point submission (admin only)
+      tags: [PointSubmission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type: { type: string, enum: [OTC, Bulanan] }
+                price: { type: number, minimum: 0 }
+                nisData:
+                  type: object
+                  properties:
+                    custServId: { type: integer }
+                    custId: { type: string }
+                    accountName: { type: string }
+                    serviceCode: { type: string }
+                    serviceName: { type: string }
+                    accountManager: { type: string, nullable: true }
+                    salesEmployeeId: { type: string, nullable: true }
+                isRecurring: { type: boolean }
+                recurringEndDate: { type: string, format: date, nullable: true }
+      responses:
+        "200":
+          description: Point submission updated successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Point submission updated successfully"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+    delete:
+      summary: Delete a point submission (admin only)
+      tags: [PointSubmission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Point submission deleted successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Point submission deleted successfully"
+                data: null
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+
+  # =============================================
+  # NIS ROUTES (Admin)
+  # =============================================
+  /nis/account:
+    get:
+      summary: Search NIS accounts from external database (admin only)
+      tags: [PointSubmission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 2 }
+          description: Search keyword (min 2 characters)
+          example: "nusanet"
+      responses:
+        "200":
+          description: NIS accounts retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "NIS accounts retrieved successfully"
+                data:
+                  - custServId: 12345
+                    custId: "CUST001"
+                    accountName: "PT Nusanet"
+                    serviceCode: "SVC001"
+                    serviceName: "Internet 50Mbps"
+                    accountManager: "John Doe"
+                    salesEmployeeId: "EMP-001"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+
 tags:
   - name: Auth
     description: Authentication — register, login, logout, token refresh, and password reset
@@ -5055,3 +5481,5 @@ tags:
     description: Submit and retrieve user feedback stored via Google AppScript
   - name: User
     description: Admin endpoints for managing and listing users
+  - name: PointSubmission
+    description: Admin endpoints for managing point submissions and NIS account search
