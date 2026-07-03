@@ -140,8 +140,10 @@ async function syncUsers() {
                     bankName: row.bank_name || null,
                     identityNumber: row.identity_number || null,
                     status: row.status === 'active' ? UserStatus.ACTIVE : UserStatus.INACTIVE,
+                    isVerified: true,
+                    isBoarding: false,
                 })
-                .orUpdate(["status"], ["id"])
+                .orUpdate(["status", "is_verified", "is_boarding"], ["id"])
                 .execute()
             synced++
         } catch (error: any) {

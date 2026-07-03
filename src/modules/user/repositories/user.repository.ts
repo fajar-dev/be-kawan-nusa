@@ -62,6 +62,13 @@ export class UserRepository implements IUserRepository {
             }
         }
 
+        if (filters.startDate) {
+            query.andWhere("user.created_at >= :startDate", { startDate: filters.startDate })
+        }
+        if (filters.endDate) {
+            query.andWhere("user.created_at <= :endDate", { endDate: filters.endDate + ' 23:59:59' })
+        }
+
         // Get total count
         const countQuery = query.clone()
         const totalResult = await countQuery.getRawMany()

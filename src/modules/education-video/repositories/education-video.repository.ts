@@ -28,6 +28,13 @@ export class EducationVideoRepository implements IEducationVideoRepository {
         if (filters.categoryId) query.andWhere("video.categoryId = :categoryId", { categoryId: filters.categoryId })
         if (filters.q) query.andWhere("video.title LIKE :q OR video.description LIKE :q", { q: `%${filters.q}%` })
 
+        if (filters.startDate) {
+            query.andWhere("video.createdAt >= :startDate", { startDate: filters.startDate })
+        }
+        if (filters.endDate) {
+            query.andWhere("video.createdAt <= :endDate", { endDate: filters.endDate + ' 23:59:59' })
+        }
+
         if (filters.currentUserId !== undefined && filters.isView !== undefined) {
             const condition = filters.isView ? "video.id IN" : "video.id NOT IN"
             query.andWhere(qb => {

@@ -27,8 +27,10 @@ export class UserController {
         const sort = c.req.query("sort") || "createdAt"
         const order = c.req.query("order") || "DESC"
         const status = c.req.query("status")
+        const startDate = c.req.query("startDate")
+        const endDate = c.req.query("endDate")
 
-        const { data, total } = await this.service.getAll(page, limit, q, sort, order, { status })
+        const { data, total } = await this.service.getAll(page, limit, q, sort, order, { status, startDate, endDate })
 
         return ApiResponse.paginate(
             c,

@@ -5,6 +5,8 @@ export interface EducationVideoListFilters {
     q?: string
     currentUserId?: number
     isView?: boolean
+    startDate?: string
+    endDate?: string
 }
 
 export interface IEducationVideoRepository {

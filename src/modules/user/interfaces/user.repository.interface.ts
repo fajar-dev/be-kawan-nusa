@@ -3,6 +3,8 @@ import { User } from "../entities/user.entity"
 
 export interface UserListFilters {
     status?: string
+    startDate?: string
+    endDate?: string
 }
 
 export interface IUserRepository {

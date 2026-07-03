@@ -28,6 +28,13 @@ export class EducationArticleRepository implements IEducationArticleRepository {
         if (filters.categoryId) query.andWhere("article.categoryId = :categoryId", { categoryId: filters.categoryId })
         if (filters.q) query.andWhere("article.title LIKE :q OR article.content LIKE :q", { q: `%${filters.q}%` })
 
+        if (filters.startDate) {
+            query.andWhere("article.createdAt >= :startDate", { startDate: filters.startDate })
+        }
+        if (filters.endDate) {
+            query.andWhere("article.createdAt <= :endDate", { endDate: filters.endDate + ' 23:59:59' })
+        }
+
         if (filters.currentUserId !== undefined && filters.isView !== undefined) {
             const condition = filters.isView ? "article.id IN" : "article.id NOT IN"
             query.andWhere(qb => {

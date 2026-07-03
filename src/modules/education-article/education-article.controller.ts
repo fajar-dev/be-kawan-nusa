@@ -17,12 +17,16 @@ export class EducationArticleController {
         const q = c.req.query("q") || ""
         const isViewParam = c.req.query("isView")
         const isView = isViewParam !== undefined ? isViewParam === "true" : undefined
+        const startDate = c.req.query("startDate")
+        const endDate = c.req.query("endDate")
 
         const { data, total } = await this.service.getAll(page, limit, {
             categoryId,
             q,
             currentUserId: role === "user" ? user?.id : undefined,
             isView,
+            startDate,
+            endDate,
         })
 
         return ApiResponse.paginate(
