@@ -22,7 +22,7 @@ export class PointCalculator {
         const today = new Date().toISOString().split('T')[0]
         const rewards = await manager.find(Point, {
             where: {
-                customerService: { userId },
+                userId,
                 remainingPoint: MoreThan(0),
                 expiredDate: MoreThan(today as any)
             }
@@ -46,12 +46,11 @@ export class PointCalculator {
         // Sorted by expiredDate (ASC) to use points that will expire sooner
         const rewards = await manager.find(Point, {
             where: {
-                customerService: { userId },
+                userId,
                 remainingPoint: MoreThan(0),
                 expiredDate: MoreThan(today as any)
             },
             order: { expiredDate: "ASC", createdAt: "ASC" },
-            relations: ["customerService"]
         })
 
         const totalAvailable = rewards.reduce((sum, r) => sum + Number(r.remainingPoint), 0)
@@ -107,13 +106,12 @@ export class PointCalculator {
         }
 
         if (userId) {
-            where.customerService = { userId }
+            where.userId = userId
         }
 
         // Find rewards with remaining points that have expired
         const expiredRewards = await manager.find(Point, {
             where,
-            relations: ["customerService"],
         })
 
         let totalExpired = 0
@@ -124,7 +122,7 @@ export class PointCalculator {
 
             // Create expired redemption record
             const redemption = manager.create(Redemption, {
-                userId: reward.customerService.userId,
+                userId: reward.userId,
                 pointsUsed: expiredPoints,
                 type: RedemptionType.EXPIRED,
                 status: RedemptionStatus.EXPIRED,

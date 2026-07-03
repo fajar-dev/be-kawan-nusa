@@ -12,7 +12,8 @@ export class AdditionalRepository implements IAdditionalRepository {
                 SELECT DISTINCT c.id as title, 'customer' as module, CONCAT('/customer/', c.id) as route
                 FROM customers c
                 INNER JOIN customer_services cs ON c.id = cs.customer_id
-                WHERE cs.user_id = ? AND (c.id LIKE ? OR c.name LIKE ?)
+                INNER JOIN customer_service_referrals csr ON csr.customer_service_id = cs.id
+                WHERE csr.user_id = ? AND (c.id LIKE ? OR c.name LIKE ?)
             `
             params = [userId, `%${q}%`, `%${q}%`]
         }

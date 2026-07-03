@@ -5,6 +5,7 @@ import { CustomerPhone } from "../modules/customer/entities/customer-phone.entit
 import { CustomerEmail } from "../modules/customer/entities/customer-email.entity"
 import { Service } from "../modules/service/entities/service.entity"
 import { CustomerService } from "../modules/customer-service/entities/customer-service.entity"
+import { CustomerServiceReferral } from "../modules/customer-service/entities/customer-service-referral.entity"
 import { User } from "../modules/user/entities/user.entity"
 import { Point } from "../modules/point/entities/point.entity"
 import { Catalog } from "../modules/catalog/entities/catalog.entity"
@@ -44,7 +45,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, User, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, JobQueue, JobQueueFailure],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, JobQueue, JobQueueFailure],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

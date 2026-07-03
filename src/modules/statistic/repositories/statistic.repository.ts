@@ -25,7 +25,7 @@ export class StatisticRepository implements IStatisticRepository {
     async getCustomerTotal(userId: number): Promise<number> {
         const result = await this.customerRepository.createQueryBuilder("customer")
             .innerJoin("customer.services", "cs")
-            .where("cs.userId = :userId", { userId })
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
             .select("COUNT(DISTINCT customer.id)", "total")
             .getRawOne()
         return Number(result?.total || 0)
@@ -34,7 +34,7 @@ export class StatisticRepository implements IStatisticRepository {
     async getCustomerCountByMonth(userId: number, month: number, year: number): Promise<number> {
         const result = await this.customerRepository.createQueryBuilder("customer")
             .innerJoin("customer.services", "cs")
-            .where("cs.userId = :userId", { userId })
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
             .andWhere("MONTH(customer.createdAt) = :month", { month })
             .andWhere("YEAR(customer.createdAt) = :year", { year })
             .select("COUNT(DISTINCT customer.id)", "total")
@@ -43,12 +43,14 @@ export class StatisticRepository implements IStatisticRepository {
     }
 
     async getCustomerServiceTotal(userId: number): Promise<number> {
-        return await this.customerServiceRepository.count({ where: { userId } })
+        return await this.customerServiceRepository.createQueryBuilder("cs")
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
+            .getCount()
     }
 
     async getCustomerServiceCountByMonth(userId: number, month: number, year: number): Promise<number> {
         return await this.customerServiceRepository.createQueryBuilder("cs")
-            .where("cs.userId = :userId", { userId })
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
             .andWhere("MONTH(cs.referenceDate) = :month", { month })
             .andWhere("YEAR(cs.referenceDate) = :year", { year })
             .getCount()
@@ -56,9 +58,8 @@ export class StatisticRepository implements IStatisticRepository {
 
     async getPointsByMonth(userId: number, month: number, year: number): Promise<number> {
         const result = await this.pointRepository.createQueryBuilder("reward")
-            .innerJoin("reward.customerService", "cs")
             .select("SUM(reward.point)", "total")
-            .where("cs.userId = :userId", { userId })
+            .where("reward.userId = :userId", { userId })
             .andWhere("MONTH(reward.createdAt) = :month", { month })
             .andWhere("YEAR(reward.createdAt) = :year", { year })
             .getRawOne()
@@ -67,10 +68,9 @@ export class StatisticRepository implements IStatisticRepository {
 
     async getMonthlyPointSums(userId: number, year: number): Promise<MonthlyCount[]> {
         const rawData = await this.pointRepository.createQueryBuilder("reward")
-            .innerJoin("reward.customerService", "cs")
             .select("MONTH(reward.createdAt)", "month")
             .addSelect("SUM(reward.point)", "total")
-            .where("cs.userId = :userId", { userId })
+            .where("reward.userId = :userId", { userId })
             .andWhere("YEAR(reward.createdAt) = :year", { year })
             .groupBy("month")
             .orderBy("month", "ASC")
@@ -85,9 +85,9 @@ export class StatisticRepository implements IStatisticRepository {
     ): Promise<{ day: number; count: number }[]> {
         const rawData = await this.customerRepository.createQueryBuilder("customer")
             .innerJoin("customer.services", "cs")
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
             .select("DAY(customer.createdAt)", "day")
             .addSelect("COUNT(DISTINCT customer.id)", "count")
-            .where("cs.userId = :userId", { userId })
             .andWhere("YEAR(customer.createdAt) = :year", { year })
             .andWhere("MONTH(customer.createdAt) = :month", { month })
             .groupBy("day")
@@ -99,9 +99,9 @@ export class StatisticRepository implements IStatisticRepository {
     async getCustomerCountByMonthInYear(userId: number, year: number): Promise<MonthlyCount[]> {
         const rawData = await this.customerRepository.createQueryBuilder("customer")
             .innerJoin("customer.services", "cs")
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
             .select("MONTH(customer.createdAt)", "month")
             .addSelect("COUNT(DISTINCT customer.id)", "count")
-            .where("cs.userId = :userId", { userId })
             .andWhere("YEAR(customer.createdAt) = :year", { year })
             .groupBy("month")
             .orderBy("month", "ASC")

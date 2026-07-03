@@ -92,4 +92,19 @@ export class PointSubmissionRepository implements IPointSubmissionRepository {
         const count = await query.getCount()
         return count > 0
     }
+
+    async existsByCustServIdAndUser(custServId: number, userId: number, excludeId?: number): Promise<boolean> {
+        const query = this.repository.createQueryBuilder("ps")
+            .where("JSON_EXTRACT(ps.nisData, '$.custServId') = :custServId", { custServId })
+            .andWhere("ps.userId = :userId", { userId })
+            .andWhere("ps.status != 'rejected'")
+
+        if (excludeId) {
+            query.andWhere("ps.id != :excludeId", { excludeId })
+        }
+
+        const count = await query.getCount()
+        return count > 0
+    }
 }
+

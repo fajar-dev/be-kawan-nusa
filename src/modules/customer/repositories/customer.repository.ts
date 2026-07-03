@@ -25,7 +25,7 @@ export class CustomerRepository implements ICustomerRepository {
         const skip = (page - 1) * limit
         const query = this.repository.createQueryBuilder("customer")
             .innerJoin("customer.services", "user_cs")
-            .where("user_cs.userId = :userId", { userId })
+            .innerJoin("user_cs.referrals", "ref", "ref.userId = :userId", { userId })
 
         if (q) {
             query.andWhere(new Brackets(qb => {
@@ -67,7 +67,8 @@ export class CustomerRepository implements ICustomerRepository {
             .leftJoinAndSelect("customer.phones", "phones")
             .leftJoinAndSelect("customer.emails", "emails")
             .innerJoin("customer.services", "cs")
-            .where("customer.id = :id AND cs.userId = :userId", { id, userId })
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
+            .where("customer.id = :id", { id })
             .getOne()
 
         if (!customer) return null

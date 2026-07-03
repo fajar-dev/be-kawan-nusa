@@ -4,7 +4,7 @@ import { Customer } from "../../customer/entities/customer.entity"
 import { Service } from "../../service/entities/service.entity"
 import { CustomerServiceStatus } from "../customer-service.enum"
 import { Point } from "../../point/entities/point.entity"
-import { User } from "../../user/entities/user.entity"
+import { CustomerServiceReferral } from "./customer-service-referral.entity"
 import { Employee } from "../../employee/entities/employee.entity"
 
 @Entity("customer_services")
@@ -20,9 +20,6 @@ export class CustomerService {
     @Column({ name: "service_code" })
     serviceCode!: string
 
-    @Index()
-    @Column({ name: "user_id" })
-    userId!: number
 
     @Column({ name: "account_name", type: "varchar" })
     accountName!: string
@@ -68,9 +65,8 @@ export class CustomerService {
     @OneToMany(() => Point, (point) => point.customerService)
     rewards!: Relation<Point[]>
 
-    @ManyToOne(() => User, (user) => user.customerServices)
-    @JoinColumn({ name: "user_id" })
-    user!: Relation<User>
+    @OneToMany(() => CustomerServiceReferral, (ref) => ref.customerService)
+    referrals!: Relation<CustomerServiceReferral[]>
 
     @ManyToOne(() => Employee, { nullable: true, eager: false })
     @JoinColumn({ name: "sales_id" })

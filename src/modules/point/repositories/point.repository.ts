@@ -15,7 +15,7 @@ export class PointRepository implements IPointRepository {
             .leftJoinAndSelect("reward.customerService", "cs")
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.customer", "customer")
-            .where("cs.userId = :userId", { userId })
+            .where("reward.userId = :userId", { userId })
 
         this.applyCommonFilters(query, q, filters)
 
@@ -32,7 +32,7 @@ export class PointRepository implements IPointRepository {
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.customer", "customer")
             .where("customer.id = :customerId", { customerId })
-            .andWhere("cs.userId = :userId", { userId })
+            .andWhere("reward.userId = :userId", { userId })
 
         this.applyCommonFilters(query, q, filters)
 
@@ -46,9 +46,8 @@ export class PointRepository implements IPointRepository {
     async getTotalAvailablePoints(userId: number): Promise<number> {
         const today = new Date().toISOString().split("T")[0]
         const result = await this.repository.createQueryBuilder("reward")
-            .innerJoin("reward.customerService", "cs")
             .select("SUM(reward.remainingPoint)", "total")
-            .where("cs.userId = :userId", { userId })
+            .where("reward.userId = :userId", { userId })
             .andWhere("reward.expiredDate > :today", { today })
             .getRawOne()
         return Number(result?.total || 0)

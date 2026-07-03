@@ -101,7 +101,7 @@ describe("Point Submission Module", () => {
 
     describe("GET /point-submission/check-account", () => {
         it("should return result for admin", async () => {
-            const res = await authRequest("/point-submission/check-account?custServId=999999", adminToken)
+            const res = await authRequest("/point-submission/check-account?custServId=999999&userId=1", adminToken)
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
         })

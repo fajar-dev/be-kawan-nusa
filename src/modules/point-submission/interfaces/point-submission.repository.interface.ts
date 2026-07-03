@@ -27,4 +27,6 @@ export interface IPointSubmissionRepository {
     delete(id: number): Promise<void>
 
     existsByCustServId(custServId: number, excludeId?: number): Promise<boolean>
+
+    existsByCustServIdAndUser(custServId: number, userId: number, excludeId?: number): Promise<boolean>
 }

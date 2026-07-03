@@ -405,7 +405,6 @@ async function syncCustomerServices() {
                     id: row.id,
                     customerId: row.customer_id,
                     serviceCode: row.service_code,
-                    userId: row.user_id,
                     accountName: row.account_name || null,
                     registrationDate: row.registration_date,
                     activationDate: row.activation_date || null,
@@ -416,6 +415,15 @@ async function syncCustomerServices() {
                     salesId: salesId,
                     status: statusEnum,
                 }, ["id"])
+
+                // Upsert pivot table (customer_service_referrals)
+                if (row.user_id) {
+                    await AppDataSource.query(
+                        `INSERT IGNORE INTO customer_service_referrals (customer_service_id, user_id) VALUES (?, ?)`,
+                        [row.id, row.user_id]
+                    )
+                }
+
                 synced++
             } catch (err: any) {
                 // Ignore FK constraint failures mostly, but log them for debugging

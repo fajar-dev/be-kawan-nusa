@@ -1,4 +1,4 @@
-import { Brackets, In, Repository } from "typeorm"
+import { Brackets, Repository } from "typeorm"
 import { AppDataSource } from "../../../config/database"
 import { Service } from "../entities/service.entity"
 import { CustomerService as CustomerServiceEntity } from "../../customer-service/entities/customer-service.entity"
@@ -26,8 +26,9 @@ export class ServiceRepository implements IServiceRepository {
         const { startDate, endDate, isActive, category } = filters
 
         const query = this.repository.createQueryBuilder("service")
-            .leftJoin("customer_services", "cs", "cs.service_code = service.code AND cs.user_id = :userId", { userId })
-            .leftJoin("points", "r", "r.customer_service_id = cs.id")
+            .leftJoin("customer_service_referrals", "csr", "csr.user_id = :userId", { userId })
+            .leftJoin("customer_services", "cs", "cs.id = csr.customer_service_id AND cs.service_code = service.code")
+            .leftJoin("points", "r", "r.customer_service_id = cs.id AND r.user_id = :userId", { userId })
             .select("service")
             .addSelect("COUNT(DISTINCT cs.id)", "totalCustomerServices")
             .addSelect("MAX(cs.reference_date)", "lastReferanceDate")
@@ -76,11 +77,14 @@ export class ServiceRepository implements IServiceRepository {
         if (!service) return null
 
         const serviceCodes = [service.code]
-        const customerServices = await this.customerServiceRepo.find({
-            where: { serviceCode: In(serviceCodes), userId },
-            relations: ["customer", "rewards"],
-            order: { referenceDate: "DESC" },
-        })
+        const customerServices = await this.customerServiceRepo
+            .createQueryBuilder("cs")
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
+            .leftJoinAndSelect("cs.customer", "customer")
+            .leftJoinAndSelect("cs.rewards", "reward")
+            .where("cs.serviceCode IN (:...serviceCodes)", { serviceCodes })
+            .orderBy("cs.referenceDate", "DESC")
+            .getMany()
 
         const result = service as ServiceWithStats
         result.totalCustomerServices = customerServices.length

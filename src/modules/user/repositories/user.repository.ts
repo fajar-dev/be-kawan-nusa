@@ -35,14 +35,14 @@ export class UserRepository implements IUserRepository {
                 return subQuery
                     .select("MAX(cs.reference_date)", "lastReferanceDate")
                     .from("customer_services", "cs")
-                    .where("cs.user_id = user.id")
+                    .innerJoin("customer_service_referrals", "csr", "csr.customer_service_id = cs.id")
+                    .where("csr.user_id = user.id")
             }, "lastReferanceDate")
             .addSelect(subQuery => {
                 return subQuery
                     .select("COALESCE(SUM(r.remaining_point), 0)", "total")
                     .from("points", "r")
-                    .innerJoin("customer_services", "rcs", "rcs.id = r.customer_service_id")
-                    .where("rcs.user_id = user.id")
+                    .where("r.user_id = user.id")
                     .andWhere("r.expired_date > :today", { today })
             }, "point")
 

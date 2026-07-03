@@ -68,14 +68,19 @@ export class PointSubmissionController {
 
     async checkAccount(c: Context) {
         const custServId = Number(c.req.query("custServId"))
+        const userId = Number(c.req.query("userId"))
         const excludeId = c.req.query("excludeId") ? Number(c.req.query("excludeId")) : undefined
 
         if (!custServId || isNaN(custServId)) {
             return ApiResponse.error(c, "custServId is required", 400)
         }
 
-        const exists = await this.service.checkAccountExists(custServId, excludeId)
-        return ApiResponse.success(c, { exists }, "Account check completed")
+        if (!userId || isNaN(userId)) {
+            return ApiResponse.error(c, "userId is required", 400)
+        }
+
+        const result = await this.service.checkAccountExists(custServId, userId, excludeId)
+        return ApiResponse.success(c, result, "Account check completed")
     }
 
     async searchNisAccounts(c: Context) {

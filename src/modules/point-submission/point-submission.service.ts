@@ -22,8 +22,10 @@ export class PointSubmissionService {
         return item
     }
 
-    async checkAccountExists(custServId: number, excludeId?: number): Promise<boolean> {
-        return await this.repository.existsByCustServId(custServId, excludeId)
+    async checkAccountExists(custServId: number, userId: number, excludeId?: number): Promise<{ existsForUser: boolean; existsForOthers: boolean }> {
+        const existsForUser = await this.repository.existsByCustServIdAndUser(custServId, userId, excludeId)
+        const existsForOthers = await this.repository.existsByCustServId(custServId, excludeId)
+        return { existsForUser, existsForOthers }
     }
 
     async create(data: Partial<PointSubmission>): Promise<PointSubmission> {

@@ -4,6 +4,7 @@ import { Customer } from "../../modules/customer/entities/customer.entity"
 import { CustomerPhone } from "../../modules/customer/entities/customer-phone.entity"
 import { CustomerEmail } from "../../modules/customer/entities/customer-email.entity"
 import { CustomerService } from "../../modules/customer-service/entities/customer-service.entity"
+import { CustomerServiceReferral } from "../../modules/customer-service/entities/customer-service-referral.entity"
 import { Service } from "../../modules/service/entities/service.entity"
 import { Employee } from "../../modules/employee/entities/employee.entity"
 import { CustomerType } from "../../modules/customer/customer.enum"
@@ -180,15 +181,34 @@ export class NisHelper {
             if (row.serviceCategory === 'Access Home') categoryEnum = ServiceCategory.ACCESS_HOME
             else if (row.serviceCategory === 'Digital Business') categoryEnum = ServiceCategory.DIGITAL_BUSINESS
 
-            await manager.getRepository(Service).upsert({
-                code: row.serviceCode,
-                name: row.serviceName || 'Unknown',
-                type: typeEnum,
-                category: categoryEnum,
-                isActive: true,
-            }, ["code"])
+             // 1. Sync Service (Find or Create by code)
+            try {
+                let service = await manager.getRepository(Service).findOneBy({ code: row.serviceCode })
+                if (service) {
+                    // Update existing
+                    await manager.getRepository(Service).update(service.id, {
+                        name: row.serviceName || 'Unknown',
+                        type: typeEnum,
+                        category: categoryEnum,
+                        isActive: true,
+                    })
+                } else {
+                    // Create new
+                    service = manager.create(Service, {
+                        code: row.serviceCode,
+                        name: row.serviceName || 'Unknown',
+                        type: typeEnum,
+                        category: categoryEnum,
+                        isActive: true,
+                    })
+                    await manager.save(service)
+                }
+            } catch (err: any) {
+                console.error(`[NisHelper] Sync Service failed: ${err.message}`)
+                throw err
+            }
 
-            // 2. Upsert Customer
+             // 2. Upsert Customer
             const custTypeVals = Object.values(CustomerType) as string[]
             let custTypeEnum: CustomerType | undefined = undefined
             if (row.customerType && custTypeVals.includes(row.customerType)) {
@@ -234,7 +254,7 @@ export class NisHelper {
                         label: emailRow.label || 'Email'
                     }, ["id"])
                 } catch (err) {
-                    console.warn(`[NisHelper] Skipped email ID ${emailRow.id} for customer ${row.customerId}`)
+                    console.warn(`[NisHelper] Skipped email ID ${emailRow.id} failed for customer ${row.customerId}`)
                 }
             }
 
@@ -257,7 +277,6 @@ export class NisHelper {
                 id: row.id,
                 customerId: row.customerId,
                 serviceCode: row.serviceCode,
-                userId: userId,
                 accountName: row.accountName || null,
                 registrationDate: row.registrationDate,
                 activationDate: row.activationDate || null,
@@ -268,6 +287,12 @@ export class NisHelper {
                 salesId: salesId,
                 status: statusEnum,
             }, ["id"])
+
+            // 7. Upsert CustomerServiceReferral (pivot table)
+            await manager.getRepository(CustomerServiceReferral).upsert({
+                customerServiceId: row.id,
+                userId: userId,
+            }, ["customerServiceId", "userId"])
 
             return {
                 customerId: row.customerId,

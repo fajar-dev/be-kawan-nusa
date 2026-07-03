@@ -38,6 +38,7 @@ async function processPointSubmission(item: JobQueue, nisHelper: NisHelper, poin
     await AppDataSource.transaction(async (manager) => {
         await pointCalculator.addPointsReward(manager, {
             customerServiceId: syncResult.customerServiceId,
+            userId,
             price,
             point,
             remainingPoint: point,

@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm"
 import type { Relation } from "typeorm"
-import { CustomerService } from "../../customer-service/entities/customer-service.entity"
+import { CustomerServiceReferral } from "../../customer-service/entities/customer-service-referral.entity"
 import { Redemption } from "../../redemption/entities/redemption.entity"
 import { PasswordResetToken } from "../../auth/entities/password-reset-token.entity"
 import { EmailVerificationToken } from "../../auth/entities/email-verification-token.entity"
@@ -103,8 +103,8 @@ export class User {
     @Column({ name: "is_boarding", default: false })
     isBoarding!: boolean
 
-    @OneToMany(() => CustomerService, (customerService) => customerService.user)
-    customerServices!: Relation<CustomerService[]>
+    @OneToMany(() => CustomerServiceReferral, (ref) => ref.user)
+    referrals!: Relation<CustomerServiceReferral[]>
 
     @OneToMany(() => Redemption, (redemption) => redemption.user)
     redemptions!: Relation<Redemption[]>

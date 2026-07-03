@@ -448,9 +448,10 @@ components:
 
     CreatePointRequest:
       type: object
-      required: [customerServiceId, price, point, type]
+      required: [customerServiceId, userId, price, point, type]
       properties:
         customerServiceId: { type: integer, minimum: 1, example: 42 }
+        userId: { type: integer, minimum: 1, example: 5, description: "The referral user ID" }
         price: { type: number, minimum: 0, example: 250000 }
         point: { type: number, minimum: 0, example: 500 }
         type:
@@ -5300,6 +5301,10 @@ paths:
   /point-submission/check-account:
     get:
       summary: Check if a NIS account is already submitted (admin only)
+      description: |
+        Returns two flags:
+        - `existsForUser`: true if this specific user already submitted this custServId (hard block)
+        - `existsForOthers`: true if any user (including this one) already submitted this custServId (warning only)
       tags: [PointSubmission]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -5308,6 +5313,12 @@ paths:
           required: true
           schema: { type: integer }
           example: 12345
+        - name: userId
+          in: query
+          required: true
+          schema: { type: integer }
+          description: The referral user ID to check against
+          example: 5
         - name: excludeId
           in: query
           schema: { type: integer }
@@ -5322,7 +5333,8 @@ paths:
                 statusCode: 200
                 message: "Account check completed"
                 data:
-                  exists: false
+                  existsForUser: false
+                  existsForOthers: true
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
         "403":

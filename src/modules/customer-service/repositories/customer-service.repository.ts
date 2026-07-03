@@ -1,6 +1,7 @@
 import { Brackets, Repository } from "typeorm"
 import { AppDataSource } from "../../../config/database"
 import { CustomerService } from "../entities/customer-service.entity"
+import { CustomerServiceReferral } from "../entities/customer-service-referral.entity"
 import { Customer } from "../../customer/entities/customer.entity"
 import { Point } from "../../point/entities/point.entity"
 import {
@@ -76,7 +77,7 @@ export class CustomerServiceRepository implements ICustomerServiceRepository {
             .leftJoinAndSelect("cs.service", "service")
             .leftJoinAndSelect("cs.rewards", "reward")
             .leftJoinAndSelect("cs.sales", "sales")
-            .where("cs.userId = :userId", { userId })
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
 
         if (q) {
             query.andWhere(new Brackets(qb => {
@@ -126,7 +127,7 @@ export class CustomerServiceRepository implements ICustomerServiceRepository {
             .leftJoinAndSelect("cs.rewards", "reward")
             .leftJoinAndSelect("cs.sales", "sales")
             .where("cs.customerId = :customerId", { customerId })
-            .andWhere("cs.userId = :userId", { userId })
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
 
         if (q) {
             query.andWhere(new Brackets(qb => {
@@ -165,7 +166,7 @@ export class CustomerServiceRepository implements ICustomerServiceRepository {
             .leftJoinAndSelect("cs.rewards", "reward")
             .leftJoinAndSelect("cs.sales", "sales")
             .where("cs.serviceCode = :serviceCode", { serviceCode })
-            .andWhere("cs.userId = :userId", { userId })
+            .innerJoin("cs.referrals", "ref", "ref.userId = :userId", { userId })
 
         if (q) {
             query.andWhere(new Brackets(qb => {
@@ -188,7 +189,12 @@ export class CustomerServiceRepository implements ICustomerServiceRepository {
     }
 
     async existsByCustomerAndUser(customerId: string, userId: number): Promise<boolean> {
-        const count = await this.repository.countBy({ customerId, userId })
+        const count = await AppDataSource.getRepository(CustomerServiceReferral)
+            .createQueryBuilder("ref")
+            .innerJoin("ref.customerService", "cs")
+            .where("cs.customerId = :customerId", { customerId })
+            .andWhere("ref.userId = :userId", { userId })
+            .getCount()
         return count > 0
     }
 }
