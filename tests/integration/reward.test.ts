@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "bun:test"
 import { authRequest, request } from "../helpers/test-client"
 import { createTestUser, generateUserToken, cleanupTestUser } from "../helpers/auth.helper"
 import { User } from "../../src/modules/user/entities/user.entity"
+import { config } from "../../src/config/config"
 
 describe("Point Module (Reward)", () => {
     let testUser: User
@@ -31,6 +32,75 @@ describe("Point Module (Reward)", () => {
         it("should fail without auth", async () => {
             const res = await request("/point/reward")
             expect(res.status).toBe(401)
+        })
+    })
+
+    describe("POST /point/reward", () => {
+        it("should fail without api key (401)", async () => {
+            const res = await request("/point/reward", {
+                method: "POST",
+                body: {
+                    customerServiceId: 1,
+                    userId: testUser.id,
+                    price: 100000,
+                    point: 100,
+                    type: "OTC",
+                },
+            })
+            expect(res.status).toBe(401)
+        })
+
+        it("should fail with invalid api key (401)", async () => {
+            const res = await request("/point/reward", {
+                method: "POST",
+                headers: { "x-api-key": "wrong-key" },
+                body: {
+                    customerServiceId: 1,
+                    userId: testUser.id,
+                    price: 100000,
+                    point: 100,
+                    type: "OTC",
+                },
+            })
+            expect(res.status).toBe(401)
+        })
+
+        it("should fail with invalid body (422)", async () => {
+            const res = await request("/point/reward", {
+                method: "POST",
+                headers: { "x-api-key": config.app.apiKey },
+                body: {},
+            })
+            expect(res.status).toBe(422)
+        })
+
+        it("should fail without userId (422)", async () => {
+            const res = await request("/point/reward", {
+                method: "POST",
+                headers: { "x-api-key": config.app.apiKey },
+                body: {
+                    customerServiceId: 1,
+                    price: 100000,
+                    point: 100,
+                    type: "OTC",
+                },
+            })
+            expect(res.status).toBe(422)
+        })
+
+        it("should fail with non-existent customerServiceId (404)", async () => {
+            const res = await request("/point/reward", {
+                method: "POST",
+                headers: { "x-api-key": config.app.apiKey },
+                body: {
+                    customerServiceId: 999999,
+                    userId: testUser.id,
+                    price: 100000,
+                    point: 100,
+                    type: "OTC",
+                },
+            })
+            expect(res.status).toBe(404)
         })
     })
 })

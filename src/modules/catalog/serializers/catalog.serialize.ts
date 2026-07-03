@@ -13,7 +13,6 @@ export class CatalogSerializer {
     static async single(item: any) {
         return {
             id: Number(item.id),
-            categoryId: Number(item.categoryId),
             name: item.name,
             type: item.type,
             description: item.description,

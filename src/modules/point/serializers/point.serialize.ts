@@ -4,7 +4,6 @@ export class PointSerializer {
     static single(point: Point) {
         return {
             id: point.id,
-            customerServiceId: point.customerServiceId,
             price: Number(point.price),
             expiredDate: point.expiredDate,
             point: Number(point.point),

@@ -20,7 +20,6 @@ export class EducationArticleSerializer {
             } : null,
             readingTime: this.calculateReadingTime(item.content),
             isView: !!item.isViewed,
-            categoryId: item.categoryId,
             category: item.category ? {
                 id: item.category.id,
                 name: item.category.name

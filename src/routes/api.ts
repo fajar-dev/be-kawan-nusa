@@ -122,7 +122,7 @@ routes.get("/customer-service", authMiddleware, roleMiddleware('user'), (c) => c
 
 // Point (Reward)
 routes.get("/point/reward", authMiddleware, roleMiddleware('user'), (c) => pointController.index(c))
-routes.post("/point/reward", apiKeyMiddleware, roleMiddleware('admin'), zValidator("json", CreatePointValidator, validationHook), (c) => pointController.store(c))
+routes.post("/point/reward", apiKeyMiddleware, zValidator("json", CreatePointValidator, validationHook), (c) => pointController.store(c))
 
 // Statistic
 routes.get("/statistic/count", authMiddleware, roleMiddleware('user'), (c) => statisticController.count(c))

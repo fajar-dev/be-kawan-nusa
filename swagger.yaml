@@ -392,7 +392,6 @@ components:
       type: object
       properties:
         id: { type: integer, example: 101 }
-        customerServiceId: { type: integer, example: 42 }
         price: { type: number, example: 250000 }
         expiredDate: { type: string, format: date, example: "2025-03-01" }
         point: { type: number, example: 500 }
@@ -593,7 +592,6 @@ components:
       type: object
       properties:
         id: { type: integer, example: 5 }
-        categoryId: { type: integer, example: 2 }
         name: { type: string, example: "Voucher Tokopedia 50K" }
         type: { type: string, enum: ["product", "voucher"], example: "voucher" }
         description:
@@ -664,7 +662,6 @@ components:
             photo: { type: string, nullable: true, example: "https://cdn.example.com/photo.jpg" }
         readingTime: { type: string, example: "3 menit baca" }
         isView: { type: boolean, example: false }
-        categoryId: { type: integer, example: 1 }
         category:
           nullable: true
           type: object
@@ -701,7 +698,6 @@ components:
             employeeId: { type: string, example: "EMP-001" }
             photo: { type: string, nullable: true, example: "https://cdn.example.com/photo.jpg" }
         isView: { type: boolean, example: true }
-        categoryId: { type: integer, example: 2 }
         category:
           nullable: true
           type: object
@@ -901,7 +897,6 @@ components:
       type: object
       properties:
         id: { type: integer, example: 1 }
-        userId: { type: integer, example: 5 }
         type: { type: string, enum: [OTC, Bulanan], example: "OTC" }
         point: { type: number, example: 100 }
         price: { type: number, example: 10000 }
@@ -1975,7 +1970,6 @@ paths:
                 message: "Rewards retrieved successfully"
                 data:
                   - id: 101
-                    customerServiceId: 42
                     price: 250000
                     expiredDate: "2025-03-01"
                     point: 500
@@ -2017,6 +2011,7 @@ paths:
             schema: { $ref: "#/components/schemas/CreatePointRequest" }
             example:
               customerServiceId: 42
+              userId: 5
               price: 250000
               point: 500
               type: "OTP"
@@ -2031,7 +2026,6 @@ paths:
                 message: "Reward created successfully"
                 data:
                   id: 101
-                  customerServiceId: 42
                   price: 250000
                   expiredDate: "2025-03-01"
                   point: 500
@@ -3176,7 +3170,6 @@ paths:
                 message: "Customer rewards retrieved successfully"
                 data:
                   - id: 101
-                    customerServiceId: 42
                     price: 250000
                     expiredDate: "2025-03-01"
                     point: 500
@@ -3944,7 +3937,6 @@ paths:
                       photo: "https://cdn.example.com/photo.jpg"
                     readingTime: "3 menit baca"
                     isView: false
-                    categoryId: 1
                     category:
                       id: 1
                       name: "Tips & Trik"
@@ -4056,7 +4048,6 @@ paths:
                     photo: "https://cdn.example.com/photo.jpg"
                   readingTime: "3 menit baca"
                   isView: true
-                  categoryId: 1
                   category:
                     id: 1
                     name: "Tips & Trik"
@@ -4160,7 +4151,6 @@ paths:
                       employeeId: "EMP-001"
                       photo: "https://cdn.example.com/photo.jpg"
                     isView: false
-                    categoryId: 2
                     category:
                       id: 2
                       name: "Tutorial"
@@ -4242,7 +4232,6 @@ paths:
                     employeeId: "EMP-001"
                     photo: "https://cdn.example.com/photo.jpg"
                   isView: true
-                  categoryId: 2
                   category:
                     id: 2
                     name: "Tutorial"
@@ -5229,7 +5218,6 @@ paths:
                 message: "Point submissions retrieved successfully"
                 data:
                   - id: 1
-                    userId: 5
                     type: "OTC"
                     point: 100
                     price: 10000
@@ -5286,7 +5274,6 @@ paths:
                 message: "Point submission created successfully"
                 data:
                   id: 1
-                  userId: 5
                   type: "OTC"
                   point: 100
                   price: 10000
@@ -5394,7 +5381,6 @@ paths:
                 message: "Point submission retrieved successfully"
                 data:
                   id: 1
-                  userId: 5
                   type: "OTC"
                   point: 100
                   price: 10000

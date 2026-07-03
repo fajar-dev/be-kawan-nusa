@@ -4,7 +4,6 @@ export class PointSubmissionSerializer {
     static single(item: PointSubmission) {
         return {
             id: item.id,
-            userId: item.userId,
             type: item.type,
             point: Number(item.point),
             price: Number(item.price),

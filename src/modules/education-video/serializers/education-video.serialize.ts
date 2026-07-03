@@ -20,7 +20,6 @@ export class EducationVideoSerializer {
                 photo: item.author.photo || null,
             } : null,
             isView: !!item.isViewed,
-            categoryId: item.categoryId,
             category: item.category ? {
                 id: item.category.id,
                 name: item.category.name
