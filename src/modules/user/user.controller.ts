@@ -3,6 +3,7 @@ import { UserService } from "./user.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { UserListSerializer } from "./serializers/user-list.serialize"
 import { UserSerializer } from "./serializers/user.serialize"
+import { UserStatusHistorySerializer } from "./serializers/user-status-history.serialize"
 import { CustomerServiceService } from "../customer-service/customer-service.service"
 import { CustomerServiceSerializer } from "../customer-service/serializers/customer-service.serialize"
 import { PointService } from "../point/point.service"
@@ -158,8 +159,15 @@ export class UserController {
 
     async updateStatus(c: Context) {
         const id = Number(c.req.param("id"))
+        const admin = c.get("user")
         const { status, note } = c.req.valid("json" as never)
-        const user = await this.service.updateStatus(id, status, note)
+        const user = await this.service.updateStatus(id, status, note, admin.id)
         return ApiResponse.success(c, await UserSerializer.single(user), "User status updated successfully")
+    }
+
+    async statusHistories(c: Context) {
+        const id = Number(c.req.param("id"))
+        const data = await this.service.getStatusHistories(id)
+        return ApiResponse.success(c, UserStatusHistorySerializer.collection(data), "User status histories retrieved successfully")
     }
 }

@@ -26,6 +26,7 @@ export async function createTestAdmin(overrides: Partial<Employee> = {}): Promis
     const employee = repo.create({
         name: "Test Admin",
         email: `admin-${Date.now()}@nusanet.id`,
+        employeeId: `TEST-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         isActive: true,
         ...overrides,
     })

@@ -177,6 +177,7 @@ routes.get("/user/:id/point", authMiddleware, roleMiddleware('admin'), (c) => us
 routes.get("/user/:id/redeem", authMiddleware, roleMiddleware('admin'), (c) => userController.redemptions(c))
 routes.get("/user/:id/statistic", authMiddleware, roleMiddleware('admin'), (c) => userController.statistic(c))
 routes.patch("/user/:id/status", authMiddleware, roleMiddleware('admin'), zValidator("json", UpdateUserStatusValidator, validationHook), (c) => userController.updateStatus(c))
+routes.get("/user/:id/status-histories", authMiddleware, roleMiddleware('admin'), (c) => userController.statusHistories(c))
 
 // Point Submission (Admin)
 routes.get("/point-submission", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.index(c))

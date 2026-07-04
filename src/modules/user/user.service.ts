@@ -1,8 +1,10 @@
 import { User } from "./entities/user.entity"
+import { UserStatusHistory } from "./entities/user-status-history.entity"
 import { UserStatus } from "./user.enum"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { EntityManager } from "typeorm"
 import { IUserRepository, UserListFilters } from "./interfaces/user.repository.interface"
+import { AppDataSource } from "../../config/database"
 import { mail } from "../../core/helpers/mail"
 import { config } from "../../config/config"
 import * as fs from "fs"
@@ -35,7 +37,7 @@ export class UserService {
         return await this.repository.save(data, manager)
     }
 
-    async updateStatus(id: number, status: UserStatus, note: string): Promise<User> {
+    async updateStatus(id: number, status: UserStatus, note: string, changedById: number): Promise<User> {
         const user = await this.repository.findById(id)
         if (!user) {
             throw new NotFoundException("User not found")
@@ -46,11 +48,23 @@ export class UserService {
             throw new BadRequestException(`Cannot change status from '${user.status}'`)
         }
 
+        const fromStatus = user.status
+
         user.status = status
         user.statusNote = note
         user.statusUpdatedAt = new Date()
 
         const saved = await this.repository.save(user)
+
+        // Record status history
+        const historyRepo = AppDataSource.getRepository(UserStatusHistory)
+        await historyRepo.save({
+            userId: id,
+            fromStatus,
+            toStatus: status,
+            note: note || null,
+            changedById,
+        })
 
         // Send status change email (fire-and-forget)
         this.sendStatusChangeEmail(saved, status, note).catch((err) =>
@@ -58,6 +72,15 @@ export class UserService {
         )
 
         return saved
+    }
+
+    async getStatusHistories(userId: number): Promise<UserStatusHistory[]> {
+        const historyRepo = AppDataSource.getRepository(UserStatusHistory)
+        return await historyRepo.find({
+            where: { userId },
+            relations: ["changedBy"],
+            order: { createdAt: "DESC" },
+        })
     }
 
     private async sendStatusChangeEmail(user: User, status: UserStatus, note: string): Promise<void> {
