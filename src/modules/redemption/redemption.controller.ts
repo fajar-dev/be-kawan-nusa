@@ -5,6 +5,7 @@ import { RedemptionSerializer } from "./serializers/redemption.serialize"
 import { RedemptionCashListSerializer } from "./serializers/redemption-cash-list.serialize"
 import { RedemptionProductListSerializer } from "./serializers/redemption-product-list.serialize"
 import { RedemptionVoucherListSerializer } from "./serializers/redemption-voucher-list.serialize"
+import { RedemptionStatusHistorySerializer } from "./serializers/redemption-status-history.serialize"
 
 export class RedemptionController {
     constructor(private readonly service: RedemptionService) {}
@@ -150,9 +151,10 @@ export class RedemptionController {
 
     async completeCash(c: any) {
         const id = Number(c.req.param("id"))
+        const admin = c.get("user")
 
         try {
-            const data = await this.service.completeCash(id)
+            const data = await this.service.completeCash(id, admin.id)
             return ApiResponse.success(c, await RedemptionSerializer.single(data), "Redemption marked as completed successfully")
         } catch (error: any) {
             return ApiResponse.error(c, error.message || "Failed to complete redemption", 400)
@@ -162,9 +164,10 @@ export class RedemptionController {
     async processProduct(c: any) {
         const id = Number(c.req.param("id"))
         const body = c.req.valid("json")
+        const admin = c.get("user")
 
         try {
-            const data = await this.service.processProduct(id, body.shipper, body.trackingNumber)
+            const data = await this.service.processProduct(id, body.shipper, body.trackingNumber, admin.id)
             return ApiResponse.success(c, await RedemptionSerializer.single(data), "Product redemption is now processing")
         } catch (error: any) {
             return ApiResponse.error(c, error.message || "Failed to process product redemption", 400)
@@ -173,9 +176,10 @@ export class RedemptionController {
 
     async completeProduct(c: any) {
         const id = Number(c.req.param("id"))
+        const admin = c.get("user")
 
         try {
-            const data = await this.service.completeProduct(id)
+            const data = await this.service.completeProduct(id, admin.id)
             return ApiResponse.success(c, await RedemptionSerializer.single(data), "Product redemption marked as completed successfully")
         } catch (error: any) {
             return ApiResponse.error(c, error.message || "Failed to complete product redemption", 400)
@@ -216,9 +220,10 @@ export class RedemptionController {
     async processVoucher(c: any) {
         const id = Number(c.req.param("id"))
         const body = c.req.valid("json")
+        const admin = c.get("user")
 
         try {
-            const data = await this.service.processVoucher(id, body.code, body.expiredDate)
+            const data = await this.service.processVoucher(id, body.code, body.expiredDate, admin.id)
             return ApiResponse.success(c, await RedemptionSerializer.single(data), "Voucher redemption is now processing")
         } catch (error: any) {
             return ApiResponse.error(c, error.message || "Failed to process voucher redemption", 400)
@@ -227,12 +232,19 @@ export class RedemptionController {
 
     async completeVoucher(c: any) {
         const id = Number(c.req.param("id"))
+        const admin = c.get("user")
 
         try {
-            const data = await this.service.completeVoucher(id)
+            const data = await this.service.completeVoucher(id, admin.id)
             return ApiResponse.success(c, await RedemptionSerializer.single(data), "Voucher redemption marked as completed successfully")
         } catch (error: any) {
             return ApiResponse.error(c, error.message || "Failed to complete voucher redemption", 400)
         }
+    }
+
+    async statusHistories(c: Context) {
+        const id = Number(c.req.param("id"))
+        const data = await this.service.getStatusHistories(id)
+        return ApiResponse.success(c, RedemptionStatusHistorySerializer.collection(data), "Redemption status histories retrieved successfully")
     }
 }

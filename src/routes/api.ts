@@ -83,6 +83,7 @@ routes.put("/redemption/product/list/:id", authMiddleware, roleMiddleware('admin
 routes.get("/redemption/voucher/list", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.voucherList(c))
 routes.post("/redemption/voucher/list/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", ProcessVoucherRedemptionValidator, validationHook), (c) => redemptionController.processVoucher(c))
 routes.put("/redemption/voucher/list/:id", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.completeVoucher(c))
+routes.get("/redemption/:id/status-histories", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.statusHistories(c))
 
 // Redemption — User
 routes.get("/redemption", authMiddleware, roleMiddleware('user'), (c) => redemptionController.index(c))

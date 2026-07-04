@@ -4,6 +4,7 @@ import { RedemptionVoucher } from "./entities/redemption-voucher.entity"
 import { RedemptionVoucherDetail } from "./entities/redemption-voucher-detail.entity"
 import { RedemptionProduct } from "./entities/redemption-product.entity"
 import { RedemptionProductShipping } from "./entities/redemption-product-shipping.entity"
+import { RedemptionStatusHistory } from "./entities/redemption-status-history.entity"
 import { User } from "../user/entities/user.entity"
 import { Catalog } from "../catalog/entities/catalog.entity"
 import { CatalogStockHistory } from "../catalog/entities/catalog-stock-history.entity"
@@ -16,6 +17,7 @@ import { IRedemptionRepository, RedemptionListFilters } from "./interfaces/redem
 import { generateWithdrawalNote } from "../../core/helpers/pdf"
 import { minio } from "../../core/helpers/minio"
 import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
+import { AppDataSource } from "../../config/database"
 
 export class RedemptionService {
     constructor(
@@ -248,7 +250,7 @@ export class RedemptionService {
         })
     }
 
-    async completeCash(id: number): Promise<Redemption> {
+    async completeCash(id: number, changedById: number): Promise<Redemption> {
         const redemption = await this.repository.findById(id)
         if (!redemption) {
             throw new NotFoundException("Redemption record not found")
@@ -266,11 +268,13 @@ export class RedemptionService {
             throw new BadRequestException(`Cannot complete redemption with status ${redemption.status}`)
         }
 
+        const fromStatus = redemption.status
         redemption.status = RedemptionStatus.COMPLETED
+        await this.recordStatusHistory(id, fromStatus, RedemptionStatus.COMPLETED, changedById)
         return await this.repository.save(redemption)
     }
 
-    async processProduct(id: number, shipper: Shipper, trackingNumber: string): Promise<Redemption> {
+    async processProduct(id: number, shipper: Shipper, trackingNumber: string, changedById: number): Promise<Redemption> {
         const redemption = await this.repository.findById(id)
         if (!redemption) {
             throw new NotFoundException("Redemption record not found")
@@ -288,6 +292,7 @@ export class RedemptionService {
             throw new BadRequestException("Redemption product data not found")
         }
 
+        const fromStatus = redemption.status
         return await this.unitOfWork.runInTransaction(async (manager) => {
             const shipping = manager.create(RedemptionProductShipping, {
                 redemptionProductId: redemption.redemptionProductId!,
@@ -298,11 +303,12 @@ export class RedemptionService {
             await manager.save(shipping)
 
             redemption.status = RedemptionStatus.PROCESSING
+            await this.recordStatusHistory(id, fromStatus, RedemptionStatus.PROCESSING, changedById)
             return await manager.save(redemption)
         })
     }
 
-    async completeProduct(id: number): Promise<Redemption> {
+    async completeProduct(id: number, changedById: number): Promise<Redemption> {
         const redemption = await this.repository.findById(id)
         if (!redemption) {
             throw new NotFoundException("Redemption record not found")
@@ -316,7 +322,9 @@ export class RedemptionService {
             throw new BadRequestException(`Cannot complete redemption with status ${redemption.status}`)
         }
 
+        const fromStatus = redemption.status
         redemption.status = RedemptionStatus.COMPLETED
+        await this.recordStatusHistory(id, fromStatus, RedemptionStatus.COMPLETED, changedById)
         return await this.repository.save(redemption)
     }
 
@@ -330,7 +338,7 @@ export class RedemptionService {
         return await this.repository.findVoucherList(page, limit, filters, sort, order)
     }
 
-    async processVoucher(id: number, code: string, expiredDate?: string): Promise<Redemption> {
+    async processVoucher(id: number, code: string, expiredDate: string | undefined, changedById: number): Promise<Redemption> {
         const redemption = await this.repository.findById(id)
         if (!redemption) {
             throw new NotFoundException("Redemption record not found")
@@ -348,6 +356,7 @@ export class RedemptionService {
             throw new BadRequestException("Redemption voucher data not found")
         }
 
+        const fromStatus = redemption.status
         return await this.unitOfWork.runInTransaction(async (manager) => {
             const detail = manager.create(RedemptionVoucherDetail, {
                 redemptionVoucherId: redemption.redemptionVoucherId!,
@@ -357,11 +366,12 @@ export class RedemptionService {
             await manager.save(detail)
 
             redemption.status = RedemptionStatus.PROCESSING
+            await this.recordStatusHistory(id, fromStatus, RedemptionStatus.PROCESSING, changedById)
             return await manager.save(redemption)
         })
     }
 
-    async completeVoucher(id: number): Promise<Redemption> {
+    async completeVoucher(id: number, changedById: number): Promise<Redemption> {
         const redemption = await this.repository.findById(id)
         if (!redemption) {
             throw new NotFoundException("Redemption record not found")
@@ -375,8 +385,30 @@ export class RedemptionService {
             throw new BadRequestException(`Cannot complete redemption with status ${redemption.status}`)
         }
 
+        const fromStatus = redemption.status
         redemption.status = RedemptionStatus.COMPLETED
+        await this.recordStatusHistory(id, fromStatus, RedemptionStatus.COMPLETED, changedById)
         return await this.repository.save(redemption)
+    }
+
+    private async recordStatusHistory(redemptionId: number, fromStatus: RedemptionStatus | null, toStatus: RedemptionStatus, changedById: number, note?: string): Promise<void> {
+        const historyRepo = AppDataSource.getRepository(RedemptionStatusHistory)
+        await historyRepo.save({
+            redemptionId,
+            fromStatus,
+            toStatus,
+            note: note || null,
+            changedById,
+        })
+    }
+
+    async getStatusHistories(redemptionId: number): Promise<RedemptionStatusHistory[]> {
+        const historyRepo = AppDataSource.getRepository(RedemptionStatusHistory)
+        return await historyRepo.find({
+            where: { redemptionId },
+            relations: ["changedBy"],
+            order: { createdAt: "DESC" },
+        })
     }
 
     private async generateRedempNo(): Promise<string> {

@@ -18,6 +18,7 @@ import { RedemptionVoucher } from "../modules/redemption/entities/redemption-vou
 import { RedemptionProduct } from "../modules/redemption/entities/redemption-product.entity"
 import { RedemptionProductShipping } from "../modules/redemption/entities/redemption-product-shipping.entity"
 import { RedemptionVoucherDetail } from "../modules/redemption/entities/redemption-voucher-detail.entity"
+import { RedemptionStatusHistory } from "../modules/redemption/entities/redemption-status-history.entity"
 import { EducationCategory } from "../modules/education-category/entities/education-category.entity"
 import { EducationArticle } from "../modules/education-article/entities/education-article.entity"
 import { EducationArticleView } from "../modules/education-article/entities/education-article-view.entity"
@@ -46,7 +47,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, JobQueue, JobQueueFailure],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, JobQueue, JobQueueFailure],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",
