@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Jo
 import type { Relation } from "typeorm"
 import { Catalog } from "./catalog.entity"
 import { Employee } from "../../employee/entities/employee.entity"
+import { User } from "../../user/entities/user.entity"
 import { StockHistoryType } from "../catalog.enum"
 
 @Entity("catalog_stock_histories")
@@ -42,6 +43,14 @@ export class CatalogStockHistory {
     @ManyToOne(() => Employee, { nullable: true })
     @JoinColumn({ name: "created_by_id" })
     createdBy?: Relation<Employee>
+
+    @Index()
+    @Column({ name: "user_id", nullable: true })
+    userId?: number
+
+    @ManyToOne(() => User, { nullable: true })
+    @JoinColumn({ name: "user_id" })
+    user?: Relation<User>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

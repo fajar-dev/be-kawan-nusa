@@ -195,6 +195,7 @@ export class CatalogService {
         stockAfter: number
         notes?: string
         createdById?: number
+        userId?: number
     }): Promise<CatalogStockHistory> {
         const history = this.stockHistoryRepo.create(data)
         return await this.stockHistoryRepo.save(history)
@@ -207,7 +208,7 @@ export class CatalogService {
     ): Promise<{ data: CatalogStockHistory[]; total: number }> {
         const [data, total] = await this.stockHistoryRepo.findAndCount({
             where: { catalogId },
-            relations: ["createdBy"],
+            relations: ["createdBy", "user"],
             order: { createdAt: "DESC" },
             take: limit,
             skip: (page - 1) * limit,

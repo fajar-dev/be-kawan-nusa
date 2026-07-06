@@ -85,6 +85,32 @@ describe("Catalog Module", () => {
             expect(res.status).toBe(404)
         })
 
+        it("should return stock history with user field", async () => {
+            const res = await authRequest("/catalog/1/stock-history", adminToken)
+            if (res.status === 404) return // catalog 1 may not exist in test DB
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+            expect(res.body.meta).toBeDefined()
+            if (res.body.data.length > 0) {
+                const item = res.body.data[0]
+                expect(item).toHaveProperty("id")
+                expect(item).toHaveProperty("type")
+                expect(item).toHaveProperty("quantity")
+                expect(item).toHaveProperty("stockBefore")
+                expect(item).toHaveProperty("stockAfter")
+                expect(item).toHaveProperty("createdBy")
+                expect(item).toHaveProperty("user")
+                expect(item).toHaveProperty("createdAt")
+            }
+        })
+
+        it("should support pagination", async () => {
+            const res = await authRequest("/catalog/1/stock-history?page=1&limit=5", adminToken)
+            if (res.status === 404) return
+            expect(res.status).toBe(200)
+            expect(res.body.meta.perPage).toBe(5)
+        })
+
         it("should fail for user role", async () => {
             const res = await authRequest("/catalog/1/stock-history", userToken)
             expect(res.status).toBe(403)

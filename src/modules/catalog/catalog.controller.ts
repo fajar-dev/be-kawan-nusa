@@ -144,6 +144,10 @@ export class CatalogController {
                 id: item.createdBy.id,
                 name: item.createdBy.name,
             } : null,
+            user: item.user ? {
+                id: item.user.id,
+                name: [item.user.firstName, item.user.lastName].filter(Boolean).join(' '),
+            } : null,
             createdAt: item.createdAt,
         }))
 

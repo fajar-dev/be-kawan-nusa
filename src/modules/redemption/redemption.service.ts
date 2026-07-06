@@ -153,6 +153,7 @@ export class RedemptionService {
                 stockBefore: catalog.stock,
                 stockAfter: catalog.stock - 1,
                 notes: `Penukaran voucher oleh user #${userId}`,
+                userId,
             })
             await manager.save(stockHistory)
 
@@ -212,6 +213,7 @@ export class RedemptionService {
                 stockBefore: catalog.stock,
                 stockAfter: catalog.stock - 1,
                 notes: `Penukaran produk oleh user #${userId}`,
+                userId,
             })
             await manager.save(stockHistory)
 

@@ -3843,6 +3843,7 @@ paths:
                     createdBy:
                       id: 1
                       name: "Admin Nusanet"
+                    user: null
                     createdAt: "2024-06-01T08:00:00.000Z"
                   - id: 2
                     catalogId: 5
@@ -3852,6 +3853,9 @@ paths:
                     stockAfter: 49
                     notes: "Penukaran voucher oleh user #3"
                     createdBy: null
+                    user:
+                      id: 3
+                      name: "John Doe"
                     createdAt: "2024-06-02T10:30:00.000Z"
                 meta:
                   total: 2
