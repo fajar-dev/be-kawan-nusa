@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from "typeorm"
 import type { Relation } from "typeorm"
+import { Role } from "../../role/entities/role.entity"
 
 @Entity("employees")
 export class Employee {
@@ -24,6 +25,10 @@ export class Employee {
     @Column({ nullable: true })
     phone?: string
 
+    @Index()
+    @Column({ name: "role_id", nullable: true })
+    roleId?: number
+
     @Column({ name: "manager_id", nullable: true })
     managerId!: number | null
 
@@ -31,6 +36,10 @@ export class Employee {
     isActive!: boolean
 
     // Relations
+    @ManyToOne(() => Role, { nullable: true })
+    @JoinColumn({ name: "role_id" })
+    role?: Relation<Role>
+
     @ManyToOne(() => Employee, { nullable: true })
     @JoinColumn({ name: "manager_id" })
     manager?: Relation<Employee>

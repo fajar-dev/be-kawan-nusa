@@ -22,7 +22,10 @@ export const authMiddleware = async (c: Context, next: Next) => {
 
         if (role === 'admin') {
             const employeeRepository = AppDataSource.getRepository(Employee)
-            account = await employeeRepository.findOneBy({ id: decoded.sub })
+            account = await employeeRepository.findOne({
+                where: { id: decoded.sub },
+                relations: ["role"],
+            })
         } else {
             const userRepository = AppDataSource.getRepository(User)
             account = await userRepository.findOneBy({ id: decoded.sub })
@@ -34,6 +37,9 @@ export const authMiddleware = async (c: Context, next: Next) => {
 
         c.set('user', account)
         c.set('role', role)
+        if (role === 'admin') {
+            c.set('permissions', (account as Employee).role?.permissions || {})
+        }
         await next()
     } catch (error) {
         throw new UnauthorizedException("Invalid or expired token")

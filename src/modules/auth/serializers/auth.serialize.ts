@@ -19,6 +19,12 @@ export class AuthSerializer {
                 phone: employee.phone,
                 isActive: employee.isActive,
                 role,
+                employeeRole: employee.role ? {
+                    id: employee.role.id,
+                    name: employee.role.name,
+                    color: employee.role.color || null,
+                } : null,
+                permissions: employee.role?.permissions || {},
             }
         }
 
