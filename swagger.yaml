@@ -978,6 +978,102 @@ components:
         accountManager: { type: string, nullable: true, example: "John Doe" }
         salesEmployeeId: { type: string, nullable: true, example: "EMP-001" }
 
+    # --- Role Schemas ---
+    RoleListItem:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Super Admin" }
+        description: { type: string, nullable: true, example: "Full access to all features" }
+        color: { type: string, nullable: true, example: "#FF5733" }
+        permissions:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+          example:
+            dashboard: ["L"]
+            user: ["L", "T", "E", "H"]
+            catalog: ["L", "T"]
+        isDefault: { type: boolean, example: false }
+        employeeCount: { type: integer, example: 5 }
+        createdAt: { type: string, format: date-time, example: "2024-06-01T08:00:00.000Z" }
+        updatedAt: { type: string, format: date-time, example: "2024-06-01T08:00:00.000Z" }
+
+    RoleDetail:
+      allOf:
+        - $ref: "#/components/schemas/RoleListItem"
+        - type: object
+          properties:
+            employees:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: integer, example: 1 }
+                  name: { type: string, example: "Admin Nusanet" }
+                  email: { type: string, example: "admin@nusanet.id" }
+                  photo: { type: string, nullable: true, example: "https://cdn.example.com/photo.jpg" }
+
+    CreateRoleRequest:
+      type: object
+      required: [name, permissions]
+      properties:
+        name: { type: string, example: "Editor" }
+        description: { type: string, example: "Can edit content" }
+        color: { type: string, example: "#00FF00" }
+        permissions:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+          example:
+            education: ["L", "T", "E"]
+            catalog: ["L"]
+        employeeIds:
+          type: array
+          items: { type: integer }
+          example: [1, 2, 3]
+
+    UpdateRoleRequest:
+      type: object
+      properties:
+        name: { type: string, example: "Editor Updated" }
+        description: { type: string, example: "Updated description" }
+        color: { type: string, example: "#0000FF" }
+        permissions:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+          example:
+            education: ["L", "T", "E", "H"]
+            catalog: ["L", "T"]
+        employeeIds:
+          type: array
+          items: { type: integer }
+          example: [1, 2]
+
+    PermissionModule:
+      type: object
+      properties:
+        key: { type: string, example: "dashboard" }
+        label: { type: string, example: "Dashboard Overview" }
+        group: { type: string, example: "Beranda" }
+        actions:
+          type: array
+          items: { type: string }
+          example: ["L"]
+
+    RoleEmployee:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Admin Nusanet" }
+        email: { type: string, example: "admin@nusanet.id" }
+        photo: { type: string, nullable: true, example: "https://cdn.example.com/photo.jpg" }
+        roleId: { type: integer, nullable: true, example: 1 }
+
   parameters:
     PageParam:
       name: page
@@ -5527,6 +5623,348 @@ paths:
         "403":
           description: Forbidden - admin role required
 
+  # =============================================
+  # ROLE MANAGEMENT ROUTES (Admin)
+  # =============================================
+  /role:
+    get:
+      summary: List roles (admin only)
+      description: "Retrieve a paginated list of roles with employee counts. Admin only."
+      tags: [Role]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+      responses:
+        "200":
+          description: Roles retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/RoleListItem"
+                      meta:
+                        $ref: "#/components/schemas/PaginationMeta"
+              example:
+                success: true
+                statusCode: 200
+                message: "Roles retrieved successfully"
+                data:
+                  - id: 1
+                    name: "Super Admin"
+                    description: "Full access"
+                    color: "#FF5733"
+                    permissions:
+                      dashboard: ["L"]
+                      user: ["L", "T", "E", "H"]
+                    isDefault: false
+                    employeeCount: 3
+                    createdAt: "2024-06-01T08:00:00.000Z"
+                    updatedAt: "2024-06-01T08:00:00.000Z"
+                meta:
+                  total: 5
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 1
+                  from: 1
+                  to: 5
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required or insufficient permissions
+    post:
+      summary: Create a role (admin only)
+      description: "Create a new role with permissions. Optionally assign employees. Admin only."
+      tags: [Role]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoleRequest"
+      responses:
+        "201":
+          description: Role created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/RoleListItem"
+              example:
+                success: true
+                statusCode: 201
+                message: "Role created successfully"
+                data:
+                  id: 10
+                  name: "Editor"
+                  description: "Can edit content"
+                  color: "#00FF00"
+                  permissions:
+                    education: ["L", "T", "E"]
+                    catalog: ["L"]
+                  isDefault: false
+                  employeeCount: 0
+                  createdAt: "2024-06-01T08:00:00.000Z"
+                  updatedAt: "2024-06-01T08:00:00.000Z"
+        "400":
+          description: Bad request (e.g. duplicate role name)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+              example:
+                success: false
+                statusCode: 400
+                message: "Role name already exists"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required or insufficient permissions
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  /role/{id}:
+    get:
+      summary: Get role by ID (admin only)
+      description: "Retrieve a single role with its assigned employees. Admin only."
+      tags: [Role]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Role retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/RoleDetail"
+              example:
+                success: true
+                statusCode: 200
+                message: "Role retrieved successfully"
+                data:
+                  id: 1
+                  name: "Super Admin"
+                  description: "Full access"
+                  color: "#FF5733"
+                  permissions:
+                    dashboard: ["L"]
+                    user: ["L", "T", "E", "H"]
+                  isDefault: false
+                  employeeCount: 2
+                  employees:
+                    - id: 1
+                      name: "Admin Nusanet"
+                      email: "admin@nusanet.id"
+                      photo: null
+                    - id: 2
+                      name: "Manager Nusanet"
+                      email: "manager@nusanet.id"
+                      photo: "https://cdn.example.com/photo.jpg"
+                  createdAt: "2024-06-01T08:00:00.000Z"
+                  updatedAt: "2024-06-01T08:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required or insufficient permissions
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    put:
+      summary: Update a role (admin only)
+      description: "Update role name, description, color, permissions, or employee assignments. Admin only."
+      tags: [Role]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoleRequest"
+      responses:
+        "200":
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/RoleListItem"
+              example:
+                success: true
+                statusCode: 200
+                message: "Role updated successfully"
+                data:
+                  id: 1
+                  name: "Super Admin"
+                  description: "Updated description"
+                  color: "#0000FF"
+                  permissions:
+                    dashboard: ["L"]
+                    user: ["L", "T", "E", "H"]
+                  isDefault: false
+                  employeeCount: 2
+                  createdAt: "2024-06-01T08:00:00.000Z"
+                  updatedAt: "2024-06-02T10:00:00.000Z"
+        "400":
+          description: Bad request (e.g. duplicate role name)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+              example:
+                success: false
+                statusCode: 400
+                message: "Role name already exists"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required or insufficient permissions
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+    delete:
+      summary: Delete a role (admin only)
+      description: "Delete a role and unassign all employees from it. Admin only."
+      tags: [Role]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Role deleted successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Role deleted successfully"
+                data: null
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required or insufficient permissions
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+
+  /role/permission-matrix:
+    get:
+      summary: Get permission matrix (admin only)
+      description: "Retrieve all available permission modules with their keys, labels, groups, and allowed actions. Used for building the role permission UI. Admin only."
+      tags: [Role]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Permission matrix retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/PermissionModule"
+              example:
+                success: true
+                statusCode: 200
+                message: "Permission matrix retrieved successfully"
+                data:
+                  - key: "dashboard"
+                    label: "Dashboard Overview"
+                    group: "Beranda"
+                    actions: ["L"]
+                  - key: "user"
+                    label: "Daftar Referral"
+                    group: "Referral"
+                    actions: ["L", "T", "E", "H"]
+                  - key: "catalog"
+                    label: "Katalog Reward"
+                    group: "Katalog Reward"
+                    actions: ["L", "T", "E", "H"]
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required or insufficient permissions
+
+  /role/employees:
+    get:
+      summary: List employees for role assignment (admin only)
+      description: "Retrieve all active employees with their current role assignments. Used in the role assignment UI. Admin only."
+      tags: [Role]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Employees retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BaseResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/RoleEmployee"
+              example:
+                success: true
+                statusCode: 200
+                message: "Employees retrieved successfully"
+                data:
+                  - id: 1
+                    name: "Admin Nusanet"
+                    email: "admin@nusanet.id"
+                    photo: null
+                    roleId: 1
+                  - id: 2
+                    name: "Manager Nusanet"
+                    email: "manager@nusanet.id"
+                    photo: "https://cdn.example.com/photo.jpg"
+                    roleId: 2
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required or insufficient permissions
+
 tags:
   - name: Auth
     description: Authentication — register, login, logout, token refresh, and password reset
@@ -5560,3 +5998,5 @@ tags:
     description: Admin endpoints for managing and listing users
   - name: PointSubmission
     description: Admin endpoints for managing point submissions and NIS account search
+  - name: Role
+    description: Admin endpoints for managing roles, permissions, and employee assignments

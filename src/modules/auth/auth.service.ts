@@ -2,6 +2,7 @@ import { User } from "../user/entities/user.entity"
 import { UserStatus } from "../user/user.enum"
 import { minio } from "../../core/helpers/minio"
 import { Employee } from "../employee/entities/employee.entity"
+import { AppDataSource } from "../../config/database"
 import {
     RegisterValidator,
     LoginValidator,
@@ -199,7 +200,10 @@ export class AuthService {
 
     async adminGoogleLogin(data: GoogleLoginValidator) {
         const payload = await this.authTokenService.verifyGoogleCode(data.code)
-        const employee = await this.employeeService.getByEmail(payload.email!)
+        const employee = await AppDataSource.getRepository(Employee).findOne({
+            where: { email: payload.email! },
+            relations: ["role"],
+        })
 
         if (!employee) {
             throw new BadRequestException("Employee not registered")
@@ -253,7 +257,12 @@ export class AuthService {
             let account: User | Employee
 
             if (role === 'admin') {
-                account = await this.employeeService.getById(decoded.sub)
+                const emp = await AppDataSource.getRepository(Employee).findOne({
+                    where: { id: decoded.sub },
+                    relations: ["role"],
+                })
+                if (!emp) throw new UnauthorizedException("Employee not found")
+                account = emp
             } else {
                 account = await this.userService.getById(decoded.sub)
             }

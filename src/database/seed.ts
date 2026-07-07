@@ -11,6 +11,7 @@ async function seed() {
 
         const seedersDir = path.join(process.cwd(), "database/seeders");
         const seedFiles = [
+            "role_seeder.sql",
             "users_seeder.sql",
             "catalog_seeder.sql",
             "education_seeder.sql",

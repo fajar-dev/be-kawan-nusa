@@ -27,6 +27,7 @@ import { EducationVideoView } from "../modules/education-video/entities/educatio
 import { ServicePromotion } from "../modules/service-promotion/entities/service-promotion.entity"
 import { Template } from "../modules/template/entities/template.entity"
 import { Employee } from "../modules/employee/entities/employee.entity"
+import { Role } from "../modules/role/entities/role.entity"
 import { PasswordResetToken } from "../modules/auth/entities/password-reset-token.entity"
 import { EmailVerificationToken } from "../modules/auth/entities/email-verification-token.entity"
 import { OtpToken } from "../modules/auth/entities/otp-token.entity"
@@ -47,7 +48,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, JobQueue, JobQueueFailure],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, Role, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, JobQueue, JobQueueFailure],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

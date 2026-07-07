@@ -16,6 +16,7 @@ import { UpdateUserStatusValidator } from "../modules/user/validators/user.valid
 import { authMiddleware } from "../core/middlewares/auth.middleware"
 import { apiKeyMiddleware } from "../core/middlewares/api-key.middleware"
 import { roleMiddleware } from "../core/middlewares/role.middleware"
+import { permissionMiddleware } from "../core/middlewares/permission.middleware"
 import { rateLimitMiddleware } from "../core/middlewares/rate-limit.middleware"
 import { validationHook } from "../core/helpers/validator"
 
@@ -40,6 +41,7 @@ import { feedbackController } from "../modules/feedback/feedback.module"
 import { templateController } from "../modules/template/template.module"
 import { userController } from "../modules/user/user.module"
 import { pointSubmissionController } from "../modules/point-submission/point-submission.module"
+import { roleController } from "../modules/role/role.module"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const routes = new Hono()
@@ -75,15 +77,15 @@ routes.post("/profile/documents", authMiddleware, roleMiddleware('user'), (c) =>
 routes.get("/point", authMiddleware, roleMiddleware('user'), (c) => pointController.show(c))
 
 // Redemption — Admin
-routes.get("/redemption/cash/list", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.cashList(c))
-routes.put("/redemption/cash/list/:id", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.completeCash(c))
-routes.get("/redemption/product/list", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.productList(c))
-routes.post("/redemption/product/list/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", ProcessProductRedemptionValidator, validationHook), (c) => redemptionController.processProduct(c))
-routes.put("/redemption/product/list/:id", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.completeProduct(c))
-routes.get("/redemption/voucher/list", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.voucherList(c))
-routes.post("/redemption/voucher/list/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", ProcessVoucherRedemptionValidator, validationHook), (c) => redemptionController.processVoucher(c))
-routes.put("/redemption/voucher/list/:id", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.completeVoucher(c))
-routes.get("/redemption/:id/status-histories", authMiddleware, roleMiddleware('admin'), (c) => redemptionController.statusHistories(c))
+routes.get("/redemption/cash/list", authMiddleware, roleMiddleware('admin'), permissionMiddleware('redemption.cash', 'L'), (c) => redemptionController.cashList(c))
+routes.put("/redemption/cash/list/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('redemption.cash', 'E'), (c) => redemptionController.completeCash(c))
+routes.get("/redemption/product/list", authMiddleware, roleMiddleware('admin'), permissionMiddleware('redemption.product', 'L'), (c) => redemptionController.productList(c))
+routes.post("/redemption/product/list/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('redemption.product', 'E'), zValidator("json", ProcessProductRedemptionValidator, validationHook), (c) => redemptionController.processProduct(c))
+routes.put("/redemption/product/list/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('redemption.product', 'E'), (c) => redemptionController.completeProduct(c))
+routes.get("/redemption/voucher/list", authMiddleware, roleMiddleware('admin'), permissionMiddleware('redemption.voucher', 'L'), (c) => redemptionController.voucherList(c))
+routes.post("/redemption/voucher/list/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('redemption.voucher', 'E'), zValidator("json", ProcessVoucherRedemptionValidator, validationHook), (c) => redemptionController.processVoucher(c))
+routes.put("/redemption/voucher/list/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('redemption.voucher', 'E'), (c) => redemptionController.completeVoucher(c))
+routes.get("/redemption/:id/status-histories", authMiddleware, roleMiddleware('admin'), permissionMiddleware('redemption.cash', 'L'), (c) => redemptionController.statusHistories(c))
 
 // Redemption — User
 routes.get("/redemption", authMiddleware, roleMiddleware('user'), (c) => redemptionController.index(c))
@@ -101,17 +103,17 @@ routes.get("/customer/:id/point", authMiddleware, roleMiddleware('user'), (c) =>
 // Service Promotion
 routes.get("/service/promotion", authMiddleware, (c) => servicePromotionController.index(c))
 routes.get("/service/promotion/:id", authMiddleware, (c) => servicePromotionController.show(c))
-routes.post("/service/promotion", authMiddleware, roleMiddleware('admin'), (c) => servicePromotionController.store(c))
-routes.put("/service/promotion/:id", authMiddleware, roleMiddleware('admin'), (c) => servicePromotionController.update(c))
-routes.delete("/service/promotion/:id", authMiddleware, roleMiddleware('admin'), (c) => servicePromotionController.destroy(c))
+routes.post("/service/promotion", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'T'), (c) => servicePromotionController.store(c))
+routes.put("/service/promotion/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'E'), (c) => servicePromotionController.update(c))
+routes.delete("/service/promotion/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'H'), (c) => servicePromotionController.destroy(c))
 
 // Template
 routes.get("/template", authMiddleware, (c) => templateController.index(c))
 routes.get("/template/:id", authMiddleware, roleMiddleware('user', 'admin'), (c) => templateController.show(c))
 routes.get("/template/:id/download", authMiddleware, roleMiddleware('user', 'admin'), (c) => templateController.download(c))
-routes.post("/template", authMiddleware, roleMiddleware('admin'), (c) => templateController.store(c))
-routes.put("/template/:id", authMiddleware, roleMiddleware('admin'), (c) => templateController.update(c))
-routes.delete("/template/:id", authMiddleware, roleMiddleware('admin'), (c) => templateController.destroy(c))
+routes.post("/template", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'T'), (c) => templateController.store(c))
+routes.put("/template/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'E'), (c) => templateController.update(c))
+routes.delete("/template/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'H'), (c) => templateController.destroy(c))
 
 // Service
 routes.get("/service", authMiddleware, roleMiddleware('user'), (c) => serviceController.index(c))
@@ -130,67 +132,80 @@ routes.get("/statistic/count", authMiddleware, roleMiddleware('user'), (c) => st
 routes.get("/statistic/point", authMiddleware, roleMiddleware('user'), (c) => statisticController.pointPerMonth(c))
 routes.get("/statistic/customer", authMiddleware, roleMiddleware('user'), (c) => statisticController.customerStats(c))
 routes.get("/statistic/redemption-point", authMiddleware, roleMiddleware('user'), (c) => statisticController.redemptionPointStats(c))
-routes.get("/statistic/admin/summary", authMiddleware, roleMiddleware('admin'), (c) => statisticController.adminSummary(c))
+routes.get("/statistic/admin/summary", authMiddleware, roleMiddleware('admin'), permissionMiddleware('dashboard', 'L'), (c) => statisticController.adminSummary(c))
 
 // Catalog Category
 routes.get("/catalog/category", authMiddleware, (c) => catalogCategoryController.index(c))
-routes.post("/catalog/category", authMiddleware, roleMiddleware('admin'), zValidator("json", CreateCatalogCategoryValidator, validationHook), (c) => catalogCategoryController.store(c))
-routes.put("/catalog/category/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", UpdateCatalogCategoryValidator, validationHook), (c) => catalogCategoryController.update(c))
-routes.delete("/catalog/category/:id", authMiddleware, roleMiddleware('admin'), (c) => catalogCategoryController.destroy(c))
+routes.post("/catalog/category", authMiddleware, roleMiddleware('admin'), permissionMiddleware('catalog', 'T'), zValidator("json", CreateCatalogCategoryValidator, validationHook), (c) => catalogCategoryController.store(c))
+routes.put("/catalog/category/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('catalog', 'E'), zValidator("json", UpdateCatalogCategoryValidator, validationHook), (c) => catalogCategoryController.update(c))
+routes.delete("/catalog/category/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('catalog', 'H'), (c) => catalogCategoryController.destroy(c))
 
 // Catalog
 routes.get("/catalog", authMiddleware, (c) => catalogController.index(c))
 routes.get("/catalog/:id", authMiddleware, (c) => catalogController.show(c))
-routes.get("/catalog/:id/stock-history", authMiddleware, roleMiddleware('admin'), (c) => catalogController.stockHistory(c))
-routes.post("/catalog", authMiddleware, roleMiddleware('admin'), (c) => catalogController.store(c))
-routes.put("/catalog/:id", authMiddleware, roleMiddleware('admin'), (c) => catalogController.update(c))
-routes.delete("/catalog/:id", authMiddleware, roleMiddleware('admin'), (c) => catalogController.destroy(c))
-routes.post("/catalog/upload", authMiddleware, roleMiddleware('admin'), (c) => catalogController.uploadImage(c))
+routes.get("/catalog/:id/stock-history", authMiddleware, roleMiddleware('admin'), permissionMiddleware('catalog', 'L'), (c) => catalogController.stockHistory(c))
+routes.post("/catalog", authMiddleware, roleMiddleware('admin'), permissionMiddleware('catalog', 'T'), (c) => catalogController.store(c))
+routes.put("/catalog/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('catalog', 'E'), (c) => catalogController.update(c))
+routes.delete("/catalog/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('catalog', 'H'), (c) => catalogController.destroy(c))
+routes.post("/catalog/upload", authMiddleware, roleMiddleware('admin'), permissionMiddleware('catalog', 'T'), (c) => catalogController.uploadImage(c))
 
 // Education
 routes.get("/education/category", authMiddleware, (c) => educationCategoryController.index(c))
-routes.post("/education/category", authMiddleware, roleMiddleware('admin'), zValidator("json", CreateEducationCategoryValidator, validationHook), (c) => educationCategoryController.store(c))
-routes.put("/education/category/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", UpdateEducationCategoryValidator, validationHook), (c) => educationCategoryController.update(c))
-routes.delete("/education/category/:id", authMiddleware, roleMiddleware('admin'), (c) => educationCategoryController.destroy(c))
+routes.post("/education/category", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'T'), zValidator("json", CreateEducationCategoryValidator, validationHook), (c) => educationCategoryController.store(c))
+routes.put("/education/category/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'E'), zValidator("json", UpdateEducationCategoryValidator, validationHook), (c) => educationCategoryController.update(c))
+routes.delete("/education/category/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'H'), (c) => educationCategoryController.destroy(c))
 
 routes.get("/education/article", authMiddleware, (c) => educationArticleController.index(c))
 routes.get("/education/article/:id", authMiddleware, (c) => educationArticleController.show(c))
-routes.post("/education/article", authMiddleware, roleMiddleware('admin'), (c) => educationArticleController.store(c))
-routes.put("/education/article/:id", authMiddleware, roleMiddleware('admin'), (c) => educationArticleController.update(c))
-routes.delete("/education/article/:id", authMiddleware, roleMiddleware('admin'), (c) => educationArticleController.destroy(c))
-routes.post("/education/article/upload", authMiddleware, roleMiddleware('admin'), (c) => educationArticleController.uploadImage(c))
+routes.post("/education/article", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'T'), (c) => educationArticleController.store(c))
+routes.put("/education/article/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'E'), (c) => educationArticleController.update(c))
+routes.delete("/education/article/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'H'), (c) => educationArticleController.destroy(c))
+routes.post("/education/article/upload", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'T'), (c) => educationArticleController.uploadImage(c))
 
 routes.get("/education/video", authMiddleware, (c) => educationVideoController.index(c))
 routes.get("/education/video/:id", authMiddleware, (c) => educationVideoController.show(c))
-routes.post("/education/video", authMiddleware, roleMiddleware('admin'), (c) => educationVideoController.store(c))
-routes.put("/education/video/:id", authMiddleware, roleMiddleware('admin'), (c) => educationVideoController.update(c))
-routes.delete("/education/video/:id", authMiddleware, roleMiddleware('admin'), (c) => educationVideoController.destroy(c))
+routes.post("/education/video", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'T'), (c) => educationVideoController.store(c))
+routes.put("/education/video/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'E'), (c) => educationVideoController.update(c))
+routes.delete("/education/video/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'H'), (c) => educationVideoController.destroy(c))
 
 // Feedback
 routes.get("/feedback", authMiddleware, (c) => feedbackController.index(c))
 routes.post("/feedback", authMiddleware, zValidator("form", StoreFeedbackValidator, validationHook), (c) => feedbackController.store(c))
 
 // User (Admin)
-routes.get("/user", authMiddleware, roleMiddleware('admin'), (c) => userController.index(c))
-routes.get("/user/:id", authMiddleware, roleMiddleware('admin'), (c) => userController.show(c))
-routes.get("/user/:id/services", authMiddleware, roleMiddleware('admin'), (c) => userController.services(c))
-routes.get("/user/:id/point", authMiddleware, roleMiddleware('admin'), (c) => userController.rewards(c))
-routes.get("/user/:id/redeem", authMiddleware, roleMiddleware('admin'), (c) => userController.redemptions(c))
-routes.get("/user/:id/statistic", authMiddleware, roleMiddleware('admin'), (c) => userController.statistic(c))
-routes.patch("/user/:id/status", authMiddleware, roleMiddleware('admin'), zValidator("json", UpdateUserStatusValidator, validationHook), (c) => userController.updateStatus(c))
-routes.get("/user/:id/status-histories", authMiddleware, roleMiddleware('admin'), (c) => userController.statusHistories(c))
+routes.get("/user", authMiddleware, roleMiddleware('admin'), permissionMiddleware('user', 'L'), (c) => userController.index(c))
+routes.get("/user/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('user', 'L'), (c) => userController.show(c))
+routes.get("/user/:id/services", authMiddleware, roleMiddleware('admin'), permissionMiddleware('user', 'L'), (c) => userController.services(c))
+routes.get("/user/:id/point", authMiddleware, roleMiddleware('admin'), permissionMiddleware('user', 'L'), (c) => userController.rewards(c))
+routes.get("/user/:id/redeem", authMiddleware, roleMiddleware('admin'), permissionMiddleware('user', 'L'), (c) => userController.redemptions(c))
+routes.get("/user/:id/statistic", authMiddleware, roleMiddleware('admin'), permissionMiddleware('user', 'L'), (c) => userController.statistic(c))
+routes.patch("/user/:id/status", authMiddleware, roleMiddleware('admin'), permissionMiddleware('user.approval', 'E'), zValidator("json", UpdateUserStatusValidator, validationHook), (c) => userController.updateStatus(c))
+routes.get("/user/:id/status-histories", authMiddleware, roleMiddleware('admin'), permissionMiddleware('user', 'L'), (c) => userController.statusHistories(c))
 
 // Point Submission (Admin)
-routes.get("/point-submission", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.index(c))
-routes.get("/point-submission/check-account", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.checkAccount(c))
-routes.get("/point-submission/:id", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.show(c))
-routes.post("/point-submission", authMiddleware, roleMiddleware('admin'), zValidator("json", CreatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.store(c))
-routes.put("/point-submission/:id", authMiddleware, roleMiddleware('admin'), zValidator("json", UpdatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.update(c))
-routes.delete("/point-submission/:id", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.destroy(c))
-routes.post("/point-submission/approve", authMiddleware, roleMiddleware('admin'), zValidator("json", ApprovePointSubmissionValidator, validationHook), (c) => pointSubmissionController.approve(c))
+routes.get("/point-submission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.index(c))
+routes.get("/point-submission/check-account", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.checkAccount(c))
+routes.get("/point-submission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.show(c))
+routes.post("/point-submission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'T'), zValidator("json", CreatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.store(c))
+routes.put("/point-submission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'E'), zValidator("json", UpdatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.update(c))
+routes.delete("/point-submission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'H'), (c) => pointSubmissionController.destroy(c))
+routes.post("/point-submission/approve", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'E'), zValidator("json", ApprovePointSubmissionValidator, validationHook), (c) => pointSubmissionController.approve(c))
 
 // NIS (Admin)
-routes.get("/nis/account", authMiddleware, roleMiddleware('admin'), (c) => pointSubmissionController.searchNisAccounts(c))
+routes.get("/nis/account", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.searchNisAccounts(c))
+
+// Role Management (admin only)
+const roleRoutes = new Hono()
+roleRoutes.use("*", authMiddleware, roleMiddleware("admin"))
+roleRoutes.get("/permission-matrix", permissionMiddleware('role', 'L'), (c) => roleController.permissionMatrix(c))
+roleRoutes.get("/employees", permissionMiddleware('role', 'L'), (c) => roleController.employees(c))
+roleRoutes.get("/", permissionMiddleware('role', 'L'), (c) => roleController.index(c))
+roleRoutes.get("/:id", permissionMiddleware('role', 'L'), (c) => roleController.show(c))
+roleRoutes.post("/", permissionMiddleware('role', 'T'), (c) => roleController.store(c))
+roleRoutes.put("/:id", permissionMiddleware('role', 'E'), (c) => roleController.update(c))
+roleRoutes.delete("/:id", permissionMiddleware('role', 'H'), (c) => roleController.destroy(c))
+
+routes.route("/role", roleRoutes)
 
 // Additional
 routes.get("/additional/service", authMiddleware, (c) => additionalController.getServices(c))
