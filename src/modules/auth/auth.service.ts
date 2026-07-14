@@ -81,12 +81,31 @@ export class AuthService {
             accountPath = filename
         }
 
-        const { identity, account, isWhatsapp, identityNumber, ...userData } = data
+        let firstName = data.firstName
+        let lastName = data.lastName
+        if (data.name) {
+            const nameParts = data.name.trim().split(" ")
+            firstName = nameParts[0]
+            lastName = nameParts.slice(1).join(" ") || undefined
+        }
+
+        let hashedPassword: string | undefined
+        let passwordUpdatedAt: Date | undefined
+        if (data.password) {
+            hashedPassword = await hashPassword(data.password)
+            passwordUpdatedAt = new Date()
+        }
+
+        const { identity, account, isWhatsapp, identityNumber, name, password, ...userData } = data
 
         return this.unitOfWork.runInTransaction(async (manager) => {
             const user = await this.userService.save(
                 {
                     ...userData,
+                    firstName: firstName || "User",
+                    lastName,
+                    password: hashedPassword,
+                    passwordUpdatedAt,
                     identityNumber: identityNumber ? Number(identityNumber) : undefined,
                     hasWhatsapp: isWhatsapp === 'true' || isWhatsapp === true,
                     identityPath,

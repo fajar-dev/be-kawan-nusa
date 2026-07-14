@@ -12,24 +12,13 @@ function createTestFile(name: string = "test.jpg", type: string = "image/jpeg"):
     return new File([buffer], name, { type })
 }
 
-// Helper to build a valid register FormData
+// Helper to build a valid register payload
 function buildRegisterForm(overrides: Record<string, any> = {}): FormData {
     const form = new FormData()
     const defaults: Record<string, any> = {
-        firstName: "New",
-        lastName: "User",
-        birthDate: "1990-05-15",
-        birthPlace: "Surabaya",
-        identityNumber: "3201234567890001",
-        taxNumber: "01.234.567.8-901.000",
+        name: "New User",
         email: `register-${Date.now()}@example.com`,
-        phone: `08${Date.now().toString().slice(-10)}`,
-        address: "Jl. Test No. 1",
-        bankName: "BCA",
-        accountNumber: "1234567890",
-        accountHolderName: "New User",
-        identity: createTestFile("ktp.jpg"),
-        account: createTestFile("rekening.jpg"),
+        password: "password123",
     }
     const merged = { ...defaults, ...overrides }
     for (const [key, value] of Object.entries(merged)) {
@@ -75,22 +64,25 @@ describe("Auth Module", () => {
             if (res.body.data?.id) createdUserIds.push(res.body.data.id)
         })
 
-        it("should register with optional company fields", async () => {
-            const form = buildRegisterForm({
-                company: "PT Test",
-                jobPosition: "Developer",
-                companyAddress: "Jl. Office No. 5",
+        it("should register via JSON payload", async () => {
+            const res = await request("/auth/register", {
+                method: "POST",
+                body: {
+                    name: "JSON User",
+                    email: `json-register-${Date.now()}@example.com`,
+                    password: "password123",
+                },
             })
-            const res = await formRequest("/auth/register", form)
             expect(res.status).toBe(201)
             expect(res.body.success).toBe(true)
             if (res.body.data?.id) createdUserIds.push(res.body.data.id)
         })
 
-        it("should fail with missing required fields", async () => {
-            const form = new FormData()
-            form.append("firstName", "Only")
-            const res = await formRequest("/auth/register", form)
+        it("should fail with missing email", async () => {
+            const res = await request("/auth/register", {
+                method: "POST",
+                body: { name: "Test User", password: "password123" },
+            })
             expect(res.status).toBe(422)
         })
 
@@ -100,36 +92,10 @@ describe("Auth Module", () => {
             expect(res.status).toBe(422)
         })
 
-        it("should fail with invalid identity number length", async () => {
-            const form = buildRegisterForm({ identityNumber: "12345" })
-            const res = await formRequest("/auth/register", form)
-            expect(res.status).toBe(422)
-        })
-
         it("should fail with duplicate email", async () => {
             const form = buildRegisterForm({ email: testUser.email })
             const res = await formRequest("/auth/register", form)
             expect(res.status).toBeGreaterThanOrEqual(400)
-        })
-
-        it("should fail with duplicate phone", async () => {
-            const form = buildRegisterForm({ phone: testUser.phone })
-            const res = await formRequest("/auth/register", form)
-            expect(res.status).toBeGreaterThanOrEqual(400)
-        })
-
-        it("should fail without identity file", async () => {
-            const form = buildRegisterForm()
-            form.delete("identity")
-            const res = await formRequest("/auth/register", form)
-            expect(res.status).toBe(422)
-        })
-
-        it("should fail without account file", async () => {
-            const form = buildRegisterForm()
-            form.delete("account")
-            const res = await formRequest("/auth/register", form)
-            expect(res.status).toBe(422)
         })
 
         it("should fail with empty body", async () => {
