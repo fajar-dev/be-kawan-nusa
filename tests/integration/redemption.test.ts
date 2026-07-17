@@ -178,4 +178,17 @@ describe("Redemption Module", () => {
             expect(res.status).toBeGreaterThanOrEqual(400)
         })
     })
+
+    describe("GET /redemption/:id/status-histories (admin)", () => {
+        it("should return a status history array (admin)", async () => {
+            const res = await authRequest("/redemption/999999/status-histories", adminToken)
+            expect(res.status).toBe(200)
+            expect(Array.isArray(res.body.data)).toBe(true)
+        })
+
+        it("should forbid a non-admin", async () => {
+            const res = await authRequest("/redemption/1/status-histories", userToken)
+            expect(res.status).toBe(403)
+        })
+    })
 })

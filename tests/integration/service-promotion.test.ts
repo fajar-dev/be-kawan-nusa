@@ -39,4 +39,26 @@ describe("Service Promotion Module", () => {
             expect(res.status).toBe(403)
         })
     })
+
+    describe("GET /service/promotion/:id", () => {
+        it("should return 404 for a non-existent promotion", async () => {
+            const res = await authRequest("/service/promotion/999999", userToken)
+            expect(res.status).toBe(404)
+        })
+    })
+
+    describe("PUT / DELETE /service/promotion/:id (admin only)", () => {
+        it("should forbid a non-admin from updating", async () => {
+            const res = await authRequest("/service/promotion/1", userToken, { method: "PUT", body: { title: "x" } })
+            expect(res.status).toBe(403)
+        })
+        it("should forbid a non-admin from deleting", async () => {
+            const res = await authRequest("/service/promotion/1", userToken, { method: "DELETE" })
+            expect(res.status).toBe(403)
+        })
+        it("should return 404 when admin deletes a non-existent promotion", async () => {
+            const res = await authRequest("/service/promotion/999999", adminToken, { method: "DELETE" })
+            expect(res.status).toBe(404)
+        })
+    })
 })

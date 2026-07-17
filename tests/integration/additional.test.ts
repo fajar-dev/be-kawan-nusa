@@ -83,4 +83,11 @@ describe("Additional Module", () => {
             expect(res.status).toBe(401)
         })
     })
+
+    describe("GET /proxy", () => {
+        it("should return 400 when the path query is missing", async () => {
+            const res = await request("/proxy")
+            expect(res.status).toBe(400)
+        })
+    })
 })

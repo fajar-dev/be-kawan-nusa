@@ -181,4 +181,11 @@ describe("Catalog Module", () => {
             expect(res.status).toBe(403)
         })
     })
+
+    describe("POST /catalog/upload (admin)", () => {
+        it("should forbid a non-admin from uploading", async () => {
+            const res = await authRequest("/catalog/upload", userToken, { method: "POST" })
+            expect(res.status).toBe(403)
+        })
+    })
 })

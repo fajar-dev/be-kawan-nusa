@@ -284,4 +284,18 @@ describe("User Module (Admin)", () => {
             expect(res.status).toBe(401)
         })
     })
+
+    describe("GET /user/:id/status-histories", () => {
+        it("should return a status history array (admin)", async () => {
+            const res = await authRequest(`/user/${testUser.id}/status-histories`, adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+            expect(Array.isArray(res.body.data)).toBe(true)
+        })
+
+        it("should forbid a non-admin", async () => {
+            const res = await authRequest(`/user/${testUser.id}/status-histories`, userToken)
+            expect(res.status).toBe(403)
+        })
+    })
 })

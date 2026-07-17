@@ -2937,65 +2937,45 @@ paths:
         "404":
           $ref: "#/components/responses/NotFoundResponse"
 
-  /redemption/{id}/receipt:
+  /redemption/{id}/status-histories:
     get:
-      summary: Preview redemption receipt as PDF (inline)
-      description: "Returns a PDF file for cash redemptions. Uses token-based authentication via query string."
+      summary: Get redemption status history timeline (admin)
+      description: "Ordered list of status transitions for a redemption. Admin only; requires permission redemption.cash (L)."
       tags: [Redemption]
       security: [{ bearerAuth: [] }]
       parameters:
         - name: id
           in: path
           required: true
-          description: Redemption ID (must be a CASH type redemption)
+          description: Redemption ID
           schema: { type: integer }
           example: 1
       responses:
         "200":
-          description: PDF receipt (inline display)
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        "400":
-          description: Not a cash redemption or not found
+          description: Status histories retrieved successfully
           content:
             application/json:
               example:
-                success: false
-                statusCode: 400
-                message: "Redemption record not found"
-
-  /redemption/{id}/receipt/download:
-    get:
-      summary: Download redemption receipt as PDF attachment
-      description: "Returns a PDF file as attachment for cash redemptions."
-      tags: [Redemption]
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: Redemption ID (must be a CASH type redemption)
-          schema: { type: integer }
-          example: 1
-      responses:
-        "200":
-          description: PDF receipt (download attachment)
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        "400":
-          description: Not a cash redemption or not found
-          content:
-            application/json:
-              example:
-                success: false
-                statusCode: 400
-                message: "Redemption record not found"
+                success: true
+                statusCode: 200
+                message: "Status histories retrieved successfully"
+                data:
+                  - id: 1
+                    fromStatus: null
+                    toStatus: "pending"
+                    note: null
+                    changedBy: { id: 5, name: "Admin Nusanet" }
+                    createdAt: "2024-03-01T09:00:00.000Z"
+                  - id: 2
+                    fromStatus: "pending"
+                    toStatus: "completed"
+                    note: "Transfer selesai"
+                    changedBy: { id: 5, name: "Admin Nusanet" }
+                    createdAt: "2024-03-01T10:15:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
 
   # =============================================
   # CUSTOMER ROUTES
@@ -3501,6 +3481,90 @@ paths:
                   to: 5
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
+    post:
+      summary: Create a service promotion (admin)
+      description: "Admin only; requires permission education (T). Multipart for the promo image."
+      tags: [Service]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [title, serviceCode, startPeriod, endPeriod]
+              properties:
+                title: { type: string, example: "Promo Double Speed" }
+                description: { type: string }
+                serviceCode: { type: string, example: "SVC-FIBER-001" }
+                url: { type: string, example: "https://nusanet.id/promo" }
+                startPeriod: { type: string, format: date, example: "2024-02-01" }
+                endPeriod: { type: string, format: date, example: "2024-02-29" }
+                image: { type: string, format: binary }
+      responses:
+        "201":
+          description: Service promotion created successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  /service/promotion/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Service promotion ID
+        schema: { type: integer }
+        example: 1
+    get:
+      summary: Get service promotion detail
+      tags: [Service]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Service promotion retrieved successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    put:
+      summary: Update a service promotion (admin)
+      description: "Admin only; requires permission education (E). Multipart; send image only to replace it."
+      tags: [Service]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                serviceCode: { type: string }
+                url: { type: string }
+                startPeriod: { type: string, format: date }
+                endPeriod: { type: string, format: date }
+                image: { type: string, format: binary }
+      responses:
+        "200":
+          description: Service promotion updated successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    delete:
+      summary: Delete a service promotion (admin)
+      description: "Admin only; requires permission education (H)."
+      tags: [Service]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Service promotion deleted successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
 
   # =============================================
   # CUSTOMER SERVICE ROUTES
@@ -3622,6 +3686,33 @@ paths:
                   to: 10
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
+    post:
+      summary: Create a marketing template (admin)
+      description: "Admin only; requires permission education (T). Multipart with thumbnail + one or more asset files (png/jpg/psd/mp4)."
+      tags: [Template]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, example: "Banner Promo Lebaran 2024" }
+                description: { type: string }
+                thumbnail: { type: string, format: binary }
+                png: { type: string, format: binary }
+                jpg: { type: string, format: binary }
+                psd: { type: string, format: binary }
+                mp4: { type: string, format: binary }
+      responses:
+        "201":
+          description: Template created successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
 
   /template/{id}:
     get:
@@ -3654,6 +3745,55 @@ paths:
                   mp4: null
                   isActive: true
                   createdAt: "2024-01-20T08:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    put:
+      summary: Update a marketing template (admin)
+      description: "Admin only; requires permission education (E). Multipart; send a file field only to replace that asset."
+      tags: [Template]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                thumbnail: { type: string, format: binary }
+                png: { type: string, format: binary }
+                jpg: { type: string, format: binary }
+                psd: { type: string, format: binary }
+                mp4: { type: string, format: binary }
+      responses:
+        "200":
+          description: Template updated successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    delete:
+      summary: Delete a marketing template (admin)
+      description: "Admin only; requires permission education (H)."
+      tags: [Template]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Template deleted successfully
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
         "404":
@@ -3994,6 +4134,90 @@ paths:
                     name: "E-Commerce"
                   - id: 3
                     name: "Merchandise"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+    post:
+      summary: Create a catalog category (admin)
+      description: "Admin only; requires permission catalog (T)."
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, example: "Voucher" }
+      responses:
+        "201":
+          description: Catalog category created successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  /catalog/category/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Catalog category ID
+        schema: { type: integer }
+        example: 1
+    put:
+      summary: Update a catalog category (admin)
+      description: "Admin only; requires permission catalog (E)."
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, example: "Voucher Belanja" }
+      responses:
+        "200":
+          description: Catalog category updated successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    delete:
+      summary: Delete a catalog category (admin)
+      description: "Admin only; requires permission catalog (H)."
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Catalog category deleted successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+
+  /catalog/upload:
+    post:
+      summary: Upload a catalog image (admin)
+      description: "Admin only; requires permission catalog (T). Returns the stored object path/URL."
+      tags: [Catalog]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200":
+          description: Image uploaded successfully
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 
@@ -4639,6 +4863,29 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 
+  /statistic/admin/summary:
+    get:
+      summary: Admin dashboard summary totals
+      description: "Global totals for the admin dashboard. Admin only; requires permission dashboard (L)."
+      tags: [Statistic]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Admin summary retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Admin summary retrieved successfully"
+                data:
+                  user: { value: 128 }
+                  customer: { value: 540 }
+                  customerService: { value: 712 }
+                  point: { value: 1250000 }
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
   # =============================================
   # ADDITIONAL / LOOKUP ROUTES
   # =============================================
@@ -4794,6 +5041,31 @@ paths:
                     route: "/service/SVC-FIBER-001"
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
+
+  /proxy:
+    get:
+      summary: Proxy a stored object from MinIO
+      description: "Streams an object from object storage by its path. Public (no auth) — used to serve uploaded images/files."
+      tags: [Additional]
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Object path/key in the bucket
+          schema: { type: string }
+          example: "catalog/1699999999_abc.png"
+      responses:
+        "200":
+          description: The requested object stream
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "400":
+          description: Missing 'path' query parameter
+          content:
+            application/json:
+              example:
+                message: "Missing 'path' query parameter"
 
   # =============================================
   # USER ROUTES
@@ -5013,6 +5285,46 @@ paths:
           $ref: "#/components/responses/NotFoundResponse"
         "422":
           $ref: "#/components/responses/ValidationResponse"
+
+  /user/{id}/status-histories:
+    get:
+      summary: Get a user's status change history (admin)
+      description: "Ordered timeline of a referral partner's status transitions. Admin only; requires permission user (L)."
+      tags: [User]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Status histories retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Status histories retrieved successfully"
+                data:
+                  - id: 1
+                    fromStatus: null
+                    toStatus: "pending"
+                    note: null
+                    changedBy: { id: 5, name: "Admin Nusanet" }
+                    createdAt: "2024-03-01T09:00:00.000Z"
+                  - id: 2
+                    fromStatus: "pending"
+                    toStatus: "active"
+                    note: "Data lengkap dan valid"
+                    changedBy: { id: 5, name: "Admin Nusanet" }
+                    createdAt: "2024-03-02T10:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
 
   /user/{id}/services:
     get:
