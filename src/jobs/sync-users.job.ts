@@ -1,4 +1,5 @@
 import { AppDataSource } from "../config/database"
+import { logger } from "../core/helpers/logger"
 import { NisDataSource } from "../config/nis-database"
 import { User } from "../modules/user/entities/user.entity"
 import { UserStatus } from "../modules/user/user.enum"
@@ -9,25 +10,25 @@ import { UserStatus } from "../modules/user/user.enum"
  */
 async function sync() {
     try {
-        console.log("[Sync] Starting sync...")
+        logger.info("Starting sync...")
         const startTime = Date.now()
 
         await AppDataSource.initialize()
-        console.log("[Sync] App database connected")
+        logger.info("App database connected")
 
         await NisDataSource.initialize()
-        console.log("[Sync] Source database connected")
+        logger.info("Source database connected")
 
         await syncUsers()
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2)
-        console.log(`[Sync] Completed in ${duration}s`)
+        logger.info(`Completed in ${duration}s`)
 
         await NisDataSource.destroy()
         await AppDataSource.destroy()
         process.exit(0)
     } catch (error) {
-        console.error("[Sync] Failed:", error)
+        logger.error("Sync job failed", { error: (error as any)?.message, stack: (error as any)?.stack })
         process.exit(1)
     }
 }
@@ -57,7 +58,7 @@ async function syncUsers() {
     `)
 
     if (sourceRows.length === 0) {
-        console.log("[Sync] No users found in source")
+        logger.info("No users found in source")
         return
     }
 
@@ -147,12 +148,12 @@ async function syncUsers() {
                 .execute()
             synced++
         } catch (error: any) {
-            console.warn(`[Sync] Skipped user ID ${row.id}: ${error.message}`)
+            logger.warn(`Skipped user ID ${row.id}: ${error.message}`)
             skipped++
         }
     }
 
-    console.log(`[Sync] Synced ${synced} users, skipped ${skipped}`)
+    logger.info(`Synced ${synced} users, skipped ${skipped}`)
 }
 
 sync()

@@ -3,7 +3,10 @@ import { PointSubmission } from "../modules/point-submission/entities/point-subm
 import { JobQueue } from "../core/queue/entities/job-queue.entity"
 import { QueueType } from "../core/queue/queue.constants"
 import { PointSubmissionStatus } from "../modules/point-submission/point-submission.enum"
+import { logger } from "../core/helpers/logger"
 import { Not, IsNull } from "typeorm"
+
+const JOB = "recurring-points"
 
 /**
  * Recurring Points Job
@@ -28,11 +31,11 @@ function getTargetDay(originalDay: number, year: number, month: number): number 
 
 async function run() {
     try {
-        console.log("[RecurringPoints] Starting...")
+        logger.info("Job started", { job: JOB })
         const startTime = Date.now()
 
         await AppDataSource.initialize()
-        console.log("[RecurringPoints] Database connected")
+        logger.info("Database connected", { job: JOB })
 
         const today = new Date()
         const todayDate = today.getDate()
@@ -51,12 +54,12 @@ async function run() {
         })
 
         if (submissions.length === 0) {
-            console.log("[RecurringPoints] No recurring submissions found")
+            logger.info("No recurring submissions found", { job: JOB })
             await AppDataSource.destroy()
             process.exit(0)
         }
 
-        console.log(`[RecurringPoints] Found ${submissions.length} recurring submission(s)`)
+        logger.info("Found recurring submissions", { job: JOB, count: submissions.length })
 
         let created = 0
         let skipped = 0
@@ -136,10 +139,7 @@ async function run() {
                             period: periodDate,
                         })
                         created++
-                        console.log(
-                            `[RecurringPoints] 📋 #${submission.id} → Queue entry created ` +
-                            `(${loopMonth + 1}/${loopYear}, day ${targetDay})`
-                        )
+                        logger.info("Queue entry created", { job: JOB, submissionId: submission.id, month: loopMonth + 1, year: loopYear, day: targetDay })
                     } else {
                         skipped++
                     }
@@ -155,15 +155,12 @@ async function run() {
         }
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2)
-        console.log(
-            `[RecurringPoints] Completed in ${duration}s. ` +
-            `Queued: ${created}, Skipped: ${skipped}, Expired: ${expired}`
-        )
+        logger.info("Job completed", { job: JOB, durationSeconds: Number(duration), queued: created, skipped, expired })
 
         await AppDataSource.destroy()
         process.exit(0)
     } catch (error) {
-        console.error("[RecurringPoints] Fatal error:", error)
+        logger.error("Job fatal error", { job: JOB, error: (error as Error)?.message, stack: (error as Error)?.stack })
         process.exit(1)
     }
 }

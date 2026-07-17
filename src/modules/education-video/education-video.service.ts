@@ -1,4 +1,5 @@
 import { EducationVideo } from "./entities/education-video.entity"
+import { logger } from "../../core/helpers/logger"
 import { NotFoundException } from "../../core/exceptions/base"
 import {
     EducationVideoListFilters,
@@ -100,7 +101,7 @@ export class EducationVideoService {
                     try {
                         await minio.delete(video.thumbnail)
                     } catch (err) {
-                        console.error("[Video] Failed to delete old thumbnail from MinIO:", err)
+                        logger.error("Failed to delete old video thumbnail from storage", { source: "minio", error: (err as Error)?.message })
                     }
                 }
                 video.thumbnail = newThumbnail === "" ? undefined : newThumbnail
@@ -120,7 +121,7 @@ export class EducationVideoService {
             try {
                 await minio.delete(video.thumbnail)
             } catch (err) {
-                console.error("[Video] Failed to delete thumbnail from MinIO:", err)
+                logger.error("Failed to delete video thumbnail from storage", { source: "minio", error: (err as Error)?.message })
             }
         }
 

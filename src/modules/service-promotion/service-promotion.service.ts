@@ -1,4 +1,5 @@
 import { ServicePromotion } from "./entities/service-promotion.entity"
+import { logger } from "../../core/helpers/logger"
 import { IServicePromotionRepository } from "./interfaces/service-promotion.repository.interface"
 import { minio } from "../../core/helpers/minio"
 import { NotFoundException } from "../../core/exceptions/base"
@@ -95,7 +96,7 @@ export class ServicePromotionService {
                     try {
                         await minio.delete(promotion.image)
                     } catch (err) {
-                        console.error("[Promotion] Failed to delete old image from MinIO:", err)
+                        logger.error("Failed to delete old promotion image from storage", { source: "minio", error: (err as Error)?.message })
                     }
                 }
                 promotion.image = newImage === "" ? undefined : newImage
@@ -115,7 +116,7 @@ export class ServicePromotionService {
             try {
                 await minio.delete(promotion.image)
             } catch (err) {
-                console.error("[Promotion] Failed to delete image from MinIO:", err)
+                logger.error("Failed to delete promotion image from storage", { source: "minio", error: (err as Error)?.message })
             }
         }
 

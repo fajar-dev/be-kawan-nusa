@@ -1,6 +1,7 @@
 import * as Minio from "minio"
 import { config } from "../../config/config"
 import { Readable } from "node:stream"
+import { logger } from "./logger"
 
 const minioClient = new Minio.Client({
     endPoint: config.minio.endPoint,
@@ -20,7 +21,7 @@ class MinioHelper {
         const exists = await minioClient.bucketExists(bucket)
         if (!exists) {
             await minioClient.makeBucket(bucket)
-            console.log(`[Minio] Bucket "${bucket}" created`)
+            logger.info("MinIO bucket created", { source: "minio", bucket })
         }
     }
 
@@ -39,7 +40,7 @@ class MinioHelper {
             "Content-Type": contentType,
         })
 
-        console.log(`[Minio] Uploaded "${objectName}" to bucket "${bucket}"`)
+        logger.info("MinIO object uploaded", { source: "minio", bucket, object: objectName })
         return objectName
     }
 
@@ -92,7 +93,7 @@ class MinioHelper {
      */
     async delete(objectName: string, bucket: string = BUCKET): Promise<void> {
         await minioClient.removeObject(bucket, objectName)
-        console.log(`[Minio] Deleted "${objectName}" from bucket "${bucket}"`)
+        logger.info("MinIO object deleted", { source: "minio", bucket, object: objectName })
     }
 
     /**

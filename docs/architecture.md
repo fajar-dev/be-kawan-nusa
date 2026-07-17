@@ -213,3 +213,45 @@ Custom exceptions extend `BaseException`:
 - `BadRequestException` (400)
 
 Global error handler in `app.ts` catches all errors.
+
+## Logging (Grafana Loki–ready)
+
+`src/core/helpers/logger.ts` exposes a structured `logger` (`info`/`warn`/`error`)
+that writes **single-line JSON (NDJSON)** — no ANSI colors, no multi-line records — to
+**two sinks**:
+
+1. **stdout** — captured by Docker / PM2 and shipped to Loki by Promtail (primary).
+2. **`logs/app-YYYY-MM-DD.log`** — a daily-rotated on-disk history so logs survive
+   even if the platform's stdout logs rotate away. Synchronous append (no line lost
+   on job `process.exit`). The date is **UTC** (matches the `time` field). Disable with
+   `LOG_TO_FILE=false`; it is also off automatically under `NODE_ENV=test`. Prune old
+   `logs/app-*.log` via cron/logrotate if disk space is a concern (`logs/` is gitignored).
+
+- `requestLogger` middleware logs one JSON line per request with `method`, `path`,
+  `status`, `duration_ms`; level is derived from status (5xx=error, 4xx=warn, else info).
+- `logError(err, ctx)` logs unhandled 500s with the stack kept as an escaped field
+  (stays on one line); handled `BaseException`s are logged at `warn`.
+- Shared fields on every entry: `time`, `level`, `service`, `env`, `msg`.
+
+In Loki/LogQL, parse with `| json` and filter on the promoted labels, e.g.
+`{service="kawan-nusa-be"} | json | status >= 500`.
+
+### Domain events
+
+Beyond request/error logs, these areas emit structured events (query with
+`| json | event="…"` or `| json | job="…"`). **Secrets are never logged** — OTP codes,
+verification/reset tokens, and passwords are omitted by design.
+
+| Area | Events / fields |
+|------|-----------------|
+| Email (`core/helpers/mail.ts`, auth/user services) | `mail.sent` / `mail.failed` (`to`, `subject`, `kind`, `messageId`) |
+| OTP (`auth.service.ts`, `core/helpers/nusacontact.ts`) | `otp.requested` / `otp.sent` / `otp.verified` / `otp.failed` (`userId`, `channel`) |
+| Job queue (`jobs/process-submissions`, `jobs/process-recurring-points`) | `job` field + `Job started/completed`, per-item `processed/failed/skipped` |
+| Sync/expire cron (`jobs/sync-*`, `jobs/expire-points`) | structured start/complete/fail lines |
+| Storage (`core/helpers/minio.ts`) | `source:"minio"` upload/delete/bucket events |
+| NIS (`core/helpers/nis.ts`) | `source:"nis"` sync failures / skipped rows |
+| PDF (`core/helpers/pdf.ts`) | `source:"pdf"` font fallback / missing data |
+| Startup (`index.ts`) | `startup.db` connect / failure |
+
+> Exception: `src/database/seed.ts` keeps plain `console.log` on purpose — it is a
+> human-run one-off CLI script, not part of the Loki-scraped service output.

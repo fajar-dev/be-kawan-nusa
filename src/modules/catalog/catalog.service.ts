@@ -1,4 +1,5 @@
 import { Catalog } from "./entities/catalog.entity"
+import { logger } from "../../core/helpers/logger"
 import { CatalogStockHistory } from "./entities/catalog-stock-history.entity"
 import { ICatalogRepository } from "./interfaces/catalog.repository.interface"
 import { NotFoundException } from "../../core/exceptions/base"
@@ -151,7 +152,7 @@ export class CatalogService {
                     try {
                         await minio.delete(catalog.image)
                     } catch (err) {
-                        console.error("[Catalog] Failed to delete old image from MinIO:", err)
+                        logger.error("Failed to delete old catalog image from storage", { source: "minio", error: (err as Error)?.message })
                     }
                 }
                 catalog.image = newImage === "" ? undefined : newImage
@@ -171,7 +172,7 @@ export class CatalogService {
             try {
                 await minio.delete(catalog.image)
             } catch (err) {
-                console.error("[Catalog] Failed to delete image from MinIO:", err)
+                logger.error("Failed to delete catalog image from storage", { source: "minio", error: (err as Error)?.message })
             }
         }
 

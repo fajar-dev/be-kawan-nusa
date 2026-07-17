@@ -1,4 +1,5 @@
 import { AppDataSource } from "../config/database"
+import { logger } from "../core/helpers/logger"
 import { NisDataSource } from "../config/nis-database"
 import { Customer } from "../modules/customer/entities/customer.entity"
 import { CustomerPhone } from "../modules/customer/entities/customer-phone.entity"
@@ -16,14 +17,14 @@ import { Employee } from "../modules/employee/entities/employee.entity"
  */
 async function sync() {
     try {
-        console.log("[Sync] Starting customers & services sync...")
+        logger.info("Starting customers & services sync...")
         const startTime = Date.now()
 
         await AppDataSource.initialize()
-        console.log("[Sync] App database connected")
+        logger.info("App database connected")
 
         await NisDataSource.initialize()
-        console.log("[Sync] Source database connected")
+        logger.info("Source database connected")
 
         await syncServices()
         await syncCustomers()
@@ -32,13 +33,13 @@ async function sync() {
         await syncCustomerServices()
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2)
-        console.log(`[Sync] Completed in ${duration}s`)
+        logger.info(`Completed in ${duration}s`)
 
         await NisDataSource.destroy()
         await AppDataSource.destroy()
         process.exit(0)
     } catch (error) {
-        console.error("[Sync] Failed:", error)
+        logger.error("Sync job failed", { error: (error as any)?.message, stack: (error as any)?.stack })
         process.exit(1)
     }
 }
@@ -71,7 +72,7 @@ async function syncServices() {
     `)
 
     if (sourceRows.length === 0) {
-        console.log("[Sync] No services found in source")
+        logger.info("No services found in source")
         return
     }
 
@@ -123,7 +124,7 @@ async function syncServices() {
         synced += entities.length
     }
 
-    console.log(`[Sync] Synced ${synced} services`)
+    logger.info(`Synced ${synced} services`)
 }
 
 async function syncCustomers() {
@@ -153,7 +154,7 @@ async function syncCustomers() {
     `)
 
     if (sourceRows.length === 0) {
-        console.log("[Sync] No customers found in source")
+        logger.info("No customers found in source")
         return
     }
 
@@ -197,7 +198,7 @@ async function syncCustomers() {
         synced += entities.length
     }
 
-    console.log(`[Sync] Synced ${synced} customers`)
+    logger.info(`Synced ${synced} customers`)
 }
 
 async function syncCustomerPhones() {
@@ -215,7 +216,7 @@ async function syncCustomerPhones() {
     `)
 
     if (sourceRows.length === 0) {
-        console.log("[Sync] No customer phones found in source")
+        logger.info("No customer phones found in source")
         return
     }
 
@@ -259,7 +260,7 @@ async function syncCustomerPhones() {
         }
     }
 
-    console.log(`[Sync] Synced ${synced} customer phones, skipped ${skipped}`)
+    logger.info(`Synced ${synced} customer phones, skipped ${skipped}`)
 }
 
 async function syncCustomerEmails() {
@@ -277,7 +278,7 @@ async function syncCustomerEmails() {
     `)
 
     if (sourceRows.length === 0) {
-        console.log("[Sync] No customer emails found in source")
+        logger.info("No customer emails found in source")
         return
     }
 
@@ -319,7 +320,7 @@ async function syncCustomerEmails() {
         }
     }
 
-    console.log(`[Sync] Synced ${synced} customer emails, skipped ${skipped}`)
+    logger.info(`Synced ${synced} customer emails, skipped ${skipped}`)
 }
 
 async function syncCustomerServices() {
@@ -359,7 +360,7 @@ async function syncCustomerServices() {
     `)
 
     if (sourceRows.length === 0) {
-        console.log("[Sync] No customer_services found in source")
+        logger.info("No customer_services found in source")
         return
     }
 
@@ -370,7 +371,7 @@ async function syncCustomerServices() {
     for (const emp of allEmployees) {
         employeeMap.set(emp.employeeId, emp.id)
     }
-    console.log(`[Sync] Loaded ${employeeMap.size} employees for sales lookup`)
+    logger.info(`Loaded ${employeeMap.size} employees for sales lookup`)
 
     const repo = AppDataSource.getRepository(CustomerService)
     const batchSize = 500
@@ -427,13 +428,13 @@ async function syncCustomerServices() {
                 synced++
             } catch (err: any) {
                 // Ignore FK constraint failures mostly, but log them for debugging
-                console.warn(`[Sync] Skipped CS ID ${row.id} (User ID: ${row.user_id}, Customer ID: ${row.customer_id}) - Reason: FK Constraint Failed`)
+                logger.warn(`Skipped CS ID ${row.id} (User ID: ${row.user_id}, Customer ID: ${row.customer_id}) - Reason: FK Constraint Failed`)
                 skipped++
             }
         }
     }
 
-    console.log(`[Sync] Synced ${synced} customer_services, skipped ${skipped}`)
+    logger.info(`Synced ${synced} customer_services, skipped ${skipped}`)
 }
 
 sync()

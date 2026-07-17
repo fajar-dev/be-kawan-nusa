@@ -1,0 +1,28 @@
+# kawan-nusa-be — scheduled jobs & log retention (PM2 deployment)
+#
+#   crontab -e        # paste as the deploy user, adjust APP_DIR / BUN
+#
+# The jobs log structured JSON to logs/app-*.log (shipped to Loki by Promtail),
+# so stdout is sent to /dev/null here; only stderr (crashes / bun errors that
+# bypass the logger) is kept in logs/cron-error.log as a safety net.
+
+APP_DIR=/opt/kawan-nusa-be
+BUN=/usr/local/bin/bun
+
+# ── Points / job queue ───────────────────────────────────────────────
+# Process the queue every 5 min so points land shortly after approval
+*/5 * * * * cd $APP_DIR && $BUN run process-submissions >/dev/null 2>>logs/cron-error.log
+# Enqueue monthly recurring point submissions — daily 01:00
+0 1 * * * cd $APP_DIR && $BUN run recurring-points >/dev/null 2>>logs/cron-error.log
+# Expire overdue reward points — daily 02:00
+0 2 * * * cd $APP_DIR && $BUN run expire-points >/dev/null 2>>logs/cron-error.log
+
+# ── Data sync from NIS / Nusawork (tune cadence to your needs) ────────
+*/30 * * * * cd $APP_DIR && $BUN run sync-customers >/dev/null 2>>logs/cron-error.log
+0 */6 * * *  cd $APP_DIR && $BUN run sync-users     >/dev/null 2>>logs/cron-error.log
+0 3 * * *    cd $APP_DIR && $BUN run sync-employees >/dev/null 2>>logs/cron-error.log
+
+# ── Retention for the app's daily JSON logs ──────────────────────────
+# gzip files older than 1 day; delete archives older than 30 days
+30 0 * * * find $APP_DIR/logs -name 'app-*.log' -mtime +1 -exec gzip {} \;
+45 0 * * * find $APP_DIR/logs -name 'app-*.log.gz' -mtime +30 -delete

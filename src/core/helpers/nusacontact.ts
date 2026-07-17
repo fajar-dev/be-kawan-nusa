@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from "axios"
 import { config } from "../../config/config"
+import { logger } from "./logger"
 
 interface NusaContactResponse {
     data: Record<string, unknown>[]
@@ -38,9 +39,9 @@ export class NusaContactHelper {
                     ],
                 },
             })
-            console.log(`[NusaContact] OTP sent to ${to}`)
+            logger.info("OTP sent", { event: "otp.sent", channel: "whatsapp", to })
         } catch (error) {
-            console.error(`[NusaContact] Failed to send OTP to ${to}:`, (error as Error).message)
+            logger.error("OTP send failed", { event: "otp.failed", channel: "whatsapp", to, error: (error as Error).message })
             throw error
         }
     }

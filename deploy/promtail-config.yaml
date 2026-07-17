@@ -1,0 +1,58 @@
+# Promtail → Grafana Loki
+# Ships the API's structured JSON logs (logs/app-YYYY-MM-DD.log) to Loki.
+#
+#   promtail -config.file=deploy/promtail-config.yaml
+#
+# Replace the two >>> placeholders below for your environment:
+#   - clients[].url        : your Loki push endpoint
+#   - __path__             : absolute path to this repo's logs/ on the prod host
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  # Remembers how far each file was read (survives Promtail restarts).
+  filename: /var/lib/promtail/positions.yaml
+
+clients:
+  - url: http://localhost:3100/loki/api/v1/push # >>> your Loki push URL
+
+scrape_configs:
+  - job_name: kawan-nusa-be
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: kawan-nusa-be
+          # >>> absolute path to the app's daily JSON logs on the prod host:
+          __path__: /opt/kawan-nusa-be/logs/app-*.log
+
+    pipeline_stages:
+      # 1. Parse each NDJSON line emitted by src/core/helpers/logger.ts
+      - json:
+          expressions:
+            time: time
+            level: level
+            service: service
+            env: env
+            event: event
+            jobname: job
+
+      # 2. Use the app's own timestamp (not the ingest time)
+      - timestamp:
+          source: time
+          format: RFC3339Nano
+
+      # 3. Promote ONLY low-cardinality fields to Loki labels.
+      #    High-cardinality fields (path, userId, email, messageId, ...) stay
+      #    inside the JSON body — query them with `| json | field="..."`.
+      - labels:
+          level:
+          service:
+          env:
+
+# Example LogQL queries in Grafana:
+#   {job="kawan-nusa-be"} | json | status >= 500
+#   {job="kawan-nusa-be", level="error"}
+#   {job="kawan-nusa-be"} | json | event=`otp.failed`
+#   {job="kawan-nusa-be"} | json | job=`process-submissions`

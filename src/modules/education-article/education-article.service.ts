@@ -1,4 +1,5 @@
 import { EducationArticle } from "./entities/education-article.entity"
+import { logger } from "../../core/helpers/logger"
 import { NotFoundException } from "../../core/exceptions/base"
 import {
     EducationArticleListFilters,
@@ -96,7 +97,7 @@ export class EducationArticleService {
                     try {
                         await minio.delete(article.image)
                     } catch (err) {
-                        console.error("[Article] Failed to delete old image from MinIO:", err)
+                        logger.error("Failed to delete old article image from storage", { source: "minio", error: (err as Error)?.message })
                     }
                 }
                 article.image = newImage === "" ? undefined : newImage
@@ -116,7 +117,7 @@ export class EducationArticleService {
             try {
                 await minio.delete(article.image)
             } catch (err) {
-                console.error("[Article] Failed to delete image from MinIO:", err)
+                logger.error("Failed to delete article image from storage", { source: "minio", error: (err as Error)?.message })
             }
         }
 

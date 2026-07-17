@@ -1,4 +1,5 @@
 import { Template } from "./entities/template.entity"
+import { logger } from "../../core/helpers/logger"
 import { ITemplateRepository } from "./interfaces/template.repository.interface"
 import { minio } from "../../core/helpers/minio"
 import { NotFoundException } from "../../core/exceptions/base"
@@ -107,7 +108,7 @@ export class TemplateService {
                         try {
                             await minio.delete(oldPath)
                         } catch (err) {
-                            console.error(`[Template] Failed to delete old ${field} from MinIO:`, err)
+                            logger.error("Failed to delete old template asset from storage", { source: "minio", field, error: (err as Error)?.message })
                         }
                     }
                     (template as any)[field] = newPath === "" ? undefined : newPath
@@ -131,7 +132,7 @@ export class TemplateService {
                 try {
                     await minio.delete(path)
                 } catch (err) {
-                    console.error(`[Template] Failed to delete ${field} from MinIO during template deletion:`, err)
+                    logger.error("Failed to delete template asset from storage during deletion", { source: "minio", field, error: (err as Error)?.message })
                 }
             }
         }

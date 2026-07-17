@@ -1,4 +1,5 @@
 import { User } from "./entities/user.entity"
+import { logger } from "../../core/helpers/logger"
 import { UserStatusHistory } from "./entities/user-status-history.entity"
 import { UserStatus } from "./user.enum"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
@@ -68,7 +69,7 @@ export class UserService {
 
         // Send status change email (fire-and-forget)
         this.sendStatusChangeEmail(saved, status, note).catch((err) =>
-            console.error("[Email] Failed to send status change notification:", err)
+            logger.error("Status change email dispatch failed", { event: "mail.failed", kind: "status-change", userId: saved.id, error: err?.message })
         )
 
         return saved
@@ -103,7 +104,7 @@ export class UserService {
             .replace(/{{appUrl}}/g, config.app.appUrl)
 
         mail.sendHtml(user.email, `${template.subject} - Kawan Nusa`, html).catch((err) => {
-            console.error(`[Mail] Failed to send status email to ${user.email}:`, err)
+            logger.error("Status change email send failed", { event: "mail.failed", kind: "status-change", email: user.email, error: err?.message })
         })
     }
 }

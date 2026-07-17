@@ -1,11 +1,12 @@
 import { AppDataSource } from './config/database'
 import { createApp } from './app'
 import { config } from './config/config'
+import { logger } from './core/helpers/logger'
 
 // Initialize database connection
 AppDataSource.initialize()
-    .then(() => console.log("Database connected successfully"))
-    .catch((err) => console.error("Database connection error", err))
+    .then(() => logger.info("Database connected", { event: "startup.db" }))
+    .catch((err) => logger.error("Database connection failed", { event: "startup.db", error: err?.message, stack: err?.stack }))
 
 // Create and configure the application
 const app = createApp()

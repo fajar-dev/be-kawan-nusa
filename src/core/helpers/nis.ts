@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm"
 import { AppDataSource } from "../../config/database"
+import { logger } from "./logger"
 import { Customer } from "../../modules/customer/entities/customer.entity"
 import { CustomerPhone } from "../../modules/customer/entities/customer-phone.entity"
 import { CustomerEmail } from "../../modules/customer/entities/customer-email.entity"
@@ -204,7 +205,7 @@ export class NisHelper {
                     await manager.save(service)
                 }
             } catch (err: any) {
-                console.error(`[NisHelper] Sync Service failed: ${err.message}`)
+                logger.error("NIS service sync failed", { source: "nis", error: err.message })
                 throw err
             }
 
@@ -238,7 +239,7 @@ export class NisHelper {
                         label: phoneRow.label || 'Phone'
                     }, ["id"])
                 } catch (err) {
-                    console.warn(`[NisHelper] Skipped phone ID ${phoneRow.id} for customer ${row.customerId}`)
+                    logger.warn("NIS phone skipped", { source: "nis", phoneId: phoneRow.id, customerId: row.customerId })
                 }
             }
 
@@ -254,7 +255,7 @@ export class NisHelper {
                         label: emailRow.label || 'Email'
                     }, ["id"])
                 } catch (err) {
-                    console.warn(`[NisHelper] Skipped email ID ${emailRow.id} failed for customer ${row.customerId}`)
+                    logger.warn("NIS email skipped", { source: "nis", emailId: emailRow.id, customerId: row.customerId })
                 }
             }
 

@@ -7,7 +7,7 @@ import { ApiResponse } from './core/helpers/response'
 import { BaseException, ValidatorException } from './core/exceptions/base'
 import { ZodError } from 'zod'
 import { config } from './config/config'
-import { logError } from './core/helpers/logger'
+import { logError, logger } from './core/helpers/logger'
 import { requestLogger } from './core/middlewares/logger.middleware'
 
 export function createApp(): Hono {
@@ -37,7 +37,7 @@ export function createApp(): Hono {
         }
 
         if (err instanceof BaseException) {
-            console.error(`[Exception] ${err.status} - ${err.message}`)
+            logger.warn(err.message, { status: err.status, method: c.req.method, path: c.req.path })
             return ApiResponse.error(c, err.message, err.status, err.context)
         }
 

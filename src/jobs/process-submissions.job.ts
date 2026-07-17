@@ -4,7 +4,10 @@ import { JobQueueFailure } from "../core/queue/entities/job-queue-failure.entity
 import { QueueType } from "../core/queue/queue.constants"
 import { NisHelper } from "../core/helpers/nis"
 import { PointCalculator } from "../core/helpers/point"
+import { logger } from "../core/helpers/logger"
 import { IsNull } from "typeorm"
+
+const JOB = "process-submissions"
 
 const BATCH_SIZE = 50
 const MAX_RETRIES = 5
@@ -56,11 +59,11 @@ async function processPointSubmission(item: JobQueue, nisHelper: NisHelper, poin
 
 async function run() {
     try {
-        console.log("[ProcessQueue] Starting...")
+        logger.info("Job started", { job: JOB })
         const startTime = Date.now()
 
         await AppDataSource.initialize()
-        console.log("[ProcessQueue] Database connected")
+        logger.info("Database connected", { job: JOB })
 
         const queueRepo = AppDataSource.getRepository(JobQueue)
         const failureRepo = AppDataSource.getRepository(JobQueueFailure)
@@ -75,12 +78,12 @@ async function run() {
         })
 
         if (pendingItems.length === 0) {
-            console.log("[ProcessQueue] No pending items")
+            logger.info("No pending items", { job: JOB })
             await AppDataSource.destroy()
             process.exit(0)
         }
 
-        console.log(`[ProcessQueue] Found ${pendingItems.length} pending item(s)`)
+        logger.info("Found pending items", { job: JOB, count: pendingItems.length })
 
         let processed = 0
         let failed = 0
@@ -94,7 +97,7 @@ async function run() {
 
             if (failureCount >= MAX_RETRIES) {
                 skipped++
-                console.log(`[ProcessQueue] ⏭ #${item.id} [${item.type}] → Skipped (${failureCount}/${MAX_RETRIES} retries exhausted)`)
+                logger.warn("Queue item skipped (retries exhausted)", { job: JOB, itemId: item.id, type: item.type, failureCount, maxRetries: MAX_RETRIES })
                 continue
             }
 
@@ -109,10 +112,7 @@ async function run() {
                 }
 
                 processed++
-                console.log(
-                    `[ProcessQueue] ✅ #${item.id} [${item.type}] → Processed ` +
-                    `(ref #${item.referenceId}, period ${item.period})`
-                )
+                logger.info("Queue item processed", { job: JOB, itemId: item.id, type: item.type, referenceId: item.referenceId, period: item.period })
             } catch (error: any) {
                 failed++
 
@@ -121,23 +121,17 @@ async function run() {
                     error: error.message || String(error),
                 })
 
-                console.error(
-                    `[ProcessQueue] ❌ #${item.id} [${item.type}] → ${error.message} ` +
-                    `(attempt ${failureCount + 1}/${MAX_RETRIES})`
-                )
+                logger.error("Queue item failed", { job: JOB, itemId: item.id, type: item.type, attempt: failureCount + 1, maxRetries: MAX_RETRIES, error: error.message })
             }
         }
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2)
-        console.log(
-            `[ProcessQueue] Completed in ${duration}s. ` +
-            `Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}`
-        )
+        logger.info("Job completed", { job: JOB, durationSeconds: Number(duration), processed, failed, skipped })
 
         await AppDataSource.destroy()
         process.exit(0)
     } catch (error) {
-        console.error("[ProcessQueue] Fatal error:", error)
+        logger.error("Job fatal error", { job: JOB, error: (error as Error)?.message, stack: (error as Error)?.stack })
         process.exit(1)
     }
 }

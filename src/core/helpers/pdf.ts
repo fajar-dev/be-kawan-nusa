@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit'
+import { logger } from "./logger"
 import { Redemption } from '../../modules/redemption/entities/redemption.entity'
 
 const GREEN = '#4a7c3f'
@@ -56,7 +57,7 @@ export const generateWithdrawalNote = (redemption: Redemption): Promise<Buffer> 
                 results.forEach(item => doc.registerFont(item.name, item.buffer))
                 return true
             } catch (e) {
-                console.error('Failed to fetch Montserrat fonts, falling back to Helvetica:', e)
+                logger.warn("Failed to fetch fonts, falling back to Helvetica", { source: "pdf", error: (e as Error)?.message })
                 return false
             }
         }
@@ -73,7 +74,7 @@ export const generateWithdrawalNote = (redemption: Redemption): Promise<Buffer> 
 
             const withdrawDetail = redemption.redemptionWithdraw
             if (!withdrawDetail) {
-                console.error('Withdrawal details missing for redemption note')
+                logger.warn("Withdrawal details missing for redemption note", { source: "pdf" })
             }
 
             const gross = redemption.pointsUsed * 1000

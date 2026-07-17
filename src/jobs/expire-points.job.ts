@@ -1,13 +1,14 @@
 import { AppDataSource } from "../config/database"
+import { logger } from "../core/helpers/logger"
 import { PointCalculator } from "../core/helpers/point"
 
 async function run() {
     try {
-        console.log("[Expire] Starting expired points cleanup...")
+        logger.info("Starting expired points cleanup...")
         const startTime = Date.now()
 
         await AppDataSource.initialize()
-        console.log("[Expire] Database connected")
+        logger.info("Database connected")
 
         const pointCalculator = new PointCalculator()
         const totalExpired = await AppDataSource.transaction(async (manager) => {
@@ -15,12 +16,12 @@ async function run() {
         })
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2)
-        console.log(`[Expire] Completed in ${duration}s. Expired ${totalExpired} rewards.`)
+        logger.info(`Completed in ${duration}s. Expired ${totalExpired} rewards.`)
 
         await AppDataSource.destroy()
         process.exit(0)
     } catch (error) {
-        console.error("[Expire] Failed:", error)
+        logger.error("Expired points job failed", { error: (error as any)?.message, stack: (error as any)?.stack })
         process.exit(1)
     }
 }

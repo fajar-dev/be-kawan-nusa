@@ -1,4 +1,5 @@
 import { Redemption } from "./entities/redemption.entity"
+import { logger } from "../../core/helpers/logger"
 import { RedemptionWithdraw } from "./entities/redemption-withdraw.entity"
 import { RedemptionVoucher } from "./entities/redemption-voucher.entity"
 import { RedemptionVoucherDetail } from "./entities/redemption-voucher-detail.entity"
@@ -125,7 +126,7 @@ export class RedemptionService {
                 redemption.redemptionWithdrawId!,
                 { receiptPath: objectName }
             )
-        }).catch((err) => console.error("[Redemption] Failed to generate receipt PDF:", err))
+        }).catch((err) => logger.error("Failed to generate receipt PDF", { event: "pdf.failed", error: (err as Error)?.message }))
 
         return redemption
     }

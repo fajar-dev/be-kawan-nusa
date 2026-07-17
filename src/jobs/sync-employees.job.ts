@@ -1,22 +1,23 @@
 import { AppDataSource } from "../config/database"
+import { logger } from "../core/helpers/logger"
 import { Employee } from "../modules/employee/entities/employee.entity"
 import { nusaworkHelper } from "../core/helpers/nusawork"
 
 async function sync() {
     try {
-        console.log("[Sync] Starting employee sync from Nusawork...")
+        logger.info("Starting employee sync from Nusawork...")
         const startTime = Date.now()
 
         await AppDataSource.initialize()
-        console.log("[Sync] App database connected")
+        logger.info("App database connected")
 
         const employees = await nusaworkHelper.getEmployees()
         if (employees.length === 0) {
-            console.log("[Sync] No employees found from Nusawork")
+            logger.info("No employees found from Nusawork")
             process.exit(0)
         }
 
-        console.log(`[Sync] Fetched ${employees.length} active employees from Nusawork`)
+        logger.info(`Fetched ${employees.length} active employees from Nusawork`)
 
         const repo = AppDataSource.getRepository(Employee)
         const batchSize = 500
@@ -42,7 +43,7 @@ async function sync() {
             synced += entities.length
         }
 
-        console.log(`[Sync] Pass 1: Synced ${synced} employees`)
+        logger.info(`Pass 1: Synced ${synced} employees`)
 
         // Build a map of user_id -> id for manager lookup
         const userIdMap = new Map<number, number>()
@@ -58,15 +59,15 @@ async function sync() {
             if (managerId) managersUpdated++
         }
 
-        console.log(`[Sync] Pass 2: Updated ${managersUpdated} manager relations`)
+        logger.info(`Pass 2: Updated ${managersUpdated} manager relations`)
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(2)
-        console.log(`[Sync] Completed in ${duration}s. Synced ${synced} employees.`)
+        logger.info(`Completed in ${duration}s. Synced ${synced} employees.`)
 
         await AppDataSource.destroy()
         process.exit(0)
     } catch (error) {
-        console.error("[Sync] Failed:", error)
+        logger.error("Sync job failed", { error: (error as any)?.message, stack: (error as any)?.stack })
         process.exit(1)
     }
 }

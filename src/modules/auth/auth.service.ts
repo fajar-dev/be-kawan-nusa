@@ -16,6 +16,7 @@ import {
 } from "./validators/auth.validator"
 import { UnauthorizedException, BadRequestException } from "../../core/exceptions/base"
 import { hashPassword, comparePassword } from "../../core/helpers/hash"
+import { logger } from "../../core/helpers/logger"
 import { verify } from "hono/jwt"
 import { config } from "../../config/config"
 import crypto from "crypto"
@@ -117,7 +118,7 @@ export class AuthService {
 
             // Fire-and-forget: don't block registration if email fails
             this.sendVerificationEmail(user).catch((err) => {
-                console.error(`[Auth] Failed to send verification email to ${user.email}:`, err)
+                logger.error("Verification email dispatch failed", { event: "mail.failed", kind: "verification", userId: user.id, email: user.email, error: err?.message })
             })
 
             return user
@@ -139,7 +140,7 @@ export class AuthService {
             .replace(/{{verifyLink}}/g, verifyLink)
 
         this.mailHelper.sendHtml(user.email!, "Verifikasi Email Anda", html).catch((err) => {
-            console.error(`[Mail] Failed to send verification email to ${user.email}:`, err)
+            logger.error("Verification email send failed", { event: "mail.failed", kind: "verification", userId: user.id, email: user.email, error: err?.message })
         })
     }
 
@@ -322,7 +323,7 @@ export class AuthService {
             .replace(/{{resetLink}}/g, resetLink)
 
         this.mailHelper.sendHtml(user.email!, "Atur Ulang Kata Sandi", html).catch((err) => {
-            console.error(`[Mail] Failed to send reset password email to ${user.email}:`, err)
+            logger.error("Reset password email send failed", { event: "mail.failed", kind: "reset-password", userId: user.id, email: user.email, error: err?.message })
         })
         return true
     }
@@ -375,6 +376,8 @@ export class AuthService {
 
         await this.otpTokenRepository.create(user.id, code, expiresAt)
 
+        logger.info("OTP requested", { event: "otp.requested", userId: user.id, channel: isEmail ? "email" : "whatsapp" })
+
         if (isEmail) {
             const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || "User"
             const templatePath = path.join(process.cwd(), "public/templates/otp-login.html")
@@ -383,12 +386,12 @@ export class AuthService {
                 .replace(/{{code}}/g, code)
 
             this.mailHelper.sendHtml(user.email!, "Kode OTP Login", html).catch((err) => {
-                console.error(`[Mail] Failed to send OTP email to ${user.email}:`, err)
+                logger.error("OTP email send failed", { event: "otp.failed", channel: "email", userId: user.id, email: user.email, error: err?.message })
             })
         } else {
             const phone = user.phone?.replace(/[\s\-]/g, '').replace(/^(\+62|62|0)/, '62') || ''
             this.nusaContactHelper.sendOTP(phone, code).catch((err) => {
-                console.error(`[NusaContact] Failed to send OTP to ${user.phone}:`, err)
+                logger.error("OTP WhatsApp send failed", { event: "otp.failed", channel: "whatsapp", userId: user.id, phone: user.phone, error: err?.message })
             })
         }
 
@@ -407,6 +410,8 @@ export class AuthService {
         }
 
         await this.otpTokenRepository.deleteAllByUserId(user.id)
+
+        logger.info("OTP verified", { event: "otp.verified", userId: user.id })
 
         const { accessToken, refreshToken } = await this.authTokenService.generateTokens(user, 'user')
 
