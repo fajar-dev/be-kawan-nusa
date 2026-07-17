@@ -10,6 +10,7 @@ Before making any changes, read these docs:
 - `docs/testing-guide.md` — How to write integration tests
 - `docs/swagger-guide.md` — How to write API documentation
 - `docs/api-reference.md` — All endpoints reference
+- `docs/jobs-and-integrations.md` — Cron jobs, queue, NIS/Nusawork/NusaContact/MinIO integrations
 
 ## Code Conventions
 
@@ -45,8 +46,10 @@ export const invoiceController = new InvoiceController(service)
 ### Routes
 
 - ALL routes in `src/routes/api.ts` — NOT in modules
-- Middleware per route: `authMiddleware`, `roleMiddleware('user'|'admin')`, `apiKeyMiddleware`
-- Validation: `zValidator("json", Schema, validationHook)`
+- Middleware per route (order matters): `authMiddleware`, `roleMiddleware('user'|'admin')`,
+  `permissionMiddleware(module, 'L'|'T'|'E'|'H')` (admin RBAC), `apiKeyMiddleware`,
+  `rateLimitMiddleware(n)`
+- Validation: `zValidator("json"|"form", Schema, validationHook)`
 
 ### Response Format
 

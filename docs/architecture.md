@@ -6,41 +6,53 @@
 |-------|------------|
 | Runtime | Bun |
 | Framework | Hono |
-| ORM | TypeORM |
-| Database | PostgreSQL |
-| Validation | Zod |
-| Auth | JWT (hono/jwt) |
-| Storage | MinIO (S3-compatible) |
-| Email | Nodemailer |
-| Testing | Bun Test |
-| Docs | Swagger/OpenAPI 3.0 |
+| ORM | TypeORM (`synchronize` via `DB_SYNC` — no migrations) |
+| Database | MySQL 8 (app DB) + read-only NIS MySQL (sync source) |
+| Validation | Zod + @hono/zod-validator |
+| Auth | JWT HS256 (hono/jwt) + Google OAuth + OTP (email/WhatsApp) |
+| Storage | MinIO (S3-compatible), proxied via `GET /api/proxy?path=` |
+| Email | Nodemailer (HTML templates in `public/templates/`) |
+| WhatsApp | NusaContact API (OTP delivery) |
+| Employee sync | Nusawork API |
+| PDF | PDFKit (receipts) |
+| Testing | Bun Test (~290 integration tests) |
+| Docs | Swagger/OpenAPI 3.0 (`/api/docs`) |
+| Deploy | PM2 (`ecosystem.config.js`) / Docker Compose (app + MySQL) |
 
 ## Project Structure
 
 ```
 src/
-├── config/           # App config, database connection
-│   ├── config.ts     # Environment variables & app config
-│   └── database.ts   # TypeORM DataSource (AppDataSource)
+├── config/           # App config, database connections
+│   ├── config.ts     # ALL environment variables, centralized
+│   ├── database.ts   # AppDataSource (MySQL) + entity registry (34 entities)
+│   ├── nis-database.ts # NisDataSource — read-only NIS MySQL (sync source)
+│   └── smtp.ts       # Nodemailer transporter
 │
 ├── core/             # Shared infrastructure
 │   ├── exceptions/   # Custom exception classes (BaseException, NotFoundException, etc.)
-│   ├── helpers/      # Utilities (response, hash, mail, minio, point calculator, auth token, validator)
+│   ├── helpers/      # response, hash, mail, minio, nis, nusawork, nusacontact,
+│   │                 # pdf, point (FIFO PointCalculator), withdraw, validator, logger
 │   ├── interfaces/   # Shared interfaces (IUnitOfWork, IBaseRepository)
-│   └── middlewares/  # Auth, role, API key middlewares
+│   ├── middlewares/  # auth, role, permission, api-key, rate-limit, token-auth, logger
+│   └── queue/        # JobQueue / JobQueueFailure entities + QueueType constants
 │
-├── modules/          # Feature modules (20 total)
-│   ├── auth/
-│   ├── user/
-│   ├── customer/
-│   ├── reward/
-│   └── ...
+├── modules/          # Feature modules (21 total)
+│   ├── auth/  profile/  user/  employee/  role/
+│   ├── customer/  customer-service/  service/  service-promotion/
+│   ├── point/  point-submission/  redemption/
+│   ├── catalog/  catalog-category/
+│   ├── education-article/  education-video/  education-category/
+│   └── template/  feedback/  statistic/  additional/
 │
 ├── routes/
-│   └── api.ts        # Centralized route definitions
+│   └── api.ts        # Centralized route definitions (single source of truth)
 │
-├── jobs/             # Background jobs (cron)
-├── app.ts            # Hono app factory (CORS, error handler, route mounting)
+├── jobs/             # Standalone cron scripts (see docs/jobs-and-integrations.md):
+│                     # sync-users, sync-customers, sync-employees,
+│                     # expire-points, process-submissions, process-recurring-points
+├── database/seed.ts  # Runs SQL files from database/seeders/
+├── app.ts            # Hono app factory (CORS, logger, error handler, Swagger, static)
 └── index.ts          # Entry point (DB init, app start)
 
 tests/
@@ -157,9 +169,39 @@ Response shape:
 
 ## Authentication & Authorization
 
-- **authMiddleware**: Validates JWT from `Authorization: Bearer <token>`. Sets `c.get("user")` and `c.get("jwtPayload")`.
-- **roleMiddleware('user')** / **roleMiddleware('admin')**: Checks role from JWT payload.
-- **apiKeyMiddleware**: Validates `X-API-KEY` header for server-to-server calls.
+Two account types share one JWT scheme (HS256, `role` claim decides the lookup):
+
+- role `user` → row in `users` (referral partner; registers via email/Google/OTP)
+- role `admin` → row in `employees` (synced from Nusawork; logs in via `/auth/admin/google`),
+  with an assigned `Role` whose `permissions` is `Record<module, ('L'|'T'|'E'|'H')[]>`
+
+Middleware chain (order matters — auth first):
+
+- **authMiddleware**: Validates JWT from `Authorization: Bearer <token>`, loads the account
+  (User or Employee+role), sets `c.get('user')`, `c.get('role')`, and for admins
+  `c.get('permissions')`.
+- **roleMiddleware(...roles)**: 403 unless `c.get('role')` is in the list.
+- **permissionMiddleware(module, action)**: admin RBAC — 403 unless the employee's role grants
+  the action (`L`ihat/view, `T`ambah/create, `E`dit, `H`apus/delete) on the module. Managed via
+  `/role` endpoints (permission matrix lives in the role module).
+- **apiKeyMiddleware**: Validates `x-api-key` header (server-to-server `POST /point/reward`).
+- **rateLimitMiddleware(n)**: n requests/minute per IP (register, OTP, forgot-password);
+  becomes a no-op when `ENV=test`.
+- **tokenAuthMiddleware**: accepts JWT via `?token=` query param (for direct-link file access).
+
+Access token: 15 min (`JWT_SECRET`); refresh token: 7 days (`JWT_REFRESH_SECRET`) via
+`POST /auth/refresh`.
+
+## Domain Invariants
+
+- **Points are FIFO with expiry** — all balance reads/deductions go through `PointCalculator`
+  (`core/helpers/point.ts`) inside a TypeORM transaction. It lazy-expires overdue rewards and
+  deducts from the soonest-expiring rewards first. Never mutate `points.remainingPoint` directly.
+- **Cash withdrawal math** (`core/helpers/withdraw.ts`): 1 point = Rp 1.000; tax 2,5%;
+  payout = gross − tax.
+- **Point submissions are processed asynchronously** through the `job_queues` table
+  (approve → enqueue → `process-submissions` cron job creates points; failures go to
+  `job_queue_failures`, max 5 retries). See docs/jobs-and-integrations.md.
 
 ## Error Handling
 

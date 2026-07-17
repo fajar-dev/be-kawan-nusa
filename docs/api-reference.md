@@ -1,204 +1,205 @@
 # API Reference
 
-Base URL: `/api`
+Base URL: `/api` — interactive docs at `GET /api/docs` (Swagger UI, spec: `/api/swagger.yaml`).
 
-## Auth
+Source of truth: [src/routes/api.ts](../src/routes/api.ts). Every route lists its middleware
+chain there; this document mirrors it.
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| POST | `/auth/register` | - | - | Register new user |
-| POST | `/auth/login` | - | - | Login (email/phone + password) |
-| POST | `/auth/google` | - | - | Google OAuth login (user) |
-| POST | `/auth/admin/google` | - | - | Google OAuth login (admin) |
-| POST | `/auth/forgot-password` | - | - | Request password reset |
-| GET | `/auth/validate-reset-token` | - | - | Validate reset token |
-| POST | `/auth/reset-password` | - | - | Reset password |
-| POST | `/auth/refresh` | - | - | Refresh access token |
-| GET | `/auth/me` | Bearer | * | Get current user |
-| POST | `/auth/logout` | Bearer | * | Logout |
+**Legend**
 
-## Profile
+- **Auth** — `Bearer` (JWT access token), `API Key` (`x-api-key` header), `-` (public)
+- **Role** — `user` (referral partner), `admin` (employee), `*` (any authenticated)
+- **Permission** — admin RBAC check `permissionMiddleware(module, action)`;
+  actions: `L`=Lihat/view, `T`=Tambah/create, `E`=Edit, `H`=Hapus/delete
+- **RL** — rate limited (n requests/minute per IP; disabled when `ENV=test`)
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/profile` | Bearer | user | Get profile |
-| PUT | `/profile/account` | Bearer | user | Update account info |
-| PUT | `/profile/bank` | Bearer | user | Update bank info |
-| PUT | `/profile/preference` | Bearer | user | Update preferences |
-| PUT | `/profile/password` | Bearer | user | Change password |
-| POST | `/profile/photo` | Bearer | user | Upload photo |
+## Auth (`/auth`)
 
-## Customer
+| Method | Path | Auth | Notes |
+|--------|------|------|-------|
+| POST | `/auth/register` | - | RL 5/min; JSON or multipart |
+| GET | `/auth/verify-email?token=` | - | Verifies email, returns session |
+| POST | `/auth/resend-verification` | - | RL 3/min |
+| GET | `/auth/check-email-status?email=` | - | Email state (exists/verified/…) |
+| POST | `/auth/login` | - | `{ identifier, password }` (email/phone) |
+| POST | `/auth/google` | - | Google OAuth code → user session |
+| POST | `/auth/admin/google` | - | Google OAuth code → **admin** (Employee) session |
+| POST | `/auth/otp/send` | - | RL 5/min; OTP via email/WhatsApp (NusaContact) |
+| POST | `/auth/otp/verify` | - | `{ identifier, code }` → session |
+| POST | `/auth/forgot-password` | - | RL 3/min |
+| GET | `/auth/validate-reset-token?token=` | - | |
+| POST | `/auth/reset-password` | - | `{ token, newPassword }` |
+| POST | `/auth/refresh` | - | `{ refreshToken }` → new token pair |
+| GET | `/auth/me` | Bearer | Current user/employee (+permissions for admin) |
+| POST | `/auth/logout` | Bearer | |
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/customer` | Bearer | user | List (page, limit, search, type) |
-| GET | `/customer/:id` | Bearer | user | Detail |
-| GET | `/customer/:id/service` | Bearer | user | Customer's services |
-| GET | `/customer/:id/reward` | Bearer | user | Customer's rewards |
+## Profile (`/profile`) — role `user`
 
-## Customer Service
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/profile` | |
+| PUT | `/profile/account` | Personal/company data |
+| PUT | `/profile/bank` | Bank account for cash withdrawal |
+| PUT | `/profile/preference` | `isSubscribe`, `isAutoWithdraw` |
+| PUT | `/profile/password` | |
+| POST | `/profile/photo` | multipart |
+| POST | `/profile/documents` | multipart — KTP / bank book (boarding) |
+| POST | `/profile/complete-boarding` | Marks boarding done → status `pending` |
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/customer-service` | Bearer | user | List (page, limit, search, status) |
+## Customer & Service — role `user`
 
-## Service
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/customer` | Paginated; filters q/type/status/dates |
+| GET | `/customer/:id` | |
+| GET | `/customer/:id/service` | Customer's subscriptions |
+| GET | `/customer/:id/point` | Rewards earned from this customer |
+| GET | `/service` | Service catalog |
+| GET | `/service/:code` | |
+| GET | `/service/:code/customer` | Customers on a service |
+| GET | `/customer-service` | All of the partner's customer subscriptions |
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/service` | Bearer | user | List services |
-| GET | `/service/:code` | Bearer | user | Service by code |
-| GET | `/service/:code/customer` | Bearer | user | Customers of service |
+## Point & Reward
 
-## Service Promotion
+| Method | Path | Auth | Role | Notes |
+|--------|------|------|------|-------|
+| GET | `/point` | Bearer | user | Available balance (lazy-expires overdue points) |
+| GET | `/point/reward` | Bearer | user | Reward history |
+| POST | `/point/reward` | API Key | - | Server-to-server reward creation |
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/service/promotion` | Bearer | * | List (page, limit) |
-| GET | `/service/promotion/:id` | Bearer | * | Detail |
-| POST | `/service/promotion` | Bearer | admin | Create |
-| PUT | `/service/promotion/:id` | Bearer | admin | Update |
-| DELETE | `/service/promotion/:id` | Bearer | admin | Delete |
+## Redemption
 
-## Point
+User side (role `user`):
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/point` | Bearer | user | Point balance |
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/redemption` | Own history; filters `type[]`, `status[]` |
+| GET | `/redemption/:id` | |
+| POST | `/redemption/cash` | `{ pointsUsed }` — payout = poin × 1000 − 2,5% tax |
+| POST | `/redemption/voucher` | `{ catalogId }` |
+| POST | `/redemption/product` | `{ catalogId, address }` |
 
-## Reward
+Admin side (role `admin`):
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/reward` | Bearer | user | List (page, limit, pointType, startDate, endDate) |
-| POST | `/reward` | API Key | - | Create reward (server-to-server) |
-
-## Redemption (User)
-
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/redemption` | Bearer | user | List (page, limit, type, status) |
-| GET | `/redemption/:id` | Bearer | user | Detail |
-| POST | `/redemption/cash` | Bearer | user | Redeem cash |
-| POST | `/redemption/voucher` | Bearer | user | Redeem voucher |
-| POST | `/redemption/product` | Bearer | user | Redeem product |
-
-## Redemption (Admin)
-
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/redemption/cash/list` | Bearer | admin | Cash list |
-| PUT | `/redemption/cash/list/:id` | Bearer | admin | Complete cash |
-| GET | `/redemption/product/list` | Bearer | admin | Product list |
-| POST | `/redemption/product/list/:id` | Bearer | admin | Process product |
-| PUT | `/redemption/product/list/:id` | Bearer | admin | Complete product |
-| GET | `/redemption/voucher/list` | Bearer | admin | Voucher list |
-| POST | `/redemption/voucher/list/:id` | Bearer | admin | Process voucher |
-| PUT | `/redemption/voucher/list/:id` | Bearer | admin | Complete voucher |
-
-## Catalog
-
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/catalog` | Bearer | * | List (page, limit, category, search) |
-| GET | `/catalog/:id` | Bearer | * | Detail |
-| POST | `/catalog` | Bearer | admin | Create |
-| PUT | `/catalog/:id` | Bearer | admin | Update |
-| DELETE | `/catalog/:id` | Bearer | admin | Delete |
-| POST | `/catalog/upload` | Bearer | admin | Upload image |
-
-## Catalog Category
-
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/catalog/category` | Bearer | * | List |
-| POST | `/catalog/category` | Bearer | admin | Create |
-| PUT | `/catalog/category/:id` | Bearer | admin | Update |
-| DELETE | `/catalog/category/:id` | Bearer | admin | Delete |
-
-## Education Category
-
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/education/category` | Bearer | * | List |
-| POST | `/education/category` | Bearer | admin | Create |
-| PUT | `/education/category/:id` | Bearer | admin | Update |
-| DELETE | `/education/category/:id` | Bearer | admin | Delete |
-
-## Education Article
-
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/education/article` | Bearer | * | List (page, limit, category, search) |
-| GET | `/education/article/:id` | Bearer | * | Detail |
-| POST | `/education/article` | Bearer | admin | Create |
-| PUT | `/education/article/:id` | Bearer | admin | Update |
-| DELETE | `/education/article/:id` | Bearer | admin | Delete |
-| POST | `/education/article/upload` | Bearer | admin | Upload image |
-
-## Education Video
-
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/education/video` | Bearer | * | List (page, limit, category) |
-| GET | `/education/video/:id` | Bearer | * | Detail |
-| POST | `/education/video` | Bearer | admin | Create |
-| PUT | `/education/video/:id` | Bearer | admin | Update |
-| DELETE | `/education/video/:id` | Bearer | admin | Delete |
-
-## Feedback
-
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/feedback` | Bearer | * | List |
-| POST | `/feedback` | Bearer | * | Submit (form: category, message, attachment) |
-
-## Template
-
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/template` | Bearer | * | List (page, limit) |
-| GET | `/template/:id` | Bearer | * | Detail |
-| GET | `/template/:id/download` | Bearer | * | Download file |
-| POST | `/template` | Bearer | admin | Create |
-| PUT | `/template/:id` | Bearer | admin | Update |
-| DELETE | `/template/:id` | Bearer | admin | Delete |
+| Method | Path | Permission | Notes |
+|--------|------|-----------|-------|
+| GET | `/redemption/cash/list` | `redemption.cash` L | |
+| PUT | `/redemption/cash/list/:id` | `redemption.cash` E | Complete cash payout |
+| GET | `/redemption/product/list` | `redemption.product` L | |
+| POST | `/redemption/product/list/:id` | `redemption.product` E | `{ shipper, trackingNumber }` |
+| PUT | `/redemption/product/list/:id` | `redemption.product` E | Complete |
+| GET | `/redemption/voucher/list` | `redemption.voucher` L | |
+| POST | `/redemption/voucher/list/:id` | `redemption.voucher` E | `{ code, expiredDate? }` |
+| PUT | `/redemption/voucher/list/:id` | `redemption.voucher` E | Complete |
+| GET | `/redemption/:id/status-histories` | `redemption.cash` L | Status timeline |
 
 ## Statistic
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/statistic/count` | Bearer | user | Dashboard counts |
-| GET | `/statistic/point` | Bearer | user | Point per month (year) |
-| GET | `/statistic/customer` | Bearer | user | Customer stats |
-| GET | `/statistic/redemption-reward` | Bearer | user | Redemption/reward stats |
-| GET | `/statistic/admin/summary` | Bearer | admin | Admin dashboard |
+| Method | Path | Role | Permission | Notes |
+|--------|------|------|-----------|-------|
+| GET | `/statistic/count` | user | | Customer/service/point counts + MoM trend |
+| GET | `/statistic/point` | user | | Points per month |
+| GET | `/statistic/customer?type=monthly\|yearly` | user | | |
+| GET | `/statistic/redemption-point` | user | | Redemption status breakdown |
+| GET | `/statistic/admin/summary` | admin | `dashboard` L | Global totals |
 
-## User (Admin)
+## Catalog (`/catalog`)
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/user` | Bearer | admin | List (page, limit, search) |
-| GET | `/user/:id` | Bearer | admin | Detail |
-| GET | `/user/:id/services` | Bearer | admin | User's services |
-| GET | `/user/:id/reward` | Bearer | admin | User's rewards |
-| GET | `/user/:id/redeem` | Bearer | admin | User's redemptions |
-| GET | `/user/:id/statistic` | Bearer | admin | User's statistics |
+| Method | Path | Role | Permission |
+|--------|------|------|-----------|
+| GET | `/catalog` | * | |
+| GET | `/catalog/:id` | * | |
+| GET | `/catalog/:id/stock-history` | admin | `catalog` L |
+| POST | `/catalog` | admin | `catalog` T |
+| PUT | `/catalog/:id` | admin | `catalog` E |
+| DELETE | `/catalog/:id` | admin | `catalog` H |
+| POST | `/catalog/upload` | admin | `catalog` T |
+| GET | `/catalog/category` | * | |
+| POST / PUT / DELETE | `/catalog/category[/:id]` | admin | `catalog` T/E/H |
 
-## Additional
+## Education (`/education`)
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/additional/service` | Bearer | * | Service dropdown |
-| GET | `/additional/customer-type` | Bearer | * | Customer type dropdown |
-| GET | `/additional/customer-service-status` | Bearer | * | Status dropdown |
-| GET | `/additional/reward-point-type` | Bearer | * | Point type dropdown |
-| GET | `/additional/service-category` | Bearer | * | Service category dropdown |
-| GET | `/additional/search` | Bearer | * | Global search (q) |
+| Method | Path | Role | Permission | Notes |
+|--------|------|------|-----------|-------|
+| GET | `/education/category` | * | | |
+| POST / PUT / DELETE | `/education/category[/:id]` | admin | `education` T/E/H | |
+| GET | `/education/article[/:id]` | * | | `?isView=` publish filter |
+| POST / PUT / DELETE | `/education/article[/:id]` | admin | `education` T/E/H | multipart |
+| POST | `/education/article/upload` | admin | `education` T | Inline editor image |
+| GET | `/education/video[/:id]` | * | | |
+| POST / PUT / DELETE | `/education/video[/:id]` | admin | `education` T/E/H | multipart |
 
-## Proxy
+## Service Promotion & Template
 
-| Method | Path | Auth | Role | Description |
-|--------|------|------|------|-------------|
-| GET | `/proxy?path=...` | - | - | MinIO file proxy |
+| Method | Path | Role | Permission |
+|--------|------|------|-----------|
+| GET | `/service/promotion[/:id]` | * | |
+| POST / PUT / DELETE | `/service/promotion[/:id]` | admin | `education` T/E/H |
+| GET | `/template` | * | |
+| GET | `/template/:id`, `/template/:id/download` | user, admin | |
+| POST / PUT / DELETE | `/template[/:id]` | admin | `education` T/E/H |
+
+## User Management (`/user`) — role `admin`
+
+| Method | Path | Permission | Notes |
+|--------|------|-----------|-------|
+| GET | `/user` | `user` L | Referral partner list (`?status=`) |
+| GET | `/user/:id` | `user` L | |
+| GET | `/user/:id/services` | `user` L | |
+| GET | `/user/:id/point` | `user` L | |
+| GET | `/user/:id/redeem` | `user` L | |
+| GET | `/user/:id/statistic` | `user` L | |
+| PATCH | `/user/:id/status` | `user.approval` E | `{ status, note }` — approve/reject/revision/active/inactive |
+| GET | `/user/:id/status-histories` | `user` L | |
+
+## Point Submission (`/point-submission`) — role `admin`
+
+| Method | Path | Permission | Notes |
+|--------|------|-----------|-------|
+| GET | `/point-submission` | `point-submission` L | |
+| GET | `/point-submission/check-account` | `point-submission` L | Duplicate-account check |
+| GET | `/point-submission/:id` | `point-submission` L | |
+| POST | `/point-submission` | `point-submission` T | OTC/Bulanan, recurring option |
+| PUT | `/point-submission/:id` | `point-submission` E | |
+| DELETE | `/point-submission/:id` | `point-submission` H | |
+| POST | `/point-submission/approve` | `point-submission` E | Bulk `{ ids[], notes? }` → enqueues `job_queues` |
+| GET | `/nis/account?q=` | `point-submission` L | Search accounts in NIS DB |
+
+## Role / RBAC (`/role`) — role `admin`
+
+| Method | Path | Permission | Notes |
+|--------|------|-----------|-------|
+| GET | `/role/permission-matrix` | `role` L | Available modules + actions |
+| GET | `/role/employees` | `role` L | Employees for assignment |
+| GET | `/role[/:id]` | `role` L | |
+| POST | `/role` | `role` T | `{ name, description?, color?, permissions?, employeeIds? }` |
+| PUT | `/role/:id` | `role` E | |
+| DELETE | `/role/:id` | `role` H | |
+
+## Feedback, Additional, Misc
+
+| Method | Path | Auth | Notes |
+|--------|------|------|-------|
+| GET | `/feedback` | Bearer | |
+| POST | `/feedback` | Bearer | multipart; forwarded to Google AppScript (`FEEDBACK_URL`) |
+| GET | `/additional/service` | Bearer | Enum options for filters |
+| GET | `/additional/customer-type` | Bearer | |
+| GET | `/additional/customer-service-status` | Bearer | |
+| GET | `/additional/point-type` | Bearer | |
+| GET | `/additional/service-category` | Bearer | |
+| GET | `/additional/search?q=` | Bearer | Global search → `{ title, module, route }` |
+| GET | `/proxy?path=` | - | MinIO object proxy (images/files) |
+
+## Response Envelope
+
+```json
+// success
+{ "success": true, "statusCode": 200, "message": "...", "data": ...,
+  "meta": { "total": 0, "perPage": 10, "currentPage": 1, "lastPage": 1, "from": 1, "to": 10 } }
+
+// error (exceptions / Zod validation)
+{ "success": false, "statusCode": 422, "message": "...", "errors": [ { "field": "...", "message": "..." } ] }
+```
+
+`meta` only on paginated lists. Common list params: `q`, `sort`, `order`, `page`, `limit`,
+`startDate`, `endDate`, plus module-specific filters (arrays passed as `key[]=`).
