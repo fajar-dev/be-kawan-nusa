@@ -732,5 +732,83 @@ describe("Auth Module", () => {
             expect(res.status).toBe(422)
         })
     })
+
+    // Full account journey across endpoints (no mocked shortcuts): the token is
+    // the one register actually produces, and login runs against a user that
+    // went through the real register → verify path. Guards the flow where email
+    // verification no longer auto-logs in — the user must log in manually.
+    describe("journey: register → verify email → login", () => {
+        const journeyEmail = `journey-${Date.now()}@example.com`
+        const journeyPassword = "password123"
+        let journeyUserId: number | null = null
+
+        // Registration sends the verification email fire-and-forget, so the token
+        // row lands just after the HTTP response resolves — poll briefly for it.
+        const waitForVerificationToken = async (userId: number, tries = 20, delayMs = 50): Promise<string> => {
+            const repo = AppDataSource.getRepository("EmailVerificationToken")
+            for (let i = 0; i < tries; i++) {
+                const row: any = await repo.findOne({ where: { userId }, order: { id: "DESC" } })
+                if (row?.token) return row.token
+                await new Promise((resolve) => setTimeout(resolve, delayMs))
+            }
+            throw new Error(`Verification token was never created for user ${userId}`)
+        }
+
+        afterAll(async () => {
+            if (journeyUserId) {
+                await AppDataSource.getRepository("EmailVerificationToken").delete({ userId: journeyUserId })
+                await cleanupTestUser(journeyUserId)
+            }
+        })
+
+        it("registers a new user who starts out unverified", async () => {
+            const res = await request("/auth/register", {
+                method: "POST",
+                body: { name: "Journey User", email: journeyEmail, password: journeyPassword },
+            })
+            expect(res.status).toBe(201)
+            expect(res.body.success).toBe(true)
+            expect(res.body.data.id).toBeDefined()
+            journeyUserId = res.body.data.id
+
+            const user = await AppDataSource.getRepository(User).findOneBy({ id: journeyUserId! })
+            expect(user?.isVerified).toBe(false)
+        })
+
+        it("blocks login while the email is still unverified", async () => {
+            const res = await request("/auth/login", {
+                method: "POST",
+                body: { identifier: journeyEmail, password: journeyPassword },
+            })
+            expect(res.status).toBe(401)
+            expect(res.body.success).toBe(false)
+        })
+
+        it("verifies the email using the token created during registration", async () => {
+            const token = await waitForVerificationToken(journeyUserId!)
+            const res = await request(`/auth/verify-email?token=${token}`)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+            expect(res.body.data.user.email).toBe(journeyEmail)
+
+            const user = await AppDataSource.getRepository(User).findOneBy({ id: journeyUserId! })
+            expect(user?.isVerified).toBe(true)
+        })
+
+        it("allows login after verification and issues a working session", async () => {
+            const res = await request("/auth/login", {
+                method: "POST",
+                body: { identifier: journeyEmail, password: journeyPassword },
+            })
+            expect(res.status).toBe(200)
+            expect(res.body.data.accessToken).toBeDefined()
+            expect(res.body.data.refreshToken).toBeDefined()
+
+            // The token obtained from LOGIN must unlock a protected endpoint.
+            const me = await authRequest("/auth/me", res.body.data.accessToken)
+            expect(me.status).toBe(200)
+            expect(me.body.data.email).toBe(journeyEmail)
+        })
+    })
 })
 
