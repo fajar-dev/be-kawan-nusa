@@ -134,7 +134,7 @@ kawan-nusa-be/
 ```bash
 bun install
 cp .env.dist .env        # lalu isi nilainya (lihat bagian Environment)
-bun run seed             # opsional: seed data awal (role, users, catalog, dll.)
+bun run seed             # opsional: seed role admin default + matriks permission (role_seeder.sql)
 bun run dev              # hot-reload; server di http://localhost:4000 (sesuai PORT)
 ```
 
@@ -284,19 +284,35 @@ bun test tests/integration/role.test.ts    # satu file
 
 ## Deployment
 
-**PM2:**
+### Produksi dengan PM2 (rekomendasi)
 
 ```bash
-bun run build
-pm2 start ecosystem.config.js   # dist/index.js, interpreter bun, max_memory_restart 1G
+bun install
+cp .env.dist .env            # isi semua variabel (lihat tabel Environment)
+bun run build                # → dist/index.js
+bun run seed                 # sekali: role admin default + matriks permission
+
+pm2 start ecosystem.config.js --env production
+pm2 save && pm2 startup      # jalan otomatis setelah reboot
 pm2 logs kawan-nusa-be
 ```
 
-**Docker Compose:** `docker compose up -d` — service `app` (port 4000) + `db` (MySQL 8,
-healthcheck, volume `mysql_data`). Compose file belum memuat env NIS/MinIO/Google/Nusawork —
-lengkapi sesuai kebutuhan.
+Config produksi tersedia di folder [`deploy/`](deploy/) dan file [`ecosystem.config.js`](ecosystem.config.js):
 
-Job cron didaftarkan terpisah di crontab host (lihat [Job Terjadwal](#job-terjadwal-cron)).
+| File | Fungsi |
+| --- | --- |
+| [`ecosystem.config.js`](ecosystem.config.js) | PM2: fork mode, restart policy, `NODE_ENV=production`, path log `logs/pm2-*.log` |
+| [`deploy/crontab.example`](deploy/crontab.example) | Semua job terjadwal (queue, recurring, expire, sync) + pembersihan log harian — `crontab -e`, sesuaikan `APP_DIR`/`BUN` |
+| [`deploy/promtail-config.yaml`](deploy/promtail-config.yaml) | Promtail men-tail `logs/app-*.log` → Loki, parse JSON jadi label (`level`/`service`/`env`) |
+| [`deploy/logrotate.conf`](deploy/logrotate.conf) | Rotasi + retensi file PM2 (`logs/pm2-*.log`) |
+
+**Alur observability:** app menulis JSON ke stdout **dan** `logs/app-YYYY-MM-DD.log` (rotasi harian) →
+Promtail men-tail file itu → Loki → Grafana. File harian dipangkas via cron (30 hari, lihat crontab).
+Cukup ganti placeholder di `deploy/promtail-config.yaml` (URL Loki + path absolut `logs/`).
+
+**Docker Compose** (alternatif): `docker compose up -d` — service `app` (port 4000) + `db` (MySQL 8).
+Compose file belum memuat env NIS/MinIO/Google/Nusawork — lengkapi bila memakai Docker.
+
 Skema DB dikelola `DB_SYNC` (tanpa migrasi) — matikan di produksi bila skema sudah stabil.
 
 ---
