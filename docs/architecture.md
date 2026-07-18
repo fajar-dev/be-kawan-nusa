@@ -25,7 +25,7 @@
 src/
 ├── config/           # App config, database connections
 │   ├── config.ts     # ALL environment variables, centralized
-│   ├── database.ts   # AppDataSource (MySQL) + entity registry (34 entities)
+│   ├── database.ts   # AppDataSource (MySQL) + entity registry (35 entities)
 │   ├── nis-database.ts # NisDataSource — read-only NIS MySQL (sync source)
 │   └── smtp.ts       # Nodemailer transporter
 │
@@ -50,7 +50,7 @@ src/
 │
 ├── jobs/             # Standalone cron scripts (see docs/jobs-and-integrations.md):
 │                     # sync-users, sync-customers, sync-employees,
-│                     # expire-points, process-submissions, process-recurring-points
+│                     # expire-points, process-submissions, generate-monthly-submissions
 ├── database/seed.ts  # Runs SQL files from database/seeders/
 ├── app.ts            # Hono app factory (CORS, logger, error handler, Swagger, static)
 └── index.ts          # Entry point (DB init, app start)
@@ -246,7 +246,7 @@ verification/reset tokens, and passwords are omitted by design.
 |------|-----------------|
 | Email (`core/helpers/mail.ts`, auth/user services) | `mail.sent` / `mail.failed` (`to`, `subject`, `kind`, `messageId`) |
 | OTP (`auth.service.ts`, `core/helpers/nusacontact.ts`) | `otp.requested` / `otp.sent` / `otp.verified` / `otp.failed` (`userId`, `channel`) |
-| Job queue (`jobs/process-submissions`, `jobs/process-recurring-points`) | `job` field + `Job started/completed`, per-item `processed/failed/skipped` |
+| Job queue (`jobs/process-submissions`, `jobs/generate-monthly-submissions`) | `job` field + `Job started/completed`, per-item `processed/failed/skipped` |
 | Sync/expire cron (`jobs/sync-*`, `jobs/expire-points`) | structured start/complete/fail lines |
 | Storage (`core/helpers/minio.ts`) | `source:"minio"` upload/delete/bucket events |
 | NIS (`core/helpers/nis.ts`) | `source:"nis"` sync failures / skipped rows |

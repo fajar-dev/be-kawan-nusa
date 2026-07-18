@@ -3,6 +3,10 @@ import { authRequest, request } from "../helpers/test-client"
 import { createTestUser, createTestAdmin, generateUserToken, generateAdminToken, cleanupTestUser, cleanupTestAdmin } from "../helpers/auth.helper"
 import { User } from "../../src/modules/user/entities/user.entity"
 import { Employee } from "../../src/modules/employee/entities/employee.entity"
+import { AppDataSource } from "../../src/config/database"
+import { PointSubmission } from "../../src/modules/point-submission/entities/point-submission.entity"
+import { PointSubmissionSchedule } from "../../src/modules/point-submission/entities/point-submission-schedule.entity"
+import { JobQueue } from "../../src/core/queue/entities/job-queue.entity"
 
 describe("Point Submission Module", () => {
     let testUser: User
@@ -267,6 +271,84 @@ describe("Point Submission Module", () => {
         it("should fail without auth (401)", async () => {
             const res = await request("/nis/account?q=test")
             expect(res.status).toBe(401)
+        })
+    })
+
+    // ── Monthly recurring schedule ─────────────────────────────────────────
+
+    describe("Monthly schedule (Bulanan)", () => {
+        const custServId = 900000 + Math.floor(Math.random() * 90000)
+        let submissionId: number | null = null
+        let scheduleId: number | null = null
+
+        const nisData = {
+            custServId,
+            custId: "CUST-TEST",
+            accountName: "Schedule Test Account",
+            serviceCode: "SVC-TEST",
+            serviceName: "Test Service",
+            accountManager: "AM Test",
+            salesEmployeeId: null,
+        }
+
+        afterAll(async () => {
+            if (scheduleId) await AppDataSource.getRepository(PointSubmissionSchedule).delete(scheduleId)
+            if (submissionId) {
+                await AppDataSource.getRepository(JobQueue).delete({ referenceId: submissionId })
+                await AppDataSource.getRepository(PointSubmission).delete(submissionId)
+            }
+        })
+
+        it("creates an active schedule when a Bulanan submission is approved", async () => {
+            // Create a Bulanan submission
+            const createRes = await authRequest("/point-submission", adminToken, {
+                method: "POST",
+                body: { userId: testUser.id, type: "Bulanan", price: 100000, nisData },
+            })
+            expect(createRes.status).toBe(201)
+            submissionId = createRes.body.data.id
+
+            // Approve it → should spawn a schedule
+            const approveRes = await authRequest("/point-submission/approve", adminToken, {
+                method: "POST",
+                body: { ids: [submissionId], notes: "First approval" },
+            })
+            expect(approveRes.status).toBe(200)
+
+            const schedule = await AppDataSource.getRepository(PointSubmissionSchedule)
+                .findOne({ where: { sourceSubmissionId: submissionId! } })
+            expect(schedule).not.toBeNull()
+            expect(schedule?.isActive).toBe(true)
+            expect(schedule?.userId).toBe(testUser.id)
+            scheduleId = schedule?.id ?? null
+        })
+
+        it("lists the schedule via GET /point-submission/schedule (admin)", async () => {
+            const res = await authRequest("/point-submission/schedule?isActive=true", adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+            expect(res.body.data.some((s: any) => s.id === scheduleId)).toBe(true)
+        })
+
+        it("forbids a non-admin from listing schedules (403)", async () => {
+            const res = await authRequest("/point-submission/schedule", userToken)
+            expect(res.status).toBe(403)
+        })
+
+        it("stops the schedule via PATCH .../stop, then rejects a second stop (400)", async () => {
+            const first = await authRequest(`/point-submission/schedule/${scheduleId}/stop`, adminToken, { method: "PATCH" })
+            expect(first.status).toBe(200)
+
+            const stopped = await AppDataSource.getRepository(PointSubmissionSchedule).findOneBy({ id: scheduleId! })
+            expect(stopped?.isActive).toBe(false)
+
+            const second = await authRequest(`/point-submission/schedule/${scheduleId}/stop`, adminToken, { method: "PATCH" })
+            expect(second.status).toBe(400)
+        })
+
+        it("returns 404 when stopping a non-existent schedule", async () => {
+            const res = await authRequest("/point-submission/schedule/999999/stop", adminToken, { method: "PATCH" })
+            expect(res.status).toBe(404)
         })
     })
 })

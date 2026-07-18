@@ -184,6 +184,8 @@ routes.get("/user/:id/status-histories", authMiddleware, roleMiddleware('admin')
 
 // Point Submission (Admin)
 routes.get("/point-submission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.index(c))
+routes.get("/point-submission/schedule", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.schedules(c))
+routes.patch("/point-submission/schedule/:id/stop", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'E'), (c) => pointSubmissionController.stopSchedule(c))
 routes.get("/point-submission/check-account", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.checkAccount(c))
 routes.get("/point-submission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.show(c))
 routes.post("/point-submission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'T'), zValidator("json", CreatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.store(c))

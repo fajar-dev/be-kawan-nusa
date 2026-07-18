@@ -13,7 +13,7 @@ Dokumen ini merangkum semuanya. Sumber: [src/jobs/](../src/jobs/), [src/core/que
 | `bun run sync-employees` | `sync-employees.job.ts` | berkala | Sinkron karyawan dari **Nusawork API** ke tabel `employees` (akun admin) |
 | `bun run expire-points` | `expire-points.job.ts` | harian | Menghanguskan reward yang melewati `expiredDate` (via `PointCalculator.expirePoints`) |
 | `bun run process-submissions` | `process-submissions.job.ts` | tiap 5 menit | Memproses antrian `job_queues` → ambil data NIS → buat poin. Batch 50, max 5 retry, gagal dicatat ke `job_queue_failures` |
-| `bun run recurring-points` | `process-recurring-points.job.ts` | harian 01:00 | Untuk submission recurring yang approved: buat entri antrian bulanan, dengan **backfill** bulan terlewat dan penyesuaian tanggal (31 Jan → 28 Feb, dst.) |
+| `bun run generate-monthly-submissions` | `generate-monthly-submissions.job.ts` | harian 01:00 | Untuk tiap **jadwal aktif** (`point_submission_schedules`): buat **submission pending baru** tiap bulan (yang harus di-approve admin), dengan **backfill** bulan terlewat dan penyesuaian tanggal (31 Jan → 28 Feb, dst.). Tanpa tanggal berakhir; berhenti saat jadwal di-stop |
 
 Contoh crontab lengkap ada di [src/jobs/index.ts](../src/jobs/index.ts). Setiap job membuka dan
 menutup koneksi database sendiri (`AppDataSource.initialize()` … `destroy()`), lalu `process.exit`.
@@ -31,14 +31,19 @@ Admin buat submission ──► approve (POST /point-submission/approve)
                           - buat baris Point via PointCalculator (transaksi)
                           - sukses → set processedAt; gagal → job_queue_failures (max 5 retry)
 
-   submission recurring (isRecurring=true):
-                        cron recurring-points (harian):
-                          - untuk tiap bulan sejak createdAt yang tanggal targetnya sudah lewat
-                            dan belum punya entri antrian → buat entri job_queues baru
+   submission Bulanan (type='Bulanan'):
+        approve pertama membuat baris di point_submission_schedules
+                        cron generate-monthly-submissions (harian):
+                          - untuk tiap jadwal aktif, tiap bulan sejak lastGeneratedPeriod yang
+                            tanggal targetnya sudah lewat & belum ada submission → buat
+                            SUBMISSION pending baru (perlu di-approve admin), lalu di-approve
+                            mengikuti alur queue di atas
+                          - berhenti saat jadwal di-stop (isActive=false); tanpa tanggal berakhir
 ```
 
 Konsekuensi penting: **poin tidak langsung muncul setelah approve** — menunggu run cron
-berikutnya. Di lingkungan dev, jalankan `bun run process-submissions` manual.
+berikutnya. Di lingkungan dev, jalankan `bun run process-submissions` manual. Untuk memicu
+submission bulanan, jalankan `bun run generate-monthly-submissions` manual.
 
 ## Integrasi Eksternal
 

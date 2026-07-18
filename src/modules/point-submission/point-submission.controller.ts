@@ -2,6 +2,7 @@ import { Context } from "hono"
 import { PointSubmissionService } from "./point-submission.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { PointSubmissionSerializer } from "./serializers/point-submission.serialize"
+import { PointSubmissionScheduleSerializer } from "./serializers/point-submission-schedule.serialize"
 import { PointSubmissionStatus } from "./point-submission.enum"
 import { NisHelper } from "../../core/helpers/nis"
 
@@ -64,6 +65,23 @@ export class PointSubmissionController {
         const body = await c.req.json()
         await this.service.approve(body.ids, user.id, body.notes)
         return ApiResponse.success(c, null, "Point submissions approved successfully")
+    }
+
+    async schedules(c: Context) {
+        const page = Number(c.req.query("page")) || 1
+        const limit = Number(c.req.query("limit")) || 10
+        const isActiveParam = c.req.query("isActive")
+        const isActive = isActiveParam === undefined ? undefined : isActiveParam === "true"
+
+        const { data, total } = await this.service.getSchedules(page, limit, isActive)
+        return ApiResponse.paginate(c, PointSubmissionScheduleSerializer.collection(data), total, page, limit, "Schedules retrieved successfully")
+    }
+
+    async stopSchedule(c: Context) {
+        const user = c.get("user")
+        const id = Number(c.req.param("id"))
+        await this.service.stopSchedule(id, user.id)
+        return ApiResponse.success(c, null, "Schedule stopped successfully")
     }
 
     async checkAccount(c: Context) {

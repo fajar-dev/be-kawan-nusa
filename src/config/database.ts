@@ -32,6 +32,7 @@ import { PasswordResetToken } from "../modules/auth/entities/password-reset-toke
 import { EmailVerificationToken } from "../modules/auth/entities/email-verification-token.entity"
 import { OtpToken } from "../modules/auth/entities/otp-token.entity"
 import { PointSubmission } from "../modules/point-submission/entities/point-submission.entity"
+import { PointSubmissionSchedule } from "../modules/point-submission/entities/point-submission-schedule.entity"
 import { JobQueue } from "../core/queue/entities/job-queue.entity"
 import { JobQueueFailure } from "../core/queue/entities/job-queue-failure.entity"
 import { config } from "./config"
@@ -48,7 +49,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, Role, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, JobQueue, JobQueueFailure],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, Role, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, PointSubmissionSchedule, JobQueue, JobQueueFailure],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

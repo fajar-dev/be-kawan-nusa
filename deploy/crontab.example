@@ -13,7 +13,7 @@ BUN=/usr/local/bin/bun
 # Process the queue every 5 min so points land shortly after approval
 */5 * * * * cd $APP_DIR && $BUN run process-submissions >/dev/null 2>>logs/cron-error.log
 # Enqueue monthly recurring point submissions — daily 01:00
-0 1 * * * cd $APP_DIR && $BUN run recurring-points >/dev/null 2>>logs/cron-error.log
+0 1 * * * cd $APP_DIR && $BUN run generate-monthly-submissions >/dev/null 2>>logs/cron-error.log
 # Expire overdue reward points — daily 02:00
 0 2 * * * cd $APP_DIR && $BUN run expire-points >/dev/null 2>>logs/cron-error.log
 

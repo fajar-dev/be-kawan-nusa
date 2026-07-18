@@ -29,7 +29,7 @@ bun run sync-customers      # sync services/customers/phones/customer-services f
 bun run sync-employees      # sync employees from Nusawork API
 bun run expire-points       # expire rewards past expiredDate
 bun run process-submissions # process pending job_queues (every 5 min; creates points)
-bun run recurring-points    # daily: enqueue monthly recurring point submissions (with backfill)
+bun run generate-monthly-submissions # daily: create pending monthly submissions from active schedules (backfill)
 ```
 
 Copy `.env.dist` → `.env`. Key env groups: app/JWT, MySQL (`DB_*`), NIS read-only MySQL
@@ -82,15 +82,18 @@ from their assigned `Role.permissions` (`Record<module, ('L'|'T'|'E'|'H')[]>`), 
   1 point = Rp 1.000, tax 2.5%, payout = gross − tax.
 - **Point submissions** are async: approve writes rows to `job_queues`; the
   `process-submissions` job (cron) pulls NIS data and creates points, with retries (max 5) and
-  failures logged to `job_queue_failures`. Recurring submissions get monthly queue entries from
-  the `recurring-points` job (backfills missed months, clamps day-of-month).
+  failures logged to `job_queue_failures`. **Monthly (`Bulanan`) submissions** create a
+  `point_submission_schedules` row on first approval; the daily `generate-monthly-submissions`
+  job then creates a NEW pending submission each month (backfills missed months, clamps
+  day-of-month) which an admin must approve. A schedule runs until stopped (`isActive=false`,
+  via `PATCH /point-submission/schedule/:id/stop`) — there is no end date.
 
 ## Key Files
 
 - `src/app.ts` — Hono app factory (CORS, logger, error handler, Swagger)
 - `src/routes/api.ts` — every route + its middleware chain (single source of truth)
 - `src/config/config.ts` — all env config, centralized
-- `src/config/database.ts` — AppDataSource + entity registry (34 entities)
+- `src/config/database.ts` — AppDataSource + entity registry (35 entities)
 - `src/config/nis-database.ts` — read-only NIS DataSource
 - `src/core/helpers/response.ts` — `ApiResponse` formatter (use for every response)
 - `src/core/exceptions/base.ts` — exception hierarchy (400/401/403/404/409/422/429)

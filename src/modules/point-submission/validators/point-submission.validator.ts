@@ -14,8 +14,6 @@ export const CreatePointSubmissionValidator = z.object({
         accountManager: z.string().nullable(),
         salesEmployeeId: z.string().nullable(),
     }),
-    isRecurring: z.boolean().optional().default(false),
-    recurringEndDate: z.string().nullable().optional(),
 })
 
 export const UpdatePointSubmissionValidator = z.object({
@@ -30,8 +28,6 @@ export const UpdatePointSubmissionValidator = z.object({
         accountManager: z.string().nullable(),
         salesEmployeeId: z.string().nullable(),
     }).optional(),
-    isRecurring: z.boolean().optional(),
-    recurringEndDate: z.string().nullable().optional(),
 })
 
 export const ApprovePointSubmissionValidator = z.object({

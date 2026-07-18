@@ -1,5 +1,7 @@
 import { PointSubmission } from "./entities/point-submission.entity"
+import { PointSubmissionSchedule } from "./entities/point-submission-schedule.entity"
 import { PointSubmissionStatus } from "./point-submission.enum"
+import { PointType } from "../point/point.enum"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { IPointSubmissionRepository, PointSubmissionListFilters } from "./interfaces/point-submission.repository.interface"
 import { JobQueue } from "../../core/queue/entities/job-queue.entity"
@@ -68,7 +70,7 @@ export class PointSubmissionService {
             )
         }
 
-        // Approve + create queue entries in one transaction
+        // Approve + create queue entries (+ recurring schedules) in one transaction
         await this.unitOfWork.runInTransaction(async (manager) => {
             const now = new Date()
             const period = new Date(now.getFullYear(), now.getMonth(), 1) // first of current month
@@ -81,7 +83,7 @@ export class PointSubmissionService {
                 notes: notes || null,
             })
 
-            // Create queue entry for each submission
+            // Create queue entry for each submission (→ process-submissions creates the Point)
             const queueRepo = manager.getRepository(JobQueue)
             const queueEntries = submissions.map(submission => queueRepo.create({
                 type: QueueType.POINT_SUBMISSION,
@@ -97,6 +99,62 @@ export class PointSubmissionService {
             }))
 
             await queueRepo.save(queueEntries)
+
+            // For each MANUAL (scheduleId=null) Bulanan submission, start a recurring
+            // schedule so a new pending submission is generated every following month.
+            const scheduleRepo = manager.getRepository(PointSubmissionSchedule)
+            for (const submission of submissions) {
+                if (submission.type !== PointType.BULANAN || submission.scheduleId != null) continue
+
+                // Skip if an active schedule already covers this user + account.
+                const existing = await scheduleRepo
+                    .createQueryBuilder("s")
+                    .where("s.userId = :userId", { userId: submission.userId })
+                    .andWhere("s.isActive = true")
+                    .andWhere("JSON_EXTRACT(s.nisData, '$.custServId') = :custServId", { custServId: submission.nisData.custServId })
+                    .getCount()
+                if (existing > 0) continue
+
+                await scheduleRepo.save(scheduleRepo.create({
+                    userId: submission.userId,
+                    nisData: submission.nisData,
+                    price: submission.price,
+                    anchorDay: now.getDate(),
+                    lastGeneratedPeriod: period,
+                    isActive: true,
+                    sourceSubmissionId: submission.id,
+                    createdById: approvedById,
+                }))
+            }
+        })
+    }
+
+    async getSchedules(page: number, limit: number, isActive?: boolean): Promise<{ data: PointSubmissionSchedule[]; total: number }> {
+        const repo = this.unitOfWork.getManager().getRepository(PointSubmissionSchedule)
+        const query = repo.createQueryBuilder("s")
+            .leftJoinAndSelect("s.user", "user")
+            .leftJoinAndSelect("s.createdBy", "createdBy")
+            .leftJoinAndSelect("s.stoppedBy", "stoppedBy")
+            .orderBy("s.createdAt", "DESC")
+
+        if (isActive !== undefined) {
+            query.where("s.isActive = :isActive", { isActive })
+        }
+
+        const [data, total] = await query.take(limit).skip((page - 1) * limit).getManyAndCount()
+        return { data, total }
+    }
+
+    async stopSchedule(id: number, stoppedById: number): Promise<void> {
+        const repo = this.unitOfWork.getManager().getRepository(PointSubmissionSchedule)
+        const schedule = await repo.findOneBy({ id })
+        if (!schedule) throw new NotFoundException("Schedule not found")
+        if (!schedule.isActive) throw new BadRequestException("Schedule is already stopped")
+
+        await repo.update(id, {
+            isActive: false,
+            stoppedById,
+            stoppedAt: new Date(),
         })
     }
 }

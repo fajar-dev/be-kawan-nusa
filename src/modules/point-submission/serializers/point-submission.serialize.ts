@@ -9,8 +9,9 @@ export class PointSubmissionSerializer {
             price: Number(item.price),
             nisData: item.nisData,
             status: item.status,
-            isRecurring: item.isRecurring,
-            recurringEndDate: item.recurringEndDate,
+            scheduleId: item.scheduleId,
+            isAuto: item.scheduleId != null,
+            period: item.period,
             notes: item.notes,
             user: item.user ? {
                 id: item.user.id,

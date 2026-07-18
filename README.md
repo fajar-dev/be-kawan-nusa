@@ -182,7 +182,7 @@ Contoh crontab ada di [src/jobs/index.ts](src/jobs/index.ts); detail alur di
 | `bun run sync-employees` | berkala | Sinkron karyawan dari Nusawork |
 | `bun run expire-points` | harian | Hanguskan poin yang melewati `expiredDate` |
 | `bun run process-submissions` | tiap 5 menit | Proses antrian `job_queues` → buat poin (retry max 5) |
-| `bun run recurring-points` | harian 01:00 | Buat antrian bulanan untuk submission recurring (dengan backfill) |
+| `bun run generate-monthly-submissions` | harian 01:00 | Buat submission pending bulanan (perlu di-approve) dari jadwal aktif, dengan backfill |
 
 > **Penting:** poin dari approval submission **tidak langsung masuk** — menunggu cron
 > `process-submissions`. Di dev, jalankan manual.
