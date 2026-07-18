@@ -176,6 +176,21 @@ Admin side (role `admin`):
 | PUT | `/role/:id` | `role` E | |
 | DELETE | `/role/:id` | `role` H | |
 
+## Notification (`/notification`) — role `user`
+
+Referral-partner notifications only (admins get 403). `userId=null` rows are broadcasts;
+read state is tracked per-user, so a broadcast's read flag is independent for each user.
+
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/notification` | Paginated (own + broadcasts, newest first); each item has `isRead`/`isBroadcast`. FE uses infinite scroll |
+| GET | `/notification/unread-count` | `{ count }` for the bell badge |
+| PATCH | `/notification/read-all` | Mark all read → `{ marked }` |
+| PATCH | `/notification/:id/read` | Mark one read (idempotent; 404 if not visible to the user) |
+
+Raised automatically on: new points, redemption transferred/shipped/completed/voucher,
+account status change (per-user); new article/video/promotion (broadcast).
+
 ## Feedback, Additional, Misc
 
 | Method | Path | Auth | Notes |

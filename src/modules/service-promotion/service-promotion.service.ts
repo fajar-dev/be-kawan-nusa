@@ -3,6 +3,8 @@ import { logger } from "../../core/helpers/logger"
 import { IServicePromotionRepository } from "./interfaces/service-promotion.repository.interface"
 import { minio } from "../../core/helpers/minio"
 import { NotFoundException } from "../../core/exceptions/base"
+import { notificationService } from "../notification/notification.module"
+import { NotificationType } from "../notification/notification.enum"
 
 export class ServicePromotionService {
     constructor(private readonly repository: IServicePromotionRepository) {}
@@ -51,7 +53,15 @@ export class ServicePromotionService {
         promotion.isActive = data.isActive ?? true
         promotion.image = image
 
-        return await this.repository.save(promotion)
+        const saved = await this.repository.save(promotion)
+        await notificationService.safeNotifyBroadcast({
+            type: NotificationType.CONTENT,
+            title: "Promo Baru",
+            message: `Ada promo baru: "${saved.title}".`,
+            link: "/education/promotion",
+            referenceId: saved.id,
+        })
+        return saved
     }
 
     async update(id: number, data: {

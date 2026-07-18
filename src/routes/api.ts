@@ -42,6 +42,7 @@ import { templateController } from "../modules/template/template.module"
 import { userController } from "../modules/user/user.module"
 import { pointSubmissionController } from "../modules/point-submission/point-submission.module"
 import { roleController } from "../modules/role/role.module"
+import { notificationController } from "../modules/notification/notification.module"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const routes = new Hono()
@@ -167,6 +168,12 @@ routes.get("/education/video/:id", authMiddleware, (c) => educationVideoControll
 routes.post("/education/video", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'T'), (c) => educationVideoController.store(c))
 routes.put("/education/video/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'E'), (c) => educationVideoController.update(c))
 routes.delete("/education/video/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('education', 'H'), (c) => educationVideoController.destroy(c))
+
+// Notification (user only)
+routes.get("/notification", authMiddleware, roleMiddleware('user'), (c) => notificationController.index(c))
+routes.get("/notification/unread-count", authMiddleware, roleMiddleware('user'), (c) => notificationController.unreadCount(c))
+routes.patch("/notification/read-all", authMiddleware, roleMiddleware('user'), (c) => notificationController.markAllRead(c))
+routes.patch("/notification/:id/read", authMiddleware, roleMiddleware('user'), (c) => notificationController.markRead(c))
 
 // Feedback
 routes.get("/feedback", authMiddleware, (c) => feedbackController.index(c))

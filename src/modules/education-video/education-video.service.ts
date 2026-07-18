@@ -6,6 +6,8 @@ import {
     IEducationVideoRepository,
 } from "./interfaces/education-video.repository.interface"
 import { minio } from "../../core/helpers/minio"
+import { notificationService } from "../notification/notification.module"
+import { NotificationType } from "../notification/notification.enum"
 
 export class EducationVideoService {
     constructor(private readonly repository: IEducationVideoRepository) {}
@@ -67,7 +69,15 @@ export class EducationVideoService {
         video.description = data.description
         video.authorId = data.authorId
         video.thumbnail = thumbnail
-        return await this.repository.save(video)
+        const saved = await this.repository.save(video)
+        await notificationService.safeNotifyBroadcast({
+            type: NotificationType.CONTENT,
+            title: "Video Edukasi Baru",
+            message: `Video baru telah tersedia: "${saved.title}".`,
+            link: `/education/video/${saved.id}`,
+            referenceId: saved.id,
+        })
+        return saved
     }
 
     async update(id: number, data: { categoryId?: number; title?: string; url?: string; description?: string; authorId?: number; thumbnailFile?: any }): Promise<EducationVideo> {

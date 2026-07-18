@@ -15,6 +15,8 @@ import { PointCalculator } from "../../core/helpers/point"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
 import { IRedemptionRepository, RedemptionListFilters } from "./interfaces/redemption.repository.interface"
+import { notificationService } from "../notification/notification.module"
+import { NotificationType } from "../notification/notification.enum"
 import { generateWithdrawalNote } from "../../core/helpers/pdf"
 import { minio } from "../../core/helpers/minio"
 import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
@@ -274,7 +276,15 @@ export class RedemptionService {
         const fromStatus = redemption.status
         redemption.status = RedemptionStatus.COMPLETED
         await this.recordStatusHistory(id, fromStatus, RedemptionStatus.COMPLETED, changedById)
-        return await this.repository.save(redemption)
+        const saved = await this.repository.save(redemption)
+        await notificationService.safeNotifyUser(redemption.userId, {
+            type: NotificationType.REDEMPTION,
+            title: "Pencairan Tunai Selesai",
+            message: `Penukaran poin Anda (${redemption.redempNo}) telah dicairkan dan ditransfer ke rekening Anda.`,
+            link: "/point/redeem/history",
+            referenceId: redemption.id,
+        })
+        return saved
     }
 
     async processProduct(id: number, shipper: Shipper, trackingNumber: string, changedById: number): Promise<Redemption> {
@@ -296,7 +306,7 @@ export class RedemptionService {
         }
 
         const fromStatus = redemption.status
-        return await this.unitOfWork.runInTransaction(async (manager) => {
+        const result = await this.unitOfWork.runInTransaction(async (manager) => {
             const shipping = manager.create(RedemptionProductShipping, {
                 redemptionProductId: redemption.redemptionProductId!,
                 shipper,
@@ -309,6 +319,14 @@ export class RedemptionService {
             await this.recordStatusHistory(id, fromStatus, RedemptionStatus.PROCESSING, changedById)
             return await manager.save(redemption)
         })
+        await notificationService.safeNotifyUser(redemption.userId, {
+            type: NotificationType.REDEMPTION,
+            title: "Reward Produk Dikirim",
+            message: `Reward produk Anda (${redemption.redempNo}) telah dikirim via ${shipper}, no. resi ${trackingNumber}.`,
+            link: "/point/redeem/history",
+            referenceId: redemption.id,
+        })
+        return result
     }
 
     async completeProduct(id: number, changedById: number): Promise<Redemption> {
@@ -328,7 +346,15 @@ export class RedemptionService {
         const fromStatus = redemption.status
         redemption.status = RedemptionStatus.COMPLETED
         await this.recordStatusHistory(id, fromStatus, RedemptionStatus.COMPLETED, changedById)
-        return await this.repository.save(redemption)
+        const saved = await this.repository.save(redemption)
+        await notificationService.safeNotifyUser(redemption.userId, {
+            type: NotificationType.REDEMPTION,
+            title: "Reward Produk Selesai",
+            message: `Reward produk Anda (${redemption.redempNo}) telah selesai diproses.`,
+            link: "/point/redeem/history",
+            referenceId: redemption.id,
+        })
+        return saved
     }
 
     async getVoucherList(
@@ -360,7 +386,7 @@ export class RedemptionService {
         }
 
         const fromStatus = redemption.status
-        return await this.unitOfWork.runInTransaction(async (manager) => {
+        const result = await this.unitOfWork.runInTransaction(async (manager) => {
             const detail = manager.create(RedemptionVoucherDetail, {
                 redemptionVoucherId: redemption.redemptionVoucherId!,
                 code,
@@ -372,6 +398,14 @@ export class RedemptionService {
             await this.recordStatusHistory(id, fromStatus, RedemptionStatus.PROCESSING, changedById)
             return await manager.save(redemption)
         })
+        await notificationService.safeNotifyUser(redemption.userId, {
+            type: NotificationType.REDEMPTION,
+            title: "Voucher Tersedia",
+            message: `Kode voucher untuk penukaran Anda (${redemption.redempNo}) sudah tersedia.`,
+            link: "/point/redeem/history",
+            referenceId: redemption.id,
+        })
+        return result
     }
 
     async completeVoucher(id: number, changedById: number): Promise<Redemption> {
@@ -391,7 +425,15 @@ export class RedemptionService {
         const fromStatus = redemption.status
         redemption.status = RedemptionStatus.COMPLETED
         await this.recordStatusHistory(id, fromStatus, RedemptionStatus.COMPLETED, changedById)
-        return await this.repository.save(redemption)
+        const saved = await this.repository.save(redemption)
+        await notificationService.safeNotifyUser(redemption.userId, {
+            type: NotificationType.REDEMPTION,
+            title: "Penukaran Voucher Selesai",
+            message: `Penukaran voucher Anda (${redemption.redempNo}) telah selesai.`,
+            link: "/point/redeem/history",
+            referenceId: redemption.id,
+        })
+        return saved
     }
 
     private async recordStatusHistory(redemptionId: number, fromStatus: RedemptionStatus | null, toStatus: RedemptionStatus, changedById: number, note?: string): Promise<void> {

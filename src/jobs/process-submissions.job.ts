@@ -5,6 +5,8 @@ import { QueueType } from "../core/queue/queue.constants"
 import { NisHelper } from "../core/helpers/nis"
 import { PointCalculator } from "../core/helpers/point"
 import { logger } from "../core/helpers/logger"
+import { notificationService } from "../modules/notification/notification.module"
+import { NotificationType } from "../modules/notification/notification.enum"
 import { IsNull } from "typeorm"
 
 const JOB = "process-submissions"
@@ -52,6 +54,14 @@ async function processPointSubmission(item: JobQueue, nisHelper: NisHelper, poin
         await manager.getRepository(JobQueue).update(item.id, {
             processedAt: new Date(),
         })
+    })
+
+    // Notify the referral partner that new points landed (fire-and-forget)
+    await notificationService.safeNotifyUser(userId, {
+        type: NotificationType.POINT,
+        title: "Poin Baru",
+        message: `${Number(point).toLocaleString("id-ID")} poin telah ditambahkan ke akun Anda.`,
+        link: "/point/activity/reward",
     })
 }
 

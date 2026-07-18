@@ -40,10 +40,10 @@ MinIO (object storage), `FEEDBACK_URL` (Google AppScript), `API_KEY` (server-to-
 
 Read [docs/architecture.md](docs/architecture.md). Key points:
 
-- **21 feature modules** in `src/modules/` (auth, profile, user, employee, role, customer,
+- **22 feature modules** in `src/modules/` (auth, profile, user, employee, role, customer,
   customer-service, service, service-promotion, point, point-submission, redemption, catalog,
   catalog-category, education-article, education-video, education-category, template, feedback,
-  statistic, additional).
+  statistic, additional, notification).
 - **Manual constructor injection** — no DI container. Wiring happens in each `{module}.module.ts`
   (composition root) which exports the controller singleton.
 - Module pattern: `entities/` → `interfaces/{name}.repository.interface.ts` →
@@ -93,7 +93,7 @@ from their assigned `Role.permissions` (`Record<module, ('L'|'T'|'E'|'H')[]>`), 
 - `src/app.ts` — Hono app factory (CORS, logger, error handler, Swagger)
 - `src/routes/api.ts` — every route + its middleware chain (single source of truth)
 - `src/config/config.ts` — all env config, centralized
-- `src/config/database.ts` — AppDataSource + entity registry (35 entities)
+- `src/config/database.ts` — AppDataSource + entity registry (37 entities)
 - `src/config/nis-database.ts` — read-only NIS DataSource
 - `src/core/helpers/response.ts` — `ApiResponse` formatter (use for every response)
 - `src/core/exceptions/base.ts` — exception hierarchy (400/401/403/404/409/422/429)

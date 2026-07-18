@@ -96,13 +96,13 @@ kawan-nusa-be/
 │   │   ├── middlewares/           # auth, role, permission, api-key, rate-limit,
 │   │   │                          # token-auth, logger
 │   │   └── queue/                 # Entity job_queues & job_queue_failures + QueueType
-│   ├── modules/                   # 21 feature module (pola seragam per module):
+│   ├── modules/                   # 22 feature module (pola seragam per module):
 │   │   │                          #   auth, profile, user, employee, role,
 │   │   │                          #   customer, customer-service, service, service-promotion,
 │   │   │                          #   point, point-submission, redemption,
 │   │   │                          #   catalog, catalog-category,
 │   │   │                          #   education-article, education-video, education-category,
-│   │   │                          #   template, feedback, statistic, additional
+│   │   │                          #   template, feedback, statistic, additional, notification
 │   │   └── {module}/
 │   │       ├── {module}.module.ts / .controller.ts / .service.ts
 │   │       ├── entities/  interfaces/  repositories/  serializers/  validators/

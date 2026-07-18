@@ -6,6 +6,8 @@ import {
     IEducationArticleRepository,
 } from "./interfaces/education-article.repository.interface"
 import { minio } from "../../core/helpers/minio"
+import { notificationService } from "../notification/notification.module"
+import { NotificationType } from "../notification/notification.enum"
 
 export class EducationArticleService {
     constructor(private readonly repository: IEducationArticleRepository) {}
@@ -64,7 +66,15 @@ export class EducationArticleService {
         article.content = data.content
         article.authorId = data.authorId
         article.image = image
-        return await this.repository.save(article)
+        const saved = await this.repository.save(article)
+        await notificationService.safeNotifyBroadcast({
+            type: NotificationType.CONTENT,
+            title: "Artikel Edukasi Baru",
+            message: `Artikel baru telah terbit: "${saved.title}".`,
+            link: `/education/article/${saved.id}`,
+            referenceId: saved.id,
+        })
+        return saved
     }
 
     async update(id: number, data: { categoryId?: number; title?: string; content?: string; authorId?: number; imageFile?: any }): Promise<EducationArticle> {

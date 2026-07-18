@@ -6,6 +6,8 @@ import { NotFoundException, BadRequestException } from "../../core/exceptions/ba
 import { EntityManager } from "typeorm"
 import { IUserRepository, UserListFilters } from "./interfaces/user.repository.interface"
 import { AppDataSource } from "../../config/database"
+import { notificationService } from "../notification/notification.module"
+import { NotificationType } from "../notification/notification.enum"
 import { mail } from "../../core/helpers/mail"
 import { config } from "../../config/config"
 import * as fs from "fs"
@@ -71,6 +73,16 @@ export class UserService {
         this.sendStatusChangeEmail(saved, status, note).catch((err) =>
             logger.error("Status change email dispatch failed", { event: "mail.failed", kind: "status-change", userId: saved.id, error: err?.message })
         )
+
+        // In-app notification for the partner
+        const notif: Record<string, { title: string; message: string; link: string }> = {
+            [UserStatus.ACTIVE]: { title: "Pendaftaran Disetujui", message: "Selamat! Pendaftaran Anda telah disetujui dan akun Anda kini aktif.", link: "/" },
+            [UserStatus.REVISION]: { title: "Data Perlu Direvisi", message: note || "Ada data pendaftaran yang perlu Anda perbaiki.", link: "/boarding" },
+            [UserStatus.REJECT]: { title: "Pendaftaran Ditolak", message: note || "Mohon maaf, pendaftaran Anda tidak dapat disetujui.", link: "/boarding/success" },
+        }
+        if (notif[status]) {
+            await notificationService.safeNotifyUser(saved.id, { type: NotificationType.ACCOUNT, ...notif[status] })
+        }
 
         return saved
     }

@@ -5541,6 +5541,108 @@ paths:
   # =============================================
   # FEEDBACK ROUTES
   # =============================================
+  /notification:
+    get:
+      summary: List notifications for the current user (paginated)
+      description: |
+        Returns the user's own notifications plus broadcasts (userId=null), newest first.
+        Each item carries `isRead` (per-user) and `isBroadcast`. **Role `user` only.**
+        The client uses infinite scroll over these pages.
+      tags: [Notification]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Notifications retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Notifications retrieved successfully"
+                data:
+                  - id: 12
+                    type: "point"
+                    title: "Poin Baru"
+                    message: "5.000 poin telah ditambahkan ke akun Anda."
+                    link: "/point/activity/reward"
+                    referenceId: null
+                    isBroadcast: false
+                    isRead: false
+                    createdAt: "2026-07-18T09:00:00.000Z"
+                  - id: 8
+                    type: "content"
+                    title: "Artikel Edukasi Baru"
+                    message: "Artikel baru telah terbit: \"Tips Referral\"."
+                    link: "/education/article/3"
+                    referenceId: 3
+                    isBroadcast: true
+                    isRead: true
+                    createdAt: "2026-07-17T09:00:00.000Z"
+                meta: { total: 24, perPage: 10, currentPage: 1, lastPage: 3, from: 1, to: 10 }
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - user role only
+
+  /notification/unread-count:
+    get:
+      summary: Unread notification count for the current user
+      tags: [Notification]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Unread count retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Unread count retrieved successfully"
+                data: { count: 3 }
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /notification/read-all:
+    patch:
+      summary: Mark all of the user's notifications as read
+      tags: [Notification]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: All notifications marked as read
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "All notifications marked as read"
+                data: { marked: 3 }
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /notification/{id}/read:
+    patch:
+      summary: Mark a single notification as read
+      description: "Idempotent. 404 if the notification does not exist or is not visible to the user."
+      tags: [Notification]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 12
+      responses:
+        "200":
+          description: Notification marked as read
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+
   /feedback:
     get:
       summary: Get feedback by logged-in user
@@ -6367,6 +6469,7 @@ tags:
     description: Dashboard statistics and chart data
   - name: Additional
     description: Lookup/reference data for dropdowns and filters
+  - name: Notification
   - name: Feedback
     description: Submit and retrieve user feedback stored via Google AppScript
   - name: User
