@@ -21,6 +21,8 @@ BUN=/usr/local/bin/bun
 */30 * * * * cd $APP_DIR && $BUN run sync-customers >/dev/null 2>>logs/cron-error.log
 0 */6 * * *  cd $APP_DIR && $BUN run sync-users     >/dev/null 2>>logs/cron-error.log
 0 3 * * *    cd $APP_DIR && $BUN run sync-employees >/dev/null 2>>logs/cron-error.log
+# Refresh existing local customers + reconcile phones/emails — daily 04:00
+0 4 * * *    cd $APP_DIR && $BUN run refresh-customers >/dev/null 2>>logs/cron-error.log
 
 # ── Retention for the app's daily JSON logs ──────────────────────────
 # gzip files older than 1 day; delete archives older than 30 days

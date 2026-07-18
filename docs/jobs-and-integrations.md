@@ -9,7 +9,8 @@ Dokumen ini merangkum semuanya. Sumber: [src/jobs/](../src/jobs/), [src/core/que
 | Perintah | File | Jadwal disarankan | Fungsi |
 |---|---|---|---|
 | `bun run sync-users` | `sync-users.job.ts` | berkala | Sinkron mitra referral dari **NIS DB** (tabel `Reseller`, `PartnerType='referral'`) ke tabel `users` |
-| `bun run sync-customers` | `sync-customers.job.ts` | berkala | Sinkron services, customers, phones/emails, dan customer-services dari NIS DB |
+| `bun run sync-customers` | `sync-customers.job.ts` | berkala | Sinkron (impor penuh) services, customers, phones/emails, dan customer-services dari NIS DB |
+| `bun run refresh-customers` | `refresh-customers.job.ts` | harian 04:00 | Refresh **hanya** customer & customer-service yang sudah ada di lokal (keyed by ID lokal, tidak impor baru). Phone/email **direkonsiliasi**: baris yang hilang di NIS **dihapus**, yang ada di-upsert. Customer yang tak ada lagi di NIS dibiarkan (tidak dihapus) |
 | `bun run sync-employees` | `sync-employees.job.ts` | berkala | Sinkron karyawan dari **Nusawork API** ke tabel `employees` (akun admin) |
 | `bun run expire-points` | `expire-points.job.ts` | harian | Menghanguskan reward yang melewati `expiredDate` (via `PointCalculator.expirePoints`) |
 | `bun run process-submissions` | `process-submissions.job.ts` | tiap 5 menit | Memproses antrian `job_queues` → ambil data NIS → buat poin. Batch 50, max 5 retry, gagal dicatat ke `job_queue_failures` |

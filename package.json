@@ -7,6 +7,7 @@
     "seed": "bun run src/database/seed.ts",
     "sync-users": "bun run src/jobs/sync-users.job.ts",
     "sync-customers": "bun run src/jobs/sync-customers.job.ts",
+    "refresh-customers": "bun run src/jobs/refresh-customers.job.ts",
     "sync-employees": "bun run src/jobs/sync-employees.job.ts",
     "expire-points": "bun run src/jobs/expire-points.job.ts",
     "process-submissions": "bun run src/jobs/process-submissions.job.ts",

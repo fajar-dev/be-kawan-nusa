@@ -178,7 +178,8 @@ Contoh crontab ada di [src/jobs/index.ts](src/jobs/index.ts); detail alur di
 | Perintah | Jadwal disarankan | Fungsi |
 | --- | --- | --- |
 | `bun run sync-users` | berkala | Sinkron mitra dari NIS (`Reseller`, `PartnerType='referral'`) |
-| `bun run sync-customers` | berkala | Sinkron layanan, pelanggan, kontak, dan customer-service dari NIS |
+| `bun run sync-customers` | berkala | Sinkron layanan, pelanggan, kontak, dan customer-service dari NIS (impor penuh) |
+| `bun run refresh-customers` | harian 04:00 | Refresh data pelanggan & customer-service yang **sudah ada** di lokal dari NIS; rekonsiliasi telepon/email (tambah + **hapus** yang sudah tak ada) |
 | `bun run sync-employees` | berkala | Sinkron karyawan dari Nusawork |
 | `bun run expire-points` | harian | Hanguskan poin yang melewati `expiredDate` |
 | `bun run process-submissions` | tiap 5 menit | Proses antrian `job_queues` → buat poin (retry max 5) |

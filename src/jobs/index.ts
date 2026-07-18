@@ -4,6 +4,8 @@
  * Available commands:
  * - bun run sync              → Sync users from NIS database
  * - bun run sync-customers    → Sync services, customers, phones, and customer services from NIS database
+ * - bun run refresh-customers → Refresh EXISTING local customers & customer-services from NIS daily
+ *                               (reconciles phones/emails — adds new, deletes removed)
  * - bun run expire-points     → Expire rewards that have passed their expiredDate
  * - bun run process-submissions → Process pending job_queues entries (sync NIS + create points)
  * - bun run generate-monthly-submissions → Create new PENDING submissions for active monthly schedules (with backfill)
