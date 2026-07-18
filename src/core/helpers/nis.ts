@@ -289,11 +289,19 @@ export class NisHelper {
                 status: statusEnum,
             }, ["id"])
 
-            // 7. Upsert CustomerServiceReferral (pivot table)
-            await manager.getRepository(CustomerServiceReferral).upsert({
-                customerServiceId: row.id,
-                userId: userId,
-            }, ["customerServiceId", "userId"])
+            // 7. Ensure CustomerServiceReferral (pivot) exists.
+            // find-or-insert instead of upsert: this entity has an auto-increment PK but a
+            // (customerServiceId, userId) unique key, and TypeORM's upsert fails to map the
+            // generated id back on the ON DUPLICATE path ("entity id is not set").
+            const existingReferral = await manager.getRepository(CustomerServiceReferral).findOne({
+                where: { customerServiceId: row.id, userId },
+            })
+            if (!existingReferral) {
+                await manager.getRepository(CustomerServiceReferral).insert({
+                    customerServiceId: row.id,
+                    userId: userId,
+                })
+            }
 
             return {
                 customerId: row.customerId,
