@@ -83,6 +83,14 @@ describe("Notification Module (user only)", () => {
             const res = await authRequest("/notification/999999/read", userToken, { method: "PATCH" })
             expect(res.status).toBe(404)
         })
+
+        it("is idempotent — clicking an already-read notification again does not error", async () => {
+            const first = await authRequest(`/notification/${broadcastNotifId}/read`, userToken, { method: "PATCH" })
+            expect(first.status).toBe(200)
+            // Second click on the same notification must NOT 500 (insert-ignore, no re-insert)
+            const second = await authRequest(`/notification/${broadcastNotifId}/read`, userToken, { method: "PATCH" })
+            expect(second.status).toBe(200)
+        })
     })
 
     describe("PATCH /notification/read-all", () => {

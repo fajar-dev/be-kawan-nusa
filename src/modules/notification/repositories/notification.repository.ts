@@ -53,11 +53,15 @@ export class NotificationRepository implements INotificationRepository {
 
     async markRead(userId: number, notificationId: number): Promise<void> {
         // INSERT IGNORE — idempotent, safe on repeated clicks.
+        // updateEntity(false) skips TypeORM's returning-id mapping, which throws
+        // "entity id is not set" on the duplicate (already-read) path for this
+        // auto-increment-PK entity with a (notificationId, userId) unique key.
         await this.readRepo.createQueryBuilder()
             .insert()
             .into(NotificationRead)
             .values({ userId, notificationId })
             .orIgnore()
+            .updateEntity(false)
             .execute()
     }
 
