@@ -27,9 +27,13 @@ export class FeedbackController {
         const raw = body["images[]"]
         const imageFiles: File[] = Array.isArray(raw) ? (raw as File[]) : [raw as File]
 
+        const userName = role === "admin" 
+            ? user.name 
+            : [user.firstName, user.lastName].filter(Boolean).join(" ")
+
         await this.service.store(
             user.id,
-            `${user.name}`,
+            userName,
             role === "admin" ? 'internal' : 'eksternal',
             { message, type, url },
             imageFiles
