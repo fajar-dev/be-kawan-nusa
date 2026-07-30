@@ -48,7 +48,11 @@ export class UserRepository implements IUserRepository {
 
         if (q) {
             query.where(
-                "(user.first_name LIKE :q OR user.last_name LIKE :q OR user.email LIKE :q OR user.phone LIKE :q)",
+                `(user.first_name LIKE :q
+                  OR user.last_name LIKE :q
+                  OR CONCAT(user.first_name, COALESCE(CONCAT(' ', user.last_name), '')) LIKE :q
+                  OR user.email LIKE :q
+                  OR user.phone LIKE :q)`,
                 { q: `%${q}%` }
             )
         }

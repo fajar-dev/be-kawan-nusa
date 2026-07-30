@@ -35,6 +35,10 @@ export const ApprovePointSubmissionValidator = z.object({
     notes: z.string().optional(),
 })
 
+export const AdjustScheduleValidator = z.object({
+    price: z.number().min(0, "Price must be non-negative"),
+})
+
 export type CreatePointSubmissionValidator = z.infer<typeof CreatePointSubmissionValidator>
 export type UpdatePointSubmissionValidator = z.infer<typeof UpdatePointSubmissionValidator>
 export type ApprovePointSubmissionValidator = z.infer<typeof ApprovePointSubmissionValidator>

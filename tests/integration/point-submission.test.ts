@@ -335,6 +335,23 @@ describe("Point Submission Module", () => {
             expect(res.status).toBe(403)
         })
 
+        it("adjusts the schedule commission", async () => {
+            const res = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { price: 250000 } })
+            expect(res.status).toBe(200)
+            expect(res.body.data.price).toBe(250000)
+            expect(res.body.data.point).toBe(2500) // floor(250000/100)
+        })
+
+        it("rejects adjusting with an invalid price (422)", async () => {
+            const res = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { price: -1 } })
+            expect(res.status).toBe(422)
+        })
+
+        it("returns 404 when adjusting a non-existent schedule", async () => {
+            const res = await authRequest("/point-submission/schedule/999999", adminToken, { method: "PATCH", body: { price: 1000 } })
+            expect(res.status).toBe(404)
+        })
+
         it("stops the schedule via PATCH .../stop, then rejects a second stop (400)", async () => {
             const first = await authRequest(`/point-submission/schedule/${scheduleId}/stop`, adminToken, { method: "PATCH" })
             expect(first.status).toBe(200)
