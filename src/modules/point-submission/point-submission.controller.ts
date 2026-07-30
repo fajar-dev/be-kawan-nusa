@@ -72,8 +72,10 @@ export class PointSubmissionController {
         const limit = Number(c.req.query("limit")) || 10
         const isActiveParam = c.req.query("isActive")
         const isActive = isActiveParam === undefined ? undefined : isActiveParam === "true"
+        const sort = c.req.query("sort")
+        const order = c.req.query("order")
 
-        const { data, total } = await this.service.getSchedules(page, limit, isActive)
+        const { data, total } = await this.service.getSchedules(page, limit, isActive, sort, order)
         return ApiResponse.paginate(c, PointSubmissionScheduleSerializer.collection(data), total, page, limit, "Schedules retrieved successfully")
     }
 

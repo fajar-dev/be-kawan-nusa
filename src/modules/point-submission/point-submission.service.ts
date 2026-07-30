@@ -129,17 +129,28 @@ export class PointSubmissionService {
         })
     }
 
-    async getSchedules(page: number, limit: number, isActive?: boolean): Promise<{ data: PointSubmissionSchedule[]; total: number }> {
+    async getSchedules(page: number, limit: number, isActive?: boolean, sort?: string, order?: string): Promise<{ data: PointSubmissionSchedule[]; total: number }> {
         const repo = this.unitOfWork.getManager().getRepository(PointSubmissionSchedule)
         const query = repo.createQueryBuilder("s")
             .leftJoinAndSelect("s.user", "user")
             .leftJoinAndSelect("s.createdBy", "createdBy")
             .leftJoinAndSelect("s.stoppedBy", "stoppedBy")
-            .orderBy("s.createdAt", "DESC")
 
         if (isActive !== undefined) {
             query.where("s.isActive = :isActive", { isActive })
         }
+
+        const sortMap: Record<string, string> = {
+            user: "user.firstName",
+            price: "s.price",
+            point: "s.price", // point is derived (floor(price/100)) — sorting by price preserves order
+            anchorDay: "s.anchorDay",
+            status: "s.isActive",
+            createdAt: "s.createdAt",
+        }
+        const sortField = sortMap[sort || ""] || "s.createdAt"
+        const sortOrder = (order || "").toUpperCase() === "ASC" ? "ASC" : "DESC"
+        query.orderBy(sortField, sortOrder)
 
         const [data, total] = await query.take(limit).skip((page - 1) * limit).getManyAndCount()
         return { data, total }

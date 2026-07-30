@@ -335,6 +335,23 @@ describe("Point Submission Module", () => {
             expect(res.status).toBe(403)
         })
 
+        it("supports sorting by price ascending and descending", async () => {
+            const asc = await authRequest("/point-submission/schedule?sort=price&order=asc&limit=100", adminToken)
+            expect(asc.status).toBe(200)
+            const pricesAsc = asc.body.data.map((s: any) => s.price)
+            expect(pricesAsc).toEqual([...pricesAsc].sort((a, b) => a - b))
+
+            const desc = await authRequest("/point-submission/schedule?sort=price&order=desc&limit=100", adminToken)
+            expect(desc.status).toBe(200)
+            const pricesDesc = desc.body.data.map((s: any) => s.price)
+            expect(pricesDesc).toEqual([...pricesDesc].sort((a, b) => b - a))
+        })
+
+        it("falls back to default sort (createdAt desc) for an unknown sort key", async () => {
+            const res = await authRequest("/point-submission/schedule?sort=not-a-real-column", adminToken)
+            expect(res.status).toBe(200)
+        })
+
         it("adjusts the schedule commission", async () => {
             const res = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { price: 250000 } })
             expect(res.status).toBe(200)
