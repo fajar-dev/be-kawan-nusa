@@ -84,6 +84,13 @@ export class PointSubmissionController {
         return ApiResponse.success(c, null, "Schedule stopped successfully")
     }
 
+    async adjustSchedule(c: Context) {
+        const id = Number(c.req.param("id"))
+        const body = await c.req.json()
+        const data = await this.service.adjustSchedule(id, body.price)
+        return ApiResponse.success(c, PointSubmissionScheduleSerializer.single(data), "Schedule commission updated successfully")
+    }
+
     async checkAccount(c: Context) {
         const custServId = Number(c.req.query("custServId"))
         const userId = Number(c.req.query("userId"))

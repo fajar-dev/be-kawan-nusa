@@ -43,6 +43,18 @@ describe("User Module (Admin)", () => {
             expect(res.status).toBe(200)
         })
 
+        it("should find a user by full name (first + last name)", async () => {
+            const uniqueLast = `Ongsono${Date.now()}`
+            const fullNameUser = await createTestUser({ firstName: "Herry", lastName: uniqueLast })
+            try {
+                const res = await authRequest(`/user?q=Herry ${uniqueLast}`, adminToken)
+                expect(res.status).toBe(200)
+                expect(res.body.data.some((u: any) => u.id === fullNameUser.id)).toBe(true)
+            } finally {
+                await cleanupTestUser(fullNameUser.id)
+            }
+        })
+
         it("should support comma-separated status filter", async () => {
             const res = await authRequest("/user?status=active,inactive", adminToken)
             expect(res.status).toBe(200)

@@ -157,4 +157,18 @@ export class PointSubmissionService {
             stoppedAt: new Date(),
         })
     }
+
+    /**
+     * Adjust the monthly commission of an active schedule. Future generated
+     * submissions will use the new price (point = floor(price / 100)).
+     */
+    async adjustSchedule(id: number, price: number): Promise<PointSubmissionSchedule> {
+        const repo = this.unitOfWork.getManager().getRepository(PointSubmissionSchedule)
+        const schedule = await repo.findOneBy({ id })
+        if (!schedule) throw new NotFoundException("Schedule not found")
+        if (!schedule.isActive) throw new BadRequestException("Cannot adjust a stopped schedule")
+
+        await repo.update(id, { price })
+        return (await repo.findOneBy({ id }))!
+    }
 }

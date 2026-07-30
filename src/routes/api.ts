@@ -9,7 +9,7 @@ import { CreatePointValidator } from "../modules/point/validators/point.validato
 import { StoreFeedbackValidator } from "../modules/feedback/validators/feedback.validator"
 import { CreateEducationCategoryValidator, UpdateEducationCategoryValidator } from "../modules/education-category/validators/education-category.validator"
 import { CreateCatalogCategoryValidator, UpdateCatalogCategoryValidator } from "../modules/catalog-category/validators/catalog-category.validator"
-import { CreatePointSubmissionValidator, UpdatePointSubmissionValidator, ApprovePointSubmissionValidator } from "../modules/point-submission/validators/point-submission.validator"
+import { CreatePointSubmissionValidator, UpdatePointSubmissionValidator, ApprovePointSubmissionValidator, AdjustScheduleValidator } from "../modules/point-submission/validators/point-submission.validator"
 import { UpdateUserStatusValidator } from "../modules/user/validators/user.validator"
 
 // ── Middlewares ──────────────────────────────────────────────────────────────
@@ -193,6 +193,7 @@ routes.get("/user/:id/status-histories", authMiddleware, roleMiddleware('admin')
 routes.get("/point-submission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.index(c))
 routes.get("/point-submission/schedule", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.schedules(c))
 routes.patch("/point-submission/schedule/:id/stop", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'E'), (c) => pointSubmissionController.stopSchedule(c))
+routes.patch("/point-submission/schedule/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'E'), zValidator("json", AdjustScheduleValidator, validationHook), (c) => pointSubmissionController.adjustSchedule(c))
 routes.get("/point-submission/check-account", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.checkAccount(c))
 routes.get("/point-submission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.show(c))
 routes.post("/point-submission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'T'), zValidator("json", CreatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.store(c))

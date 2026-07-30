@@ -5882,6 +5882,40 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 
+  /point-submission/schedule/{id}:
+    patch:
+      summary: Adjust a monthly schedule's commission (admin)
+      description: "Updates the monthly commission (price) of an active schedule; future generated submissions use it (point = floor(price/100)). Admin only; requires permission point-submission (E)."
+      tags: [PointSubmission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Schedule ID
+          schema: { type: integer }
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [price]
+              properties:
+                price: { type: number, minimum: 0, example: 500000 }
+      responses:
+        "200":
+          description: Schedule commission updated successfully
+        "400":
+          description: Cannot adjust a stopped schedule
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
   /point-submission/schedule/{id}/stop:
     patch:
       summary: Stop a monthly recurring schedule (admin)
