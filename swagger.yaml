@@ -5857,6 +5857,11 @@ paths:
           in: query
           description: Filter by active state
           schema: { type: string, enum: ["true", "false"] }
+        - name: sort
+          in: query
+          description: "Sort field: user, price, point, anchorDay, status, createdAt (default createdAt)"
+          schema: { type: string, enum: [user, price, point, anchorDay, status, createdAt], default: createdAt }
+        - $ref: "#/components/parameters/OrderParam"
       responses:
         "200":
           description: Schedules retrieved successfully
