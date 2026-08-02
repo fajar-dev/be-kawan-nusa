@@ -32,6 +32,9 @@ const LOG_DIR = join(process.cwd(), "logs")
 // File sinks are an operational toggle, not an environment switch. They stay on
 // everywhere except automated tests (which should not litter the working tree).
 const FILE_ENABLED = process.env.LOG_TO_FILE !== "false" && process.env.NODE_ENV !== "test"
+// Set by scheduled jobs (via crontab) to tag every line with which task emitted
+// it, e.g. JOB_NAME=expire-points. Absent for the web server.
+const TASK = process.env.JOB_NAME || undefined
 
 let dirReady = false
 function ensureDir(): boolean {
@@ -59,6 +62,7 @@ function emit(level: LogLevel, message: string, fields: Record<string, unknown> 
         time,
         level,
         service: SERVICE,
+        ...(TASK ? { task: TASK } : {}),
         msg: message,
         ...fields,
     }
