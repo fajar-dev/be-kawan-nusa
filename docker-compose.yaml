@@ -9,7 +9,7 @@ services:
       - "${PORT:-4000}:4000"
     environment:
       - PORT=4000
-      - ENV=${ENV:-production}
+      - NODE_ENV=${NODE_ENV:-production}
       - FE_URL=${FE_URL}
       - DB_HOST=db
       - DB_PORT=3306

@@ -1,20 +1,25 @@
 /**
  * Structured JSON logger for Grafana Loki / Promtail.
  *
- * Every entry is a single-line JSON object (NDJSON) written to two sinks:
+ * Every entry is a single-line JSON object (NDJSON) written to these sinks:
  *   1. stdout — captured by Docker / PM2 and shipped to Loki by Promtail.
- *   2. a daily-rotated file `logs/app-YYYY-MM-DD.log` — an on-disk history that
- *      survives even if the platform's stdout logs rotate away or are lost.
+ *   2. logs/app-YYYY-MM-DD.log   — daily-rotated history of ALL levels.
+ *   3. logs/error-YYYY-MM-DD.log — daily-rotated history of ERROR levels only,
+ *      so failures are easy to isolate without scanning the full stream.
  *
- * No ANSI colors, no multi-line records; each field below is queryable in Loki:
+ * The format is identical in every environment — nothing here branches on
+ * production vs development. `NODE_ENV` is NOT recorded and does not change how
+ * or what we log; its ONLY effect (in src/app.ts) is whether an unhandled 500
+ * exposes its detail in the HTTP response. Errors are always written to file.
  *
+ * Each field is queryable in Loki:
  *   {"time":"2026-07-18T10:00:00.000Z","level":"info","service":"kawan-nusa-be",
- *    "env":"production","msg":"GET /api/user 200","method":"GET","path":"/api/user",
- *    "status":200,"duration_ms":12}
+ *    "msg":"GET /api/user 200","method":"GET","path":"/api/user","status":200,
+ *    "duration_ms":12}
  *
- * The file sink uses synchronous appends so no line is lost when short-lived jobs
- * call process.exit(). Disable it with LOG_TO_FILE=false (stdout stays on).
- * Old logs/app-*.log files can be pruned by cron/logrotate if disk is a concern.
+ * File sinks use synchronous appends so no line is lost when short-lived jobs
+ * call process.exit(). Disable file sinks with LOG_TO_FILE=false (stdout stays
+ * on). Old logs/*.log files can be pruned by cron/logrotate if disk is a concern.
  */
 
 import { appendFileSync, existsSync, mkdirSync } from "fs"
@@ -23,9 +28,10 @@ import { join } from "path"
 export type LogLevel = "info" | "warn" | "error"
 
 const SERVICE = "kawan-nusa-be"
-const ENV = process.env.NODE_ENV || "development"
 const LOG_DIR = join(process.cwd(), "logs")
-const FILE_ENABLED = process.env.LOG_TO_FILE !== "false" && ENV !== "test"
+// File sinks are an operational toggle, not an environment switch. They stay on
+// everywhere except automated tests (which should not litter the working tree).
+const FILE_ENABLED = process.env.LOG_TO_FILE !== "false" && process.env.NODE_ENV !== "test"
 
 let dirReady = false
 function ensureDir(): boolean {
@@ -39,13 +45,20 @@ function ensureDir(): boolean {
     return true
 }
 
+function appendDaily(prefix: string, date: string, line: string): void {
+    try {
+        appendFileSync(join(LOG_DIR, `${prefix}-${date}.log`), line)
+    } catch {
+        // ignore file write errors — stdout already carries the log
+    }
+}
+
 function emit(level: LogLevel, message: string, fields: Record<string, unknown> = {}): void {
     const time = new Date().toISOString()
     const entry: Record<string, unknown> = {
         time,
         level,
         service: SERVICE,
-        env: ENV,
         msg: message,
         ...fields,
     }
@@ -55,13 +68,12 @@ function emit(level: LogLevel, message: string, fields: Record<string, unknown> 
     // Primary sink: stdout (Docker/PM2 → Promtail → Loki)
     process.stdout.write(line)
 
-    // Secondary sink: on-disk daily-rotated history (never let it break the app)
+    // File sinks: daily-rotated on-disk history (never let them break the app).
     if (FILE_ENABLED && ensureDir()) {
-        try {
-            appendFileSync(join(LOG_DIR, `app-${time.slice(0, 10)}.log`), line)
-        } catch {
-            // ignore file write errors — stdout already carries the log
-        }
+        const date = time.slice(0, 10)
+        appendDaily("app", date, line)
+        // Errors get an extra dedicated file so they can be read in isolation.
+        if (level === "error") appendDaily("error", date, line)
     }
 }
 
@@ -72,8 +84,9 @@ export const logger = {
 }
 
 /**
- * Backward-compatible error logger. Now emits one structured JSON line with the
- * stack trace kept as an escaped field so it stays on a single Loki log line.
+ * Backward-compatible error logger. Emits one structured JSON line (with the
+ * stack kept as an escaped field so it stays on a single Loki log line) to both
+ * the app log and the dedicated error log.
  */
 export function logError(err: Error, context?: { method?: string; path?: string }): void {
     logger.error(err.message, {

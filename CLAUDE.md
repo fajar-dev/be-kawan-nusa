@@ -18,7 +18,7 @@ The frontend lives in the sibling repo **kawan-nusa** (Nuxt 4 SPA). Swagger UI: 
 bun install                 # install deps
 bun run dev                 # dev server with hot reload (PORT from .env, default 4000)
 bun run build               # bundle to dist/index.js
-bun run start               # run src/index.ts (production: pm2 start ecosystem.config.js)
+bun run start               # run src/index.ts (production: pm2 start dist/index.js --name kawan-nusa-be --interpreter bun)
 bun run seed                # run SQL seeders from database/seeders/
 bun test                    # ~290 integration tests (needs a MySQL database; see tests/setup.ts)
 bun test tests/integration/role.test.ts   # single file

@@ -17,7 +17,7 @@
 | PDF | PDFKit (receipts) |
 | Testing | Bun Test (~290 integration tests) |
 | Docs | Swagger/OpenAPI 3.0 (`/api/docs`) |
-| Deploy | PM2 (`ecosystem.config.js`) / Docker Compose (app + MySQL) |
+| Deploy | PM2 (`pm2 start dist/index.js`) / Docker Compose (app + MySQL) |
 
 ## Project Structure
 
