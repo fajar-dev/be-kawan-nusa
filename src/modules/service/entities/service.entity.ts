@@ -34,7 +34,14 @@ export class Service {
     @Index()
     category!: ServiceCategory
 
-    @Column({ type: "json", nullable: true })
+    @Column({
+        type: "longtext",
+        nullable: true,
+        transformer: {
+            to: (value: any) => (value === null || value === undefined) ? value : JSON.stringify(value),
+            from: (value: string | null) => (value === null || value === undefined || value === "") ? value : JSON.parse(value),
+        },
+    })
     features?: any
 
     @Column({ nullable: true })

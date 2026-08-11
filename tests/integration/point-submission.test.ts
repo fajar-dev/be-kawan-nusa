@@ -356,7 +356,7 @@ describe("Point Submission Module", () => {
             const res = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { price: 250000 } })
             expect(res.status).toBe(200)
             expect(res.body.data.price).toBe(250000)
-            expect(res.body.data.point).toBe(2500) // floor(250000/100)
+            expect(res.body.data.point).toBe(250) // floor(250000/1000)
         })
 
         it("rejects adjusting with an invalid price (422)", async () => {

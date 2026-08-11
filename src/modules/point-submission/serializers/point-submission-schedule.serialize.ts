@@ -5,7 +5,7 @@ export class PointSubmissionScheduleSerializer {
         return {
             id: item.id,
             price: Number(item.price),
-            point: Math.floor(Number(item.price) / 100),
+            point: Math.floor(Number(item.price) / 1000), // Rp 1.000 = 1 Poin
             anchorDay: item.anchorDay,
             lastGeneratedPeriod: item.lastGeneratedPeriod,
             isActive: item.isActive,
