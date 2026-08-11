@@ -41,12 +41,13 @@ export function createApp(): Hono {
             return ApiResponse.error(c, err.message, err.status, err.context)
         }
 
+        // Unhandled error → always logged in full (stdout + logs/app + logs/error),
         logError(err, { method: c.req.method, path: c.req.path })
 
-        const errors = config.app.env !== "production" ? { 
-            message: err.message, 
-            stack: err.stack 
-        } : null
+        const errors = config.app.env === "production" ? null : {
+            message: err.message,
+            stack: err.stack,
+        }
 
         return ApiResponse.error(c, "Internal Server Error", 500, errors)
     })

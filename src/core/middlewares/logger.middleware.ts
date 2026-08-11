@@ -9,7 +9,7 @@ import { logger } from '../helpers/logger'
  *
  * Example output:
  *   {"time":"2026-06-17T15:00:00.000Z","level":"info","service":"kawan-nusa-be",
- *    "env":"production","msg":"GET /api/user 200","method":"GET","path":"/api/user",
+ *    "msg":"GET /api/user 200","method":"GET","path":"/api/user",
  *    "status":200,"duration_ms":12}
  */
 export const requestLogger = async (c: Context, next: Next) => {
