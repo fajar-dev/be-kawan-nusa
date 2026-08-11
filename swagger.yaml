@@ -898,7 +898,7 @@ components:
       properties:
         id: { type: integer, example: 1 }
         type: { type: string, enum: [OTC, Bulanan], example: "OTC" }
-        point: { type: number, example: 100 }
+        point: { type: number, example: 10 }
         price: { type: number, example: 10000 }
         nisData:
           type: object
@@ -5732,7 +5732,7 @@ paths:
                 data:
                   - id: 1
                     type: "OTC"
-                    point: 100
+                    point: 10
                     price: 10000
                     nisData:
                       custServId: 12345
@@ -5789,7 +5789,7 @@ paths:
                 data:
                   id: 1
                   type: "OTC"
-                  point: 100
+                  point: 10
                   price: 10000
                   status: "pending"
         "401":
@@ -5874,7 +5874,7 @@ paths:
                 data:
                   - id: 1
                     price: 100000
-                    point: 1000
+                    point: 100
                     anchorDay: 18
                     lastGeneratedPeriod: "2024-06-01"
                     isActive: true
@@ -5890,7 +5890,7 @@ paths:
   /point-submission/schedule/{id}:
     patch:
       summary: Adjust a monthly schedule's commission (admin)
-      description: "Updates the monthly commission (price) of an active schedule; future generated submissions use it (point = floor(price/100)). Admin only; requires permission point-submission (E)."
+      description: "Updates the monthly commission (price) of an active schedule; future generated submissions use it (point = floor(price/1000), i.e. Rp 1.000 = 1 point). Admin only; requires permission point-submission (E)."
       tags: [PointSubmission]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -5999,7 +5999,7 @@ paths:
                 data:
                   id: 1
                   type: "OTC"
-                  point: 100
+                  point: 10
                   price: 10000
                   nisData:
                     custServId: 12345

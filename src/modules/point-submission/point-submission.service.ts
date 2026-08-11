@@ -31,7 +31,8 @@ export class PointSubmissionService {
     }
 
     async create(data: Partial<PointSubmission>): Promise<PointSubmission> {
-        data.point = Math.floor(Number(data.price || 0) / 100)
+        // Conversion rate: Rp 1.000 = 1 Poin (matches cash withdrawal rate in withdraw.ts)
+        data.point = Math.floor(Number(data.price || 0) / 1000)
         return await this.repository.save(data)
     }
 
@@ -41,7 +42,7 @@ export class PointSubmissionService {
             throw new BadRequestException("Cannot edit a submission that has been approved")
         }
         if (data.price !== undefined) {
-            data.point = Math.floor(Number(data.price) / 100)
+            data.point = Math.floor(Number(data.price) / 1000)
         }
         await this.repository.update(id, data)
         return await this.getById(id)
@@ -92,7 +93,7 @@ export class PointSubmissionService {
                     customerServiceId: submission.nisData.custServId,
                     userId: submission.userId,
                     price: Number(submission.price),
-                    point: Math.floor(Number(submission.price) / 100),
+                    point: Math.floor(Number(submission.price) / 1000),
                     pointType: submission.type,
                 },
                 period: period,
@@ -143,7 +144,7 @@ export class PointSubmissionService {
         const sortMap: Record<string, string> = {
             user: "user.firstName",
             price: "s.price",
-            point: "s.price", // point is derived (floor(price/100)) — sorting by price preserves order
+            point: "s.price", // point is derived (floor(price/1000)) — sorting by price preserves order
             anchorDay: "s.anchorDay",
             status: "s.isActive",
             createdAt: "s.createdAt",
@@ -171,7 +172,7 @@ export class PointSubmissionService {
 
     /**
      * Adjust the monthly commission of an active schedule. Future generated
-     * submissions will use the new price (point = floor(price / 100)).
+     * submissions will use the new price (point = floor(price / 1000)).
      */
     async adjustSchedule(id: number, price: number): Promise<PointSubmissionSchedule> {
         const repo = this.unitOfWork.getManager().getRepository(PointSubmissionSchedule)

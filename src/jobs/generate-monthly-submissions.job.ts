@@ -87,7 +87,7 @@ async function run() {
                             userId: schedule.userId,
                             type: PointType.BULANAN,
                             price: schedule.price,
-                            point: Math.floor(Number(schedule.price) / 100),
+                            point: Math.floor(Number(schedule.price) / 1000), // Rp 1.000 = 1 Poin
                             nisData: schedule.nisData,
                             status: PointSubmissionStatus.PENDING,
                             scheduleId: schedule.id,
