@@ -7,11 +7,17 @@ import { IPointSubmissionRepository, PointSubmissionListFilters } from "./interf
 import { JobQueue } from "../../core/queue/entities/job-queue.entity"
 import { QueueType } from "../../core/queue/queue.constants"
 import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
+import { NisHelper } from "../../core/helpers/nis"
+import { PointCalculator } from "../../core/helpers/point"
+import { createPointFromSubmission, PointSubmissionPayload } from "../../core/helpers/point-submission-processor"
+import { logger } from "../../core/helpers/logger"
 
 export class PointSubmissionService {
     constructor(
         private readonly repository: IPointSubmissionRepository,
         private readonly unitOfWork: IUnitOfWork,
+        private readonly nisHelper: NisHelper,
+        private readonly pointCalculator: PointCalculator,
     ) {}
 
     async getAll(page: number, limit: number, q: string, sort: string, order: string, filters: PointSubmissionListFilters = {}): Promise<{ data: PointSubmission[]; total: number }> {
@@ -71,11 +77,11 @@ export class PointSubmissionService {
             )
         }
 
-        // Approve + create queue entries (+ recurring schedules) in one transaction
-        await this.unitOfWork.runInTransaction(async (manager) => {
-            const now = new Date()
-            const period = new Date(now.getFullYear(), now.getMonth(), 1) // first of current month
+        const now = new Date()
+        const period = new Date(now.getFullYear(), now.getMonth(), 1) // first of current month
 
+        // Approve + start recurring schedules in one transaction
+        await this.unitOfWork.runInTransaction(async (manager) => {
             // Update submission status
             await manager.getRepository(PointSubmission).update(ids, {
                 status: PointSubmissionStatus.APPROVED,
@@ -83,23 +89,6 @@ export class PointSubmissionService {
                 approvedAt: now,
                 notes: notes || null,
             })
-
-            // Create queue entry for each submission (→ process-submissions creates the Point)
-            const queueRepo = manager.getRepository(JobQueue)
-            const queueEntries = submissions.map(submission => queueRepo.create({
-                type: QueueType.POINT_SUBMISSION,
-                referenceId: submission.id,
-                payload: {
-                    customerServiceId: submission.nisData.custServId,
-                    userId: submission.userId,
-                    price: Number(submission.price),
-                    point: Math.floor(Number(submission.price) / 1000),
-                    pointType: submission.type,
-                },
-                period: period,
-            }))
-
-            await queueRepo.save(queueEntries)
 
             // For each MANUAL (scheduleId=null) Bulanan submission, start a recurring
             // schedule so a new pending submission is generated every following month.
@@ -128,6 +117,35 @@ export class PointSubmissionService {
                 }))
             }
         })
+
+        // Try to create the Point immediately for each approved submission.
+        // Only fall back to the queue (picked up later by process-submissions)
+        // when the immediate attempt fails, e.g. a transient NIS connectivity issue.
+        const queueRepo = this.unitOfWork.getManager().getRepository(JobQueue)
+        for (const submission of submissions) {
+            const payload: PointSubmissionPayload = {
+                customerServiceId: submission.nisData.custServId,
+                userId: submission.userId,
+                price: Number(submission.price),
+                point: Math.floor(Number(submission.price) / 1000),
+                pointType: submission.type,
+            }
+
+            try {
+                await createPointFromSubmission(submission.id, payload, this.nisHelper, this.pointCalculator)
+            } catch (error: any) {
+                logger.error("Immediate point creation failed on approve, falling back to queue", {
+                    pointSubmissionId: submission.id,
+                    error: error?.message || String(error),
+                })
+                await queueRepo.save(queueRepo.create({
+                    type: QueueType.POINT_SUBMISSION,
+                    referenceId: submission.id,
+                    payload,
+                    period,
+                }))
+            }
+        }
     }
 
     async getSchedules(page: number, limit: number, isActive?: boolean, sort?: string, order?: string): Promise<{ data: PointSubmissionSchedule[]; total: number }> {

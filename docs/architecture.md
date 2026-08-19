@@ -199,9 +199,11 @@ Access token: 15 min (`JWT_SECRET`); refresh token: 7 days (`JWT_REFRESH_SECRET`
   deducts from the soonest-expiring rewards first. Never mutate `points.remainingPoint` directly.
 - **Cash withdrawal math** (`core/helpers/withdraw.ts`): 1 point = Rp 1.000; tax 2,5%;
   payout = gross − tax.
-- **Point submissions are processed asynchronously** through the `job_queues` table
-  (approve → enqueue → `process-submissions` cron job creates points; failures go to
-  `job_queue_failures`, max 5 retries). See docs/jobs-and-integrations.md.
+- **Point submissions are processed immediately on approve** (sync NIS account → create Point,
+  via `createPointFromSubmission` in `core/helpers/point-submission-processor.ts`). Only on
+  failure does it fall back to a `job_queues` row for the `process-submissions` cron job to
+  retry (failures beyond that go to `job_queue_failures`, max 5 retries). See
+  docs/jobs-and-integrations.md.
 
 ## Error Handling
 

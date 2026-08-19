@@ -13,23 +13,30 @@ Dokumen ini merangkum semuanya. Sumber: [src/jobs/](../src/jobs/), [src/core/que
 | `bun run refresh-customers` | `refresh-customers.job.ts` | harian 04:00 | Refresh **hanya** customer & customer-service yang sudah ada di lokal (keyed by ID lokal, tidak impor baru). Phone/email **direkonsiliasi**: baris yang hilang di NIS **dihapus**, yang ada di-upsert. Customer yang tak ada lagi di NIS dibiarkan (tidak dihapus) |
 | `bun run sync-employees` | `sync-employees.job.ts` | berkala | Sinkron karyawan dari **Nusawork API** ke tabel `employees` (akun admin) |
 | `bun run expire-points` | `expire-points.job.ts` | harian | Menghanguskan reward yang melewati `expiredDate` (via `PointCalculator.expirePoints`) |
-| `bun run process-submissions` | `process-submissions.job.ts` | tiap 5 menit | Memproses antrian `job_queues` → ambil data NIS → buat poin. Batch 50, max 5 retry, gagal dicatat ke `job_queue_failures` |
+| `bun run process-submissions` | `process-submissions.job.ts` | tiap 5 menit | **Retry saja**: memproses sisa antrian `job_queues` (entri yang gagal saat percobaan langsung di approve) → ambil data NIS → buat poin. Batch 50, max 5 retry, gagal dicatat ke `job_queue_failures` |
 | `bun run generate-monthly-submissions` | `generate-monthly-submissions.job.ts` | harian 01:00 | Untuk tiap **jadwal aktif** (`point_submission_schedules`): buat **submission pending baru** tiap bulan (yang harus di-approve admin), dengan **backfill** bulan terlewat dan penyesuaian tanggal (31 Jan → 28 Feb, dst.). Tanpa tanggal berakhir; berhenti saat jadwal di-stop |
 
 Contoh crontab lengkap ada di [src/jobs/index.ts](../src/jobs/index.ts). Setiap job membuka dan
 menutup koneksi database sendiri (`AppDataSource.initialize()` … `destroy()`), lalu `process.exit`.
 
-## Alur Point Submission (async via queue)
+## Alur Point Submission (langsung saat approve, queue sebagai fallback)
 
 ```
 Admin buat submission ──► approve (POST /point-submission/approve)
-        │                          │ menulis baris ke job_queues (payload:
-        ▼                          │ customerServiceId, userId, price, point, pointType)
-   status: pending ──► approved    ▼
-                        cron process-submissions (tiap 5 menit):
-                          - ambil entri processedAt IS NULL (batch 50)
-                          - query data akun dari NIS DB (NisHelper)
-                          - buat baris Point via PointCalculator (transaksi)
+        │                          │
+        ▼                          ▼
+   status: pending ──► approved   dalam request yang sama, untuk tiap submission:
+                                     - sync akun dari NIS DB (NisHelper.syncAccountToLocal)
+                                     - buat baris Point via PointCalculator (transaksi)
+                                     - notifikasi user (fire-and-forget)
+                                     ┌─ sukses → selesai, poin langsung muncul
+                                     └─ gagal (mis. NIS timeout) → tulis baris job_queues
+                                                (payload: customerServiceId, userId, price,
+                                                point, pointType) untuk di-retry
+
+                        cron process-submissions (tiap 5 menit, RETRY-ONLY):
+                          - ambil entri job_queues dgn processedAt IS NULL (batch 50)
+                          - ulangi proses yang sama (sync NIS → buat Point)
                           - sukses → set processedAt; gagal → job_queue_failures (max 5 retry)
 
    submission Bulanan (type='Bulanan'):
@@ -38,13 +45,18 @@ Admin buat submission ──► approve (POST /point-submission/approve)
                           - untuk tiap jadwal aktif, tiap bulan sejak lastGeneratedPeriod yang
                             tanggal targetnya sudah lewat & belum ada submission → buat
                             SUBMISSION pending baru (perlu di-approve admin), lalu di-approve
-                            mengikuti alur queue di atas
+                            mengikuti alur di atas (langsung, dengan fallback ke queue)
                           - berhenti saat jadwal di-stop (isActive=false); tanpa tanggal berakhir
 ```
 
-Konsekuensi penting: **poin tidak langsung muncul setelah approve** — menunggu run cron
-berikutnya. Di lingkungan dev, jalankan `bun run process-submissions` manual. Untuk memicu
-submission bulanan, jalankan `bun run generate-monthly-submissions` manual.
+Logika inti (sync NIS + buat Point + notifikasi) ada di satu tempat:
+[`src/core/helpers/point-submission-processor.ts`](../src/core/helpers/point-submission-processor.ts)
+(`createPointFromSubmission`), dipakai baik oleh `approve()` (percobaan langsung) maupun oleh
+`process-submissions` (retry saat percobaan langsung gagal).
+
+Konsekuensi: poin biasanya **langsung muncul setelah approve**. Hanya tertunda (menunggu cron
+`process-submissions` berikutnya) jika percobaan langsung gagal — dicatat sebagai `logger.error`
+("Immediate point creation failed on approve, falling back to queue").
 
 ## Integrasi Eksternal
 

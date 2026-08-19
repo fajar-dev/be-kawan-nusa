@@ -28,7 +28,7 @@ bun run sync-users          # sync referral users from NIS DB (Reseller, Partner
 bun run sync-customers      # sync services/customers/phones/customer-services from NIS DB
 bun run sync-employees      # sync employees from Nusawork API
 bun run expire-points       # expire rewards past expiredDate
-bun run process-submissions # process pending job_queues (every 5 min; creates points)
+bun run process-submissions # retries job_queues entries that failed immediate processing on approve (every 5 min)
 bun run generate-monthly-submissions # daily: create pending monthly submissions from active schedules (backfill)
 ```
 
@@ -80,9 +80,10 @@ from their assigned `Role.permissions` (`Record<module, ('L'|'T'|'E'|'H')[]>`), 
   outside it.
 - **`calculateWithdrawal`** ([src/core/helpers/withdraw.ts](src/core/helpers/withdraw.ts)) —
   1 point = Rp 1.000, tax 2.5%, payout = gross − tax.
-- **Point submissions** are async: approve writes rows to `job_queues`; the
-  `process-submissions` job (cron) pulls NIS data and creates points, with retries (max 5) and
-  failures logged to `job_queue_failures`. **Monthly (`Bulanan`) submissions** create a
+- **Point submissions** are processed immediately on approve (sync NIS data, create the Point,
+  in the same request via `createPointFromSubmission` in `core/helpers/point-submission-processor.ts`).
+  Only on failure does it enqueue a `job_queues` row; the `process-submissions` job (cron) then
+  retries it (max 5 retries, failures logged to `job_queue_failures`). **Monthly (`Bulanan`) submissions** create a
   `point_submission_schedules` row on first approval; the daily `generate-monthly-submissions`
   job then creates a NEW pending submission each month (backfills missed months, clamps
   day-of-month) which an admin must approve. A schedule runs until stopped (`isActive=false`,
