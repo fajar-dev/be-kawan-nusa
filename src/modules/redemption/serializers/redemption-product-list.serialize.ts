@@ -28,7 +28,7 @@ export class RedemptionProductListSerializer {
                 catalog: product.catalog ? {
                     id: product.catalog.id,
                     name: product.catalog.name,
-                    image: product.catalog.image,
+                    image: await this.resolvePhotoUrl(product.catalog.image),
                     category: product.catalog.category ? {
                         id: product.catalog.category.id,
                         name: product.catalog.category.name

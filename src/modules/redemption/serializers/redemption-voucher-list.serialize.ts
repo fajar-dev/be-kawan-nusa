@@ -28,7 +28,7 @@ export class RedemptionVoucherListSerializer {
                 catalog: voucher.catalog ? {
                     id: voucher.catalog.id,
                     name: voucher.catalog.name,
-                    image: voucher.catalog.image,
+                    image: await this.resolvePhotoUrl(voucher.catalog.image),
                     category: voucher.catalog.category ? {
                         id: voucher.catalog.category.id,
                         name: voucher.catalog.category.name

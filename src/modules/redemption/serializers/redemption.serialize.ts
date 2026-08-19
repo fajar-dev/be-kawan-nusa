@@ -27,7 +27,7 @@ export class RedemptionSerializer {
                 catalog: redemption.redemptionVoucher.catalog ? {
                     id: redemption.redemptionVoucher.catalog.id,
                     name: redemption.redemptionVoucher.catalog.name,
-                    image: redemption.redemptionVoucher.catalog.image,
+                    image: await this.resolvePhotoUrl(redemption.redemptionVoucher.catalog.image),
                     category: redemption.redemptionVoucher.catalog.category ? {
                         id: redemption.redemptionVoucher.catalog.category.id,
                         name: redemption.redemptionVoucher.catalog.category.name
@@ -45,7 +45,7 @@ export class RedemptionSerializer {
                 catalog: redemption.redemptionProduct.catalog ? {
                     id: redemption.redemptionProduct.catalog.id,
                     name: redemption.redemptionProduct.catalog.name,
-                    image: redemption.redemptionProduct.catalog.image,
+                    image: await this.resolvePhotoUrl(redemption.redemptionProduct.catalog.image),
                     category: redemption.redemptionProduct.catalog.category ? {
                         id: redemption.redemptionProduct.catalog.category.id,
                         name: redemption.redemptionProduct.catalog.category.name
