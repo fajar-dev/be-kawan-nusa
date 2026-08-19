@@ -4,9 +4,8 @@ import { JobQueueFailure } from "../core/queue/entities/job-queue-failure.entity
 import { QueueType } from "../core/queue/queue.constants"
 import { NisHelper } from "../core/helpers/nis"
 import { PointCalculator } from "../core/helpers/point"
+import { createPointFromSubmission } from "../core/helpers/point-submission-processor"
 import { logger } from "../core/helpers/logger"
-import { notificationService } from "../modules/notification/notification.module"
-import { NotificationType } from "../modules/notification/notification.enum"
 import { IsNull } from "typeorm"
 
 const JOB = "process-submissions"
@@ -31,38 +30,19 @@ const MAX_RETRIES = 5
 // ── Processors ─────────────────────────────────────────────────────────
 
 async function processPointSubmission(item: JobQueue, nisHelper: NisHelper, pointCalculator: PointCalculator): Promise<void> {
-    const { customerServiceId, userId, price, point, pointType } = item.payload
-
-    // Step 1: Sync NIS account to local DB
-    const syncResult = await nisHelper.syncAccountToLocal(customerServiceId, userId)
-    if (!syncResult) {
-        throw new Error(`Failed to sync NIS account for custServId ${customerServiceId}`)
-    }
-
-    // Step 2: Create Point + mark processed in ONE transaction
-    await AppDataSource.transaction(async (manager) => {
-        await pointCalculator.addPointsReward(manager, {
-            customerServiceId: syncResult.customerServiceId,
-            userId,
-            price,
-            point,
-            remainingPoint: point,
-            type: pointType,
-            pointSubmissionId: item.referenceId,
-        })
-
-        await manager.getRepository(JobQueue).update(item.id, {
-            processedAt: new Date(),
-        })
-    })
-
-    // Notify the referral partner that new points landed (fire-and-forget)
-    await notificationService.safeNotifyUser(userId, {
-        type: NotificationType.POINT,
-        title: "Poin Baru",
-        message: `${Number(point).toLocaleString("id-ID")} poin telah ditambahkan ke akun Anda.`,
-        link: "/point/activity/reward",
-    })
+    // Reaching the queue means the immediate attempt on approve already
+    // failed once (see point-submission.service.ts) — this is the retry path.
+    await createPointFromSubmission(
+        item.referenceId,
+        item.payload as any,
+        nisHelper,
+        pointCalculator,
+        async (manager) => {
+            await manager.getRepository(JobQueue).update(item.id, {
+                processedAt: new Date(),
+            })
+        },
+    )
 }
 
 // ── Main ───────────────────────────────────────────────────────────────
