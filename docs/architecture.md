@@ -14,6 +14,7 @@
 | Email | Nodemailer (HTML templates in `public/templates/`) |
 | WhatsApp | NusaContact API (OTP delivery) |
 | Employee sync | Nusawork API |
+| Partner registration | IS5 API (partner sync on user approval) |
 | PDF | PDFKit (receipts) |
 | Testing | Bun Test (~290 integration tests) |
 | Docs | Swagger/OpenAPI 3.0 (`/api/docs`) |
@@ -31,7 +32,7 @@ src/
 │
 ├── core/             # Shared infrastructure
 │   ├── exceptions/   # Custom exception classes (BaseException, NotFoundException, etc.)
-│   ├── helpers/      # response, hash, mail, minio, nis, nusawork, nusacontact,
+│   ├── helpers/      # response, hash, mail, minio, nis, nusawork, nusacontact, is5,
 │   │                 # pdf, point (FIFO PointCalculator), withdraw, validator, logger
 │   ├── interfaces/   # Shared interfaces (IUnitOfWork, IBaseRepository)
 │   ├── middlewares/  # auth, role, permission, api-key, rate-limit, token-auth, logger

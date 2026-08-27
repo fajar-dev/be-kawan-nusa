@@ -69,6 +69,7 @@ Konsekuensi: poin biasanya **langsung muncul setelah approve**. Hanya tertunda (
 | **MinIO** (S3-compatible) | `core/helpers/minio.ts` | `MINIO_*` (bucket default `kawan-nusa`) | Penyimpanan semua upload (foto, KTP, gambar katalog/artikel, template, bukti transfer). Objek disajikan lewat `GET /api/proxy?path=` |
 | **SMTP** | `core/helpers/mail.ts` + `config/smtp.ts` | `SMTP_*` | Email verifikasi, reset password, OTP; template HTML di `public/templates/` |
 | **Google AppScript** | module feedback | `FEEDBACK_URL` | Meneruskan feedback pengguna ke spreadsheet |
+| **IS5** | `core/helpers/is5.ts` | `IS5_API_URL/API_KEY` | Saat status user diubah menjadi `active` (approve registrasi): upload foto KTP sebagai attachment, lalu daftarkan partner (`POST /api/v2/client/partners`). Fire-and-forget dari `UserService.updateStatus`, gagal hanya dicatat via `logger.error` (event `is5.failed`) — tidak membatalkan approval |
 
 ## Logika Bisnis Poin (core/helpers)
 
