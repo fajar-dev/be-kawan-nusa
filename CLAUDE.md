@@ -34,7 +34,8 @@ bun run generate-monthly-submissions # daily: create pending monthly submissions
 
 Copy `.env.dist` → `.env`. Key env groups: app/JWT, MySQL (`DB_*`), NIS read-only MySQL
 (`NIS_DB_*`), SMTP, Google OAuth, Nusawork (employee sync), NusaContact (WhatsApp OTP),
-MinIO (object storage), `FEEDBACK_URL` (Google AppScript), `API_KEY` (server-to-server reward).
+MinIO (object storage), IS5 (partner sync on user approval), `FEEDBACK_URL` (Google AppScript),
+`API_KEY` (server-to-server reward).
 
 ## Architecture
 
@@ -99,7 +100,8 @@ from their assigned `Role.permissions` (`Record<module, ('L'|'T'|'E'|'H')[]>`), 
 - `src/core/helpers/response.ts` — `ApiResponse` formatter (use for every response)
 - `src/core/exceptions/base.ts` — exception hierarchy (400/401/403/404/409/422/429)
 - `src/core/helpers/` — minio (storage + `/api/proxy`), nis, nusawork, nusacontact (WA OTP),
-  mail (SMTP + `public/templates/` HTML), pdf (receipts), point, withdraw, hash, logger
+  is5 (partner registration), mail (SMTP + `public/templates/` HTML), pdf (receipts), point,
+  withdraw, hash, logger
 - `src/core/queue/` — `job_queues` / `job_queue_failures` entities + `QueueType`
 - `swagger.yaml` — OpenAPI docs served at `/api/docs`
 

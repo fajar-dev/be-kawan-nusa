@@ -46,6 +46,10 @@ export const config = {
         clientId: process.env.NUSAWORK_CLIENT_ID || '',
         clientSecret: process.env.NUSAWORK_CLIENT_SECRET || '',
     },
+    is5: {
+        apiUrl: process.env.IS5_API_URL || '',
+        apiKey: process.env.IS5_API_KEY || '',
+    },
     nusaContact: {
         apiUrl: process.env.NUSACONTACT_API_URL || '',
         apiKey: process.env.NUSACONTACT_API_KEY || '',

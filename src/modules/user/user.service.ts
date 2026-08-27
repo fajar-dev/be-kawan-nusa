@@ -9,6 +9,8 @@ import { AppDataSource } from "../../config/database"
 import { notificationService } from "../notification/notification.module"
 import { NotificationType } from "../notification/notification.enum"
 import { mail } from "../../core/helpers/mail"
+import { is5Helper } from "../../core/helpers/is5"
+import { minio } from "../../core/helpers/minio"
 import { config } from "../../config/config"
 import * as fs from "fs"
 import * as path from "path"
@@ -74,6 +76,18 @@ export class UserService {
             logger.error("Status change email dispatch failed", { event: "mail.failed", kind: "status-change", userId: saved.id, error: err?.message })
         )
 
+        // Register the partner in IS5 once approved (fire-and-forget)
+        if (status === UserStatus.ACTIVE) {
+            this.sendToIs5(saved).catch((err) =>
+                logger.error("IS5 partner sync failed", {
+                    event: "is5.failed",
+                    userId: saved.id,
+                    error: err?.message,
+                    is5Response: err?.response?.data,
+                })
+            )
+        }
+
         // In-app notification for the partner
         const notif: Record<string, { title: string; message: string; link: string }> = {
             [UserStatus.ACTIVE]: { title: "Pendaftaran Disetujui", message: "Selamat! Pendaftaran Anda telah disetujui dan akun Anda kini aktif.", link: "/" },
@@ -118,6 +132,49 @@ export class UserService {
         mail.sendHtml(user.email, `${template.subject} - Kawan Nusa`, html).catch((err) => {
             logger.error("Status change email send failed", { event: "mail.failed", kind: "status-change", email: user.email, error: err?.message })
         })
+    }
+
+    /**
+     * Register the referral partner in IS5 once their registration is approved.
+     * Uploads their identity photo as an attachment first, then creates the partner
+     * record using that attachment id.
+     */
+    private async sendToIs5(user: User): Promise<void> {
+        if (!user.identityPath) {
+            logger.error("IS5 partner sync skipped: missing identity photo", { event: "is5.failed", userId: user.id })
+            return
+        }
+
+        const { stream, stat } = await minio.getObject(user.identityPath)
+        const chunks: Buffer[] = []
+        for await (const chunk of stream) {
+            chunks.push(chunk as Buffer)
+        }
+        const buffer = Buffer.concat(chunks)
+
+        const attachmentId = await is5Helper.uploadAttachment(
+            buffer,
+            "foto-identitas",
+            user.identityPath.split("/").pop(),
+            stat.metaData?.["content-type"],
+        )
+
+        const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || "User"
+        // IS5 requires the international +62 format; local numbers are stored as 08xx.
+        const phone = user.phone
+            ? "+" + user.phone.replace(/[\s\-]/g, "").replace(/^(\+62|62|0)/, "62")
+            : ""
+        await is5Helper.addPartner(
+            name,
+            phone,
+            user.bankName || "",
+            user.address || "",
+            user.accountNumber || "",
+            user.accountHolderName || "",
+            attachmentId,
+        )
+
+        logger.info("IS5 partner synced", { event: "is5.success", userId: user.id, attachmentId })
     }
 }
 
