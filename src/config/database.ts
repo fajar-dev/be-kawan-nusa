@@ -37,6 +37,7 @@ import { Notification } from "../modules/notification/entities/notification.enti
 import { NotificationRead } from "../modules/notification/entities/notification-read.entity"
 import { JobQueue } from "../core/queue/entities/job-queue.entity"
 import { JobQueueFailure } from "../core/queue/entities/job-queue-failure.entity"
+import { Branch } from "../modules/branch/entities/branch.entity"
 import { config } from "./config"
 
 /**
@@ -51,7 +52,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, Role, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, PointSubmissionSchedule, Notification, NotificationRead, JobQueue, JobQueueFailure],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, Role, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, PointSubmissionSchedule, Notification, NotificationRead, JobQueue, JobQueueFailure, Branch],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

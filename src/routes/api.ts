@@ -43,6 +43,7 @@ import { userController } from "../modules/user/user.module"
 import { pointSubmissionController } from "../modules/point-submission/point-submission.module"
 import { roleController } from "../modules/role/role.module"
 import { notificationController } from "../modules/notification/notification.module"
+import { branchController } from "../modules/branch/branch.module"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const routes = new Hono()
@@ -224,6 +225,7 @@ routes.get("/additional/customer-service-status", authMiddleware, (c) => additio
 routes.get("/additional/point-type", authMiddleware, (c) => additionalController.getPointTypes(c))
 routes.get("/additional/service-category", authMiddleware, (c) => additionalController.getServiceCategories(c))
 routes.get("/additional/search", authMiddleware, (c) => additionalController.search(c))
+routes.get("/additional/branch", authMiddleware, (c) => branchController.index(c))
 
 // Proxy MinIO
 routes.get("/proxy", async (c) => {
