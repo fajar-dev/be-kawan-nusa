@@ -18,7 +18,7 @@ const JOB = "generate-monthly-submissions"
  * Date logic:
  * - targetDay = schedule.anchorDay, clamped to the month's last day (31 Jan → 28 Feb)
  * - past months are always backfilled; the current month only fires once today >= targetDay
- * - the unique (scheduleId, period) constraint on point_submissions prevents duplicates
+ * - idempotent: skips generating if a submission for that (scheduleId, period) already exists
  *
  * Usage: bun run generate-monthly-submissions
  */
