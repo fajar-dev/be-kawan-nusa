@@ -66,6 +66,20 @@ describe("Additional Module", () => {
         })
     })
 
+    describe("GET /additional/employee", () => {
+        it("should return active employees list", async () => {
+            const res = await authRequest("/additional/employee", userToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+            expect(Array.isArray(res.body.data)).toBe(true)
+        })
+
+        it("should fail without auth", async () => {
+            const res = await request("/additional/employee")
+            expect(res.status).toBe(401)
+        })
+    })
+
     describe("GET /additional/search", () => {
         it("should search with query param", async () => {
             const res = await authRequest("/additional/search?q=test", userToken)

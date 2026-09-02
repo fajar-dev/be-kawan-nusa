@@ -26,7 +26,7 @@
 src/
 ├── config/           # App config, database connections
 │   ├── config.ts     # ALL environment variables, centralized
-│   ├── database.ts   # AppDataSource (MySQL) + entity registry (38 entities)
+│   ├── database.ts   # AppDataSource (MySQL) + entity registry (39 entities)
 │   ├── nis-database.ts # NisDataSource — read-only NIS MySQL (sync source)
 │   └── smtp.ts       # Nodemailer transporter
 │

@@ -6,6 +6,18 @@ export interface PointSubmissionListFilters {
     type?: string
     startDate?: string
     endDate?: string
+    branchCodes?: string[]
+    serviceCodes?: string[]
+    salesEmployeeIds?: string[]
+}
+
+export interface ScheduleListFilters {
+    isActive?: boolean
+    q?: string
+    branchCodes?: string[]
+    serviceCodes?: string[]
+    stoppedStartDate?: string
+    stoppedEndDate?: string
 }
 
 export interface IPointSubmissionRepository {

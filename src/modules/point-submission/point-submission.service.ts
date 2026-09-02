@@ -1,9 +1,11 @@
 import { PointSubmission } from "./entities/point-submission.entity"
 import { PointSubmissionSchedule } from "./entities/point-submission-schedule.entity"
+import { PointSubmissionScheduleHistory } from "./entities/point-submission-schedule-history.entity"
 import { PointSubmissionStatus } from "./point-submission.enum"
 import { PointType } from "../point/point.enum"
 import { NotFoundException, BadRequestException } from "../../core/exceptions/base"
-import { IPointSubmissionRepository, PointSubmissionListFilters } from "./interfaces/point-submission.repository.interface"
+import { IPointSubmissionRepository, PointSubmissionListFilters, ScheduleListFilters } from "./interfaces/point-submission.repository.interface"
+import { Brackets } from "typeorm"
 import { JobQueue } from "../../core/queue/entities/job-queue.entity"
 import { QueueType } from "../../core/queue/queue.constants"
 import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
@@ -148,15 +150,39 @@ export class PointSubmissionService {
         }
     }
 
-    async getSchedules(page: number, limit: number, isActive?: boolean, sort?: string, order?: string): Promise<{ data: PointSubmissionSchedule[]; total: number }> {
+    async getSchedules(page: number, limit: number, sort: string | undefined, order: string | undefined, filters: ScheduleListFilters = {}): Promise<{ data: PointSubmissionSchedule[]; total: number }> {
         const repo = this.unitOfWork.getManager().getRepository(PointSubmissionSchedule)
         const query = repo.createQueryBuilder("s")
             .leftJoinAndSelect("s.user", "user")
             .leftJoinAndSelect("s.createdBy", "createdBy")
             .leftJoinAndSelect("s.stoppedBy", "stoppedBy")
 
-        if (isActive !== undefined) {
-            query.where("s.isActive = :isActive", { isActive })
+        if (filters.isActive !== undefined) {
+            query.andWhere("s.isActive = :isActive", { isActive: filters.isActive })
+        }
+
+        if (filters.branchCodes && filters.branchCodes.length > 0) {
+            query.andWhere("JSON_UNQUOTE(JSON_EXTRACT(s.nisData, '$.branchCode')) IN (:...branchCodes)", { branchCodes: filters.branchCodes })
+        }
+
+        if (filters.serviceCodes && filters.serviceCodes.length > 0) {
+            query.andWhere("JSON_UNQUOTE(JSON_EXTRACT(s.nisData, '$.serviceCode')) IN (:...serviceCodes)", { serviceCodes: filters.serviceCodes })
+        }
+
+        if (filters.stoppedStartDate) {
+            query.andWhere("s.stoppedAt >= :stoppedStartDate", { stoppedStartDate: filters.stoppedStartDate })
+        }
+
+        if (filters.stoppedEndDate) {
+            query.andWhere("s.stoppedAt <= :stoppedEndDate", { stoppedEndDate: filters.stoppedEndDate })
+        }
+
+        if (filters.q) {
+            query.andWhere(new Brackets((qb) => {
+                qb.where("user.firstName LIKE :q", { q: `%${filters.q}%` })
+                  .orWhere("user.lastName LIKE :q", { q: `%${filters.q}%` })
+                  .orWhere("JSON_EXTRACT(s.nisData, '$.accountName') LIKE :q", { q: `%${filters.q}%` })
+            }))
         }
 
         const sortMap: Record<string, string> = {
@@ -165,9 +191,28 @@ export class PointSubmissionService {
             point: "s.price", // point is derived (floor(price/1000)) — sorting by price preserves order
             anchorDay: "s.anchorDay",
             status: "s.isActive",
+            stoppedAt: "s.stoppedAt",
             createdAt: "s.createdAt",
         }
-        const sortField = sortMap[sort || ""] || "s.createdAt"
+
+        // branchCode/custId/serviceName live inside the nisData JSON column. TypeORM's
+        // orderBy() naively splits its string argument on the first "." to find an
+        // alias, which mangles a raw JSON_EXTRACT(...) expression — so the sort value
+        // is added as a SELECT alias instead and ordered by that alias.
+        const jsonSortPaths: Record<string, string> = {
+            branchCode: "$.branchCode",
+            custId: "$.custId",
+            serviceName: "$.serviceName",
+        }
+
+        let sortField: string
+        if (jsonSortPaths[sort || ""]) {
+            query.addSelect("JSON_UNQUOTE(JSON_EXTRACT(s.nisData, :sortPath))", "sort_value")
+                .setParameter("sortPath", jsonSortPaths[sort!])
+            sortField = "sort_value"
+        } else {
+            sortField = sortMap[sort || ""] || "s.createdAt"
+        }
         const sortOrder = (order || "").toUpperCase() === "ASC" ? "ASC" : "DESC"
         query.orderBy(sortField, sortOrder)
 
@@ -189,16 +234,45 @@ export class PointSubmissionService {
     }
 
     /**
-     * Adjust the monthly commission of an active schedule. Future generated
-     * submissions will use the new price (point = floor(price / 1000)).
+     * Adjust the monthly commission and/or generation day of an active schedule.
+     * Future generated submissions use the new price (point = floor(price / 1000))
+     * and/or the new anchorDay. Every actual change is recorded in
+     * point_submission_schedule_histories for audit (who/when/from/to).
      */
-    async adjustSchedule(id: number, price: number): Promise<PointSubmissionSchedule> {
+    async adjustSchedule(id: number, data: { price?: number; anchorDay?: number }, changedById: number): Promise<PointSubmissionSchedule> {
         const repo = this.unitOfWork.getManager().getRepository(PointSubmissionSchedule)
         const schedule = await repo.findOneBy({ id })
         if (!schedule) throw new NotFoundException("Schedule not found")
         if (!schedule.isActive) throw new BadRequestException("Cannot adjust a stopped schedule")
 
-        await repo.update(id, { price })
+        const fromPrice = Number(schedule.price)
+        const fromAnchorDay = schedule.anchorDay
+        const toPrice = data.price !== undefined ? data.price : fromPrice
+        const toAnchorDay = data.anchorDay !== undefined ? data.anchorDay : fromAnchorDay
+
+        if (toPrice !== fromPrice || toAnchorDay !== fromAnchorDay) {
+            const historyRepo = this.unitOfWork.getManager().getRepository(PointSubmissionScheduleHistory)
+            await historyRepo.save({
+                scheduleId: id,
+                fromPrice,
+                toPrice,
+                fromAnchorDay,
+                toAnchorDay,
+                changedById,
+            })
+
+            await repo.update(id, { price: toPrice, anchorDay: toAnchorDay })
+        }
+
         return (await repo.findOneBy({ id }))!
+    }
+
+    async getScheduleHistories(scheduleId: number): Promise<PointSubmissionScheduleHistory[]> {
+        const historyRepo = this.unitOfWork.getManager().getRepository(PointSubmissionScheduleHistory)
+        return await historyRepo.find({
+            where: { scheduleId },
+            relations: ["changedBy"],
+            order: { createdAt: "DESC" },
+        })
     }
 }

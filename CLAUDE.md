@@ -95,7 +95,7 @@ from their assigned `Role.permissions` (`Record<module, ('L'|'T'|'E'|'H')[]>`), 
 - `src/app.ts` — Hono app factory (CORS, logger, error handler, Swagger)
 - `src/routes/api.ts` — every route + its middleware chain (single source of truth)
 - `src/config/config.ts` — all env config, centralized
-- `src/config/database.ts` — AppDataSource + entity registry (38 entities)
+- `src/config/database.ts` — AppDataSource + entity registry (39 entities)
 - `src/config/nis-database.ts` — read-only NIS DataSource
 - `src/core/helpers/response.ts` — `ApiResponse` formatter (use for every response)
 - `src/core/exceptions/base.ts` — exception hierarchy (400/401/403/404/409/422/429)

@@ -22,6 +22,10 @@ export class EmployeeService {
         return await this.repository.findByEmail(email)
     }
 
+    async getActiveEmployees(): Promise<Employee[]> {
+        return await this.repository.findAllActive()
+    }
+
     async save(data: Partial<Employee>, manager?: EntityManager): Promise<Employee> {
         return await this.repository.save(data, manager)
     }

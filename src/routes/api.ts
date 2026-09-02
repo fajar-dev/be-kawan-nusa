@@ -195,6 +195,7 @@ routes.get("/point-submission", authMiddleware, roleMiddleware('admin'), permiss
 routes.get("/point-submission/schedule", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.schedules(c))
 routes.patch("/point-submission/schedule/:id/stop", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'E'), (c) => pointSubmissionController.stopSchedule(c))
 routes.patch("/point-submission/schedule/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'E'), zValidator("json", AdjustScheduleValidator, validationHook), (c) => pointSubmissionController.adjustSchedule(c))
+routes.get("/point-submission/schedule/:id/history", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.scheduleHistories(c))
 routes.get("/point-submission/check-account", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.checkAccount(c))
 routes.get("/point-submission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.show(c))
 routes.post("/point-submission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'T'), zValidator("json", CreatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.store(c))
@@ -226,6 +227,7 @@ routes.get("/additional/point-type", authMiddleware, (c) => additionalController
 routes.get("/additional/service-category", authMiddleware, (c) => additionalController.getServiceCategories(c))
 routes.get("/additional/search", authMiddleware, (c) => additionalController.search(c))
 routes.get("/additional/branch", authMiddleware, (c) => branchController.index(c))
+routes.get("/additional/employee", authMiddleware, (c) => additionalController.getEmployees(c))
 
 // Proxy MinIO
 routes.get("/proxy", async (c) => {

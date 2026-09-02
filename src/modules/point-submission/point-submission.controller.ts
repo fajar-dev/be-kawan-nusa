@@ -3,6 +3,7 @@ import { PointSubmissionService } from "./point-submission.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { PointSubmissionSerializer } from "./serializers/point-submission.serialize"
 import { PointSubmissionScheduleSerializer } from "./serializers/point-submission-schedule.serialize"
+import { PointSubmissionScheduleHistorySerializer } from "./serializers/point-submission-schedule-history.serialize"
 import { PointSubmissionStatus } from "./point-submission.enum"
 import { NisHelper } from "../../core/helpers/nis"
 
@@ -22,9 +23,12 @@ export class PointSubmissionController {
         const type = c.req.query("type")
         const startDate = c.req.query("startDate")
         const endDate = c.req.query("endDate")
+        const branchCodes = c.req.queries("branchCode[]")
+        const serviceCodes = c.req.queries("serviceCode[]")
+        const salesEmployeeIds = c.req.queries("salesEmployeeId[]")
 
         const { data, total } = await this.service.getAll(page, limit, q, sort, order, {
-            status, type, startDate, endDate,
+            status, type, startDate, endDate, branchCodes, serviceCodes, salesEmployeeIds,
         })
 
         return ApiResponse.paginate(c, PointSubmissionSerializer.collection(data), total, page, limit, "Point submissions retrieved successfully")
@@ -74,8 +78,15 @@ export class PointSubmissionController {
         const isActive = isActiveParam === undefined ? undefined : isActiveParam === "true"
         const sort = c.req.query("sort")
         const order = c.req.query("order")
+        const q = c.req.query("q")
+        const branchCodes = c.req.queries("branchCode[]")
+        const serviceCodes = c.req.queries("serviceCode[]")
+        const stoppedStartDate = c.req.query("stoppedStartDate")
+        const stoppedEndDate = c.req.query("stoppedEndDate")
 
-        const { data, total } = await this.service.getSchedules(page, limit, isActive, sort, order)
+        const { data, total } = await this.service.getSchedules(page, limit, sort, order, {
+            isActive, q, branchCodes, serviceCodes, stoppedStartDate, stoppedEndDate,
+        })
         return ApiResponse.paginate(c, PointSubmissionScheduleSerializer.collection(data), total, page, limit, "Schedules retrieved successfully")
     }
 
@@ -87,10 +98,17 @@ export class PointSubmissionController {
     }
 
     async adjustSchedule(c: Context) {
+        const admin = c.get("user")
         const id = Number(c.req.param("id"))
         const body = await c.req.json()
-        const data = await this.service.adjustSchedule(id, body.price)
-        return ApiResponse.success(c, PointSubmissionScheduleSerializer.single(data), "Schedule commission updated successfully")
+        const data = await this.service.adjustSchedule(id, { price: body.price, anchorDay: body.anchorDay }, admin.id)
+        return ApiResponse.success(c, PointSubmissionScheduleSerializer.single(data), "Schedule updated successfully")
+    }
+
+    async scheduleHistories(c: Context) {
+        const id = Number(c.req.param("id"))
+        const data = await this.service.getScheduleHistories(id)
+        return ApiResponse.success(c, PointSubmissionScheduleHistorySerializer.collection(data), "Schedule histories retrieved successfully")
     }
 
     async checkAccount(c: Context) {
