@@ -65,8 +65,86 @@ describe("Point Submission Module", () => {
             expect(res.body.success).toBe(true)
         })
 
+        describe("nisData filters (branchCode / serviceCode / salesEmployeeId)", () => {
+            let filterSubmissionId: number
+
+            beforeAll(async () => {
+                const saved = await AppDataSource.getRepository(PointSubmission).save({
+                    userId: testUser.id,
+                    createdById: testAdmin.id,
+                    type: "OTC" as any,
+                    price: 5000,
+                    point: 5,
+                    status: "pending" as any,
+                    nisData: {
+                        custServId: 800000 + Math.floor(Math.random() * 90000),
+                        custId: "CUST-FILTER",
+                        accountName: "Filter Test Account",
+                        serviceCode: "SVC-FILTER",
+                        serviceName: "Filter Service",
+                        accountManager: "Filter AM",
+                        salesEmployeeId: "EMP-FILTER",
+                        branchCode: "999",
+                    },
+                })
+                filterSubmissionId = saved.id
+            })
+
+            afterAll(async () => {
+                if (filterSubmissionId) await AppDataSource.getRepository(PointSubmission).delete(filterSubmissionId)
+            })
+
+            it("should filter by branchCode", async () => {
+                const res = await authRequest("/point-submission?branchCode[]=999", adminToken)
+                expect(res.status).toBe(200)
+                expect(res.body.data.some((s: any) => s.id === filterSubmissionId)).toBe(true)
+            })
+
+            it("should exclude non-matching branchCode", async () => {
+                const res = await authRequest("/point-submission?branchCode[]=000-does-not-exist", adminToken)
+                expect(res.status).toBe(200)
+                expect(res.body.data.some((s: any) => s.id === filterSubmissionId)).toBe(false)
+            })
+
+            it("should filter by serviceCode", async () => {
+                const res = await authRequest("/point-submission?serviceCode[]=SVC-FILTER", adminToken)
+                expect(res.status).toBe(200)
+                expect(res.body.data.some((s: any) => s.id === filterSubmissionId)).toBe(true)
+            })
+
+            it("should filter by salesEmployeeId", async () => {
+                const res = await authRequest("/point-submission?salesEmployeeId[]=EMP-FILTER", adminToken)
+                expect(res.status).toBe(200)
+                expect(res.body.data.some((s: any) => s.id === filterSubmissionId)).toBe(true)
+            })
+
+            it("should support multiple values for the same filter", async () => {
+                const res = await authRequest("/point-submission?branchCode[]=999&branchCode[]=888", adminToken)
+                expect(res.status).toBe(200)
+                expect(res.body.data.some((s: any) => s.id === filterSubmissionId)).toBe(true)
+            })
+        })
+
         it("should support sorting", async () => {
             const res = await authRequest("/point-submission?sort=createdAt&order=ASC", adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("should support sorting by nisData.branchCode", async () => {
+            const res = await authRequest("/point-submission?sort=branchCode&order=ASC", adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("should support sorting by nisData.custId", async () => {
+            const res = await authRequest("/point-submission?sort=custId&order=ASC", adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("should support sorting by nisData.serviceName", async () => {
+            const res = await authRequest("/point-submission?sort=serviceName&order=DESC", adminToken)
             expect(res.status).toBe(200)
             expect(res.body.success).toBe(true)
         })
@@ -158,6 +236,7 @@ describe("Point Submission Module", () => {
                         serviceName: "Internet",
                         accountManager: null,
                         salesEmployeeId: null,
+                        branchCode: null,
                     },
                 },
             })
@@ -289,6 +368,7 @@ describe("Point Submission Module", () => {
             serviceName: "Test Service",
             accountManager: "AM Test",
             salesEmployeeId: null,
+            branchCode: null,
         }
 
         afterAll(async () => {
@@ -335,6 +415,27 @@ describe("Point Submission Module", () => {
             expect(res.status).toBe(403)
         })
 
+        it("supports search by account name", async () => {
+            const res = await authRequest(`/point-submission/schedule?q=${encodeURIComponent("Schedule Test Account")}`, adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.data.some((s: any) => s.id === scheduleId)).toBe(true)
+        })
+
+        it("filters by serviceCode", async () => {
+            const match = await authRequest("/point-submission/schedule?serviceCode[]=SVC-TEST", adminToken)
+            expect(match.status).toBe(200)
+            expect(match.body.data.some((s: any) => s.id === scheduleId)).toBe(true)
+
+            const noMatch = await authRequest("/point-submission/schedule?serviceCode[]=SVC-DOES-NOT-EXIST", adminToken)
+            expect(noMatch.body.data.some((s: any) => s.id === scheduleId)).toBe(false)
+        })
+
+        it("excludes a schedule when filtering by a non-matching branchCode", async () => {
+            const res = await authRequest("/point-submission/schedule?branchCode[]=999-does-not-exist", adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.data.some((s: any) => s.id === scheduleId)).toBe(false)
+        })
+
         it("supports sorting by price ascending and descending", async () => {
             const asc = await authRequest("/point-submission/schedule?sort=price&order=asc&limit=100", adminToken)
             expect(asc.status).toBe(200)
@@ -352,6 +453,30 @@ describe("Point Submission Module", () => {
             expect(res.status).toBe(200)
         })
 
+        it("supports sorting by stoppedAt", async () => {
+            const res = await authRequest("/point-submission/schedule?sort=stoppedAt&order=DESC", adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("supports sorting by nisData.branchCode", async () => {
+            const res = await authRequest("/point-submission/schedule?sort=branchCode&order=ASC", adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("supports sorting by nisData.custId", async () => {
+            const res = await authRequest("/point-submission/schedule?sort=custId&order=ASC", adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
+        it("supports sorting by nisData.serviceName", async () => {
+            const res = await authRequest("/point-submission/schedule?sort=serviceName&order=DESC", adminToken)
+            expect(res.status).toBe(200)
+            expect(res.body.success).toBe(true)
+        })
+
         it("adjusts the schedule commission", async () => {
             const res = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { price: 250000 } })
             expect(res.status).toBe(200)
@@ -362,6 +487,59 @@ describe("Point Submission Module", () => {
         it("rejects adjusting with an invalid price (422)", async () => {
             const res = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { price: -1 } })
             expect(res.status).toBe(422)
+        })
+
+        it("adjusts the schedule anchorDay", async () => {
+            const res = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { anchorDay: 15 } })
+            expect(res.status).toBe(200)
+            expect(res.body.data.anchorDay).toBe(15)
+        })
+
+        it("rejects an out-of-range anchorDay (422)", async () => {
+            const tooLow = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { anchorDay: 0 } })
+            expect(tooLow.status).toBe(422)
+
+            const tooHigh = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { anchorDay: 32 } })
+            expect(tooHigh.status).toBe(422)
+        })
+
+        it("rejects an adjust request with neither price nor anchorDay (422)", async () => {
+            const res = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: {} })
+            expect(res.status).toBe(422)
+        })
+
+        it("does not record history when the adjustment doesn't actually change anything", async () => {
+            const before = await authRequest(`/point-submission/schedule/${scheduleId}/history`, adminToken)
+            const countBefore = before.body.data.length
+
+            const current = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { price: 250000, anchorDay: 15 } })
+            expect(current.status).toBe(200)
+
+            const after = await authRequest(`/point-submission/schedule/${scheduleId}/history`, adminToken)
+            expect(after.body.data.length).toBe(countBefore)
+        })
+
+        it("records adjustment history and retrieves it via GET .../history", async () => {
+            const res = await authRequest(`/point-submission/schedule/${scheduleId}`, adminToken, { method: "PATCH", body: { price: 300000, anchorDay: 20 } })
+            expect(res.status).toBe(200)
+
+            const history = await authRequest(`/point-submission/schedule/${scheduleId}/history`, adminToken)
+            expect(history.status).toBe(200)
+            expect(history.body.success).toBe(true)
+            expect(history.body.data.length).toBeGreaterThan(0)
+
+            const latest = history.body.data[0]
+            expect(latest.toPrice).toBe(300000)
+            expect(latest.toAnchorDay).toBe(20)
+            expect(latest.fromPrice).toBe(250000)
+            expect(latest.fromAnchorDay).toBe(15)
+            expect(latest.changedBy).toEqual({ id: testAdmin.id, name: testAdmin.name })
+            expect(latest.createdAt).toBeTruthy()
+        })
+
+        it("forbids a non-admin from viewing schedule history (403)", async () => {
+            const res = await authRequest(`/point-submission/schedule/${scheduleId}/history`, userToken)
+            expect(res.status).toBe(403)
         })
 
         it("returns 404 when adjusting a non-existent schedule", async () => {
@@ -378,6 +556,15 @@ describe("Point Submission Module", () => {
 
             const second = await authRequest(`/point-submission/schedule/${scheduleId}/stop`, adminToken, { method: "PATCH" })
             expect(second.status).toBe(400)
+        })
+
+        it("filters by stoppedStartDate/stoppedEndDate after the schedule is stopped", async () => {
+            const inRange = await authRequest("/point-submission/schedule?stoppedStartDate=2024-01-01&stoppedEndDate=2099-12-31", adminToken)
+            expect(inRange.status).toBe(200)
+            expect(inRange.body.data.some((s: any) => s.id === scheduleId)).toBe(true)
+
+            const outOfRange = await authRequest("/point-submission/schedule?stoppedStartDate=2099-01-01", adminToken)
+            expect(outOfRange.body.data.some((s: any) => s.id === scheduleId)).toBe(false)
         })
 
         it("returns 404 when stopping a non-existent schedule", async () => {

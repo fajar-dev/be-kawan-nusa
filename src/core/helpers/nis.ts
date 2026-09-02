@@ -21,6 +21,7 @@ export interface NisAccountResult {
     serviceName: string
     accountManager: string | null
     salesEmployeeId: string | null
+    branchCode: string | null
 }
 
 export class NisHelper {
@@ -60,15 +61,17 @@ export class NisHelper {
         const nis = await this.getConnection()
 
         const rows: any[] = await nis.query(`
-            SELECT 
+            SELECT
                 cs.CustServId AS custServId,
                 cs.CustId AS custId,
                 cs.CustAccName AS accountName,
                 cs.ServiceId AS serviceCode,
                 s.serviceType AS serviceName,
-                cs.SalesId AS salesEmployeeId
+                cs.SalesId AS salesEmployeeId,
+                COALESCE(NULLIF(c.DisplayBranchId, ''), c.BranchId) AS branchCode
             FROM CustomerServices cs
             LEFT JOIN Services s ON cs.ServiceId = s.ServiceId
+            LEFT JOIN Customer c ON cs.CustId = c.CustId
             WHERE (cs.CustAccName LIKE ? OR cs.CustId LIKE ?)
               AND cs.CustStatus = 'AC'
             ORDER BY cs.CustAccName ASC
@@ -101,6 +104,7 @@ export class NisHelper {
             serviceName: row.serviceName || '',
             accountManager: row.salesEmployeeId ? (employeeMap.get(String(row.salesEmployeeId)) || null) : null,
             salesEmployeeId: row.salesEmployeeId ? String(row.salesEmployeeId) : null,
+            branchCode: row.branchCode ? String(row.branchCode).trim() : null,
         }))
     }
 

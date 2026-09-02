@@ -33,6 +33,7 @@ import { EmailVerificationToken } from "../modules/auth/entities/email-verificat
 import { OtpToken } from "../modules/auth/entities/otp-token.entity"
 import { PointSubmission } from "../modules/point-submission/entities/point-submission.entity"
 import { PointSubmissionSchedule } from "../modules/point-submission/entities/point-submission-schedule.entity"
+import { PointSubmissionScheduleHistory } from "../modules/point-submission/entities/point-submission-schedule-history.entity"
 import { Notification } from "../modules/notification/entities/notification.entity"
 import { NotificationRead } from "../modules/notification/entities/notification-read.entity"
 import { JobQueue } from "../core/queue/entities/job-queue.entity"
@@ -52,7 +53,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, Role, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, PointSubmissionSchedule, Notification, NotificationRead, JobQueue, JobQueueFailure, Branch],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, Role, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, PointSubmissionSchedule, PointSubmissionScheduleHistory, Notification, NotificationRead, JobQueue, JobQueueFailure, Branch],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",

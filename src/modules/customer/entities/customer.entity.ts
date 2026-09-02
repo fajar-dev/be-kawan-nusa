@@ -5,7 +5,7 @@ import { CustomerEmail } from "./customer-email.entity"
 
 import { CustomerType } from "../customer.enum"
 import { CustomerService as CustomerServiceObject } from "../../customer-service/entities/customer-service.entity"
-import { User } from "../../user/entities/user.entity"
+import { Branch } from "../../branch/entities/branch.entity"
 
 @Entity("customers")
 export class Customer {
@@ -35,6 +35,10 @@ export class Customer {
     @Column({ name: "is_active", default: true })
     isActive!: boolean
 
+    @Index()
+    @Column({ name: "branch_code", nullable: true })
+    branchCode?: string
+
     // Relations
     @OneToMany(() => CustomerPhone, (phone) => phone.customer, { cascade: true })
     phones!: Relation<CustomerPhone[]>
@@ -44,6 +48,10 @@ export class Customer {
 
     @OneToMany(() => CustomerServiceObject, (service) => service.customer)
     services!: Relation<CustomerServiceObject[]>
+
+    @ManyToOne(() => Branch, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: "branch_code", referencedColumnName: "code" })
+    branch?: Relation<Branch>
 
     @CreateDateColumn({ name: "created_at" })
     createdAt!: Date

@@ -156,13 +156,17 @@ Admin side (role `admin`):
 
 | Method | Path | Permission | Notes |
 |--------|------|-----------|-------|
-| GET | `/point-submission` | `point-submission` L | |
+| GET | `/point-submission` | `point-submission` L | Paginated; filters q/status/type/dates + nisData branchCode[]/serviceCode[]/salesEmployeeId[] |
 | GET | `/point-submission/check-account` | `point-submission` L | Duplicate-account check |
 | GET | `/point-submission/:id` | `point-submission` L | |
 | POST | `/point-submission` | `point-submission` T | OTC/Bulanan, recurring option |
 | PUT | `/point-submission/:id` | `point-submission` E | |
 | DELETE | `/point-submission/:id` | `point-submission` H | |
 | POST | `/point-submission/approve` | `point-submission` E | Bulk `{ ids[], notes? }` → enqueues `job_queues` |
+| GET | `/point-submission/schedule` | `point-submission` L | Monthly (Bulanan) recurring schedules; filters q/isActive/branchCode[]/serviceCode[]/stoppedStartDate/stoppedEndDate; sort incl. branchCode/custId/serviceName |
+| PATCH | `/point-submission/schedule/:id` | `point-submission` E | Adjust `{ price?, anchorDay? }` (at least one) — records to schedule history |
+| GET | `/point-submission/schedule/:id/history` | `point-submission` L | Adjustment history: who/when/from/to |
+| PATCH | `/point-submission/schedule/:id/stop` | `point-submission` E | Deactivates the schedule |
 | GET | `/nis/account?q=` | `point-submission` L | Search accounts in NIS DB |
 
 ## Role / RBAC (`/role`) — role `admin`
@@ -204,6 +208,7 @@ account status change (per-user); new article/video/promotion (broadcast).
 | GET | `/additional/service-category` | Bearer | |
 | GET | `/additional/search?q=` | Bearer | Global search → `{ title, module, route }` |
 | GET | `/additional/branch` | Bearer | Branch list (`branches` table) → `{ id, code, name }`, read-only reference data |
+| GET | `/additional/employee` | Bearer | Active employees → `{ code, name }` (code = `employeeId`), used for the Account Manager filter |
 | GET | `/proxy?path=` | - | MinIO object proxy (images/files) |
 
 ## Response Envelope

@@ -30,6 +30,7 @@ export class PointSubmissionSchedule {
         serviceName: string
         accountManager: string
         salesEmployeeId: string | null
+        branchCode: string | null
     }
 
     @Column({ type: "decimal", precision: 15, scale: 2, default: 0 })

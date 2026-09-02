@@ -13,6 +13,7 @@ export const CreatePointSubmissionValidator = z.object({
         serviceName: z.string(),
         accountManager: z.string().nullable(),
         salesEmployeeId: z.string().nullable(),
+        branchCode: z.string().nullable(),
     }),
 })
 
@@ -27,6 +28,7 @@ export const UpdatePointSubmissionValidator = z.object({
         serviceName: z.string(),
         accountManager: z.string().nullable(),
         salesEmployeeId: z.string().nullable(),
+        branchCode: z.string().nullable(),
     }).optional(),
 })
 
@@ -36,7 +38,10 @@ export const ApprovePointSubmissionValidator = z.object({
 })
 
 export const AdjustScheduleValidator = z.object({
-    price: z.number().min(0, "Price must be non-negative"),
+    price: z.number().min(0, "Price must be non-negative").optional(),
+    anchorDay: z.number().int().min(1, "anchorDay must be between 1 and 31").max(31, "anchorDay must be between 1 and 31").optional(),
+}).refine((data) => data.price !== undefined || data.anchorDay !== undefined, {
+    message: "At least one of price or anchorDay must be provided",
 })
 
 export type CreatePointSubmissionValidator = z.infer<typeof CreatePointSubmissionValidator>

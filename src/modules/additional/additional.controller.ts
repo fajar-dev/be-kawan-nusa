@@ -1,13 +1,15 @@
 import { Context } from "hono"
 import { AdditionalService } from "./additional.service"
 import { ServiceService } from "../service/service.service"
+import { EmployeeService } from "../employee/employee.service"
 import { ApiResponse } from "../../core/helpers/response"
 import { AdditionalSerializer } from "./serializers/additional.serialize"
 
 export class AdditionalController {
     constructor(
         private readonly additionalService: AdditionalService,
-        private readonly serviceService: ServiceService
+        private readonly serviceService: ServiceService,
+        private readonly employeeService: EmployeeService
     ) {}
 
     async getServices(c: Context) {
@@ -33,6 +35,12 @@ export class AdditionalController {
     async getServiceCategories(c: Context) {
         const data = await this.additionalService.getServiceCategories()
         return ApiResponse.success(c, AdditionalSerializer.collection(data), "Additional service categories list retrieved successfully")
+    }
+
+    async getEmployees(c: Context) {
+        const employees = await this.employeeService.getActiveEmployees()
+        const data = employees.map(e => ({ code: e.employeeId, name: e.name }))
+        return ApiResponse.success(c, data, "Additional employees list retrieved successfully")
     }
 
     async search(c: Context) {

@@ -33,6 +33,18 @@ export class PointSubmissionRepository implements IPointSubmissionRepository {
             query.andWhere("ps.createdAt <= :endDate", { endDate: filters.endDate })
         }
 
+        if (filters.branchCodes && filters.branchCodes.length > 0) {
+            query.andWhere("JSON_UNQUOTE(JSON_EXTRACT(ps.nisData, '$.branchCode')) IN (:...branchCodes)", { branchCodes: filters.branchCodes })
+        }
+
+        if (filters.serviceCodes && filters.serviceCodes.length > 0) {
+            query.andWhere("JSON_UNQUOTE(JSON_EXTRACT(ps.nisData, '$.serviceCode')) IN (:...serviceCodes)", { serviceCodes: filters.serviceCodes })
+        }
+
+        if (filters.salesEmployeeIds && filters.salesEmployeeIds.length > 0) {
+            query.andWhere("JSON_UNQUOTE(JSON_EXTRACT(ps.nisData, '$.salesEmployeeId')) IN (:...salesEmployeeIds)", { salesEmployeeIds: filters.salesEmployeeIds })
+        }
+
         if (q) {
             query.andWhere(new Brackets((qb) => {
                 qb.where("user.firstName LIKE :q", { q: `%${q}%` })
@@ -42,7 +54,24 @@ export class PointSubmissionRepository implements IPointSubmissionRepository {
             }))
         }
 
-        const sortAlias = sort.includes(".") ? sort : `ps.${sort}`
+        // branchCode/custId/serviceName live inside the nisData JSON column, not as
+        // plain table columns. TypeORM's orderBy() naively splits its string argument
+        // on the first "." to find an alias, which mangles a raw JSON_EXTRACT(...)
+        // expression — so the sort value is added as a SELECT alias instead and
+        // ordered by that alias, which TypeORM handles correctly.
+        const jsonSortPaths: Record<string, string> = {
+            branchCode: "$.branchCode",
+            custId: "$.custId",
+            serviceName: "$.serviceName",
+        }
+        let sortAlias: string
+        if (jsonSortPaths[sort]) {
+            query.addSelect("JSON_UNQUOTE(JSON_EXTRACT(ps.nisData, :sortPath))", "sort_value")
+                .setParameter("sortPath", jsonSortPaths[sort])
+            sortAlias = "sort_value"
+        } else {
+            sortAlias = sort.includes(".") ? sort : `ps.${sort}`
+        }
         query.orderBy(sortAlias, order.toUpperCase() as "ASC" | "DESC")
 
         const [data, total] = await query.take(limit).skip((page - 1) * limit).getManyAndCount()
