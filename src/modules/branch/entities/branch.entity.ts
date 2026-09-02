@@ -1,0 +1,19 @@
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm"
+
+@Entity("branches")
+export class Branch {
+    @PrimaryGeneratedColumn()
+    id!: number
+
+    @Column({ unique: true })
+    code!: string
+
+    @Column()
+    name!: string
+
+    @CreateDateColumn({ name: "created_at" })
+    createdAt!: Date
+
+    @UpdateDateColumn({ name: "updated_at" })
+    updatedAt!: Date
+}

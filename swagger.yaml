@@ -5014,6 +5014,30 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedResponse"
 
+  /additional/branch:
+    get:
+      summary: List all branches (for dropdowns/filters)
+      tags: [Additional]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Branches retrieved
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Branches retrieved successfully"
+                data:
+                  - id: 1
+                    code: "MDN"
+                    name: "Medan"
+                  - id: 2
+                    code: "JKT"
+                    name: "Jakarta"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
   /additional/search:
     get:
       summary: Global search across modules (Customer, Service, Education)

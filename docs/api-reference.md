@@ -203,6 +203,7 @@ account status change (per-user); new article/video/promotion (broadcast).
 | GET | `/additional/point-type` | Bearer | |
 | GET | `/additional/service-category` | Bearer | |
 | GET | `/additional/search?q=` | Bearer | Global search → `{ title, module, route }` |
+| GET | `/additional/branch` | Bearer | Branch list (`branches` table) → `{ id, code, name }`, read-only reference data |
 | GET | `/proxy?path=` | - | MinIO object proxy (images/files) |
 
 ## Response Envelope
