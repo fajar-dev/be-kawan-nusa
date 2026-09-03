@@ -20,6 +20,7 @@
     "@hono/zod-validator": "^0.7.6",
     "axios": "^1.17.0",
     "bcryptjs": "^3.0.3",
+    "exceljs": "^4.4.0",
     "google-auth-library": "^10.7.0",
     "hono": "^4.12.8",
     "hono-rate-limiter": "^0.5.3",
