@@ -19,6 +19,7 @@ export const PERMISSION_MODULES = [
     { key: 'education', label: 'Konten Edukasi', group: 'Konten Edukasi', actions: ['L', 'T', 'E', 'H'] },
     { key: 'employee', label: 'Manajemen Karyawan', group: 'Manajemen Karyawan', actions: ['L', 'T', 'E', 'H'] },
     { key: 'role', label: 'Pengaturan Akses', group: 'Pengaturan Akses', actions: ['L', 'T', 'E', 'H'] },
+    { key: 'report', label: 'Unduh Laporan', group: 'Unduh Laporan', actions: ['L'] },
 ]
 
 export class RoleService {

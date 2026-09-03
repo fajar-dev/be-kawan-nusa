@@ -24,6 +24,7 @@ const FULL_PERMISSIONS: Record<string, string[]> = {
     employee: ALL_ACTIONS,
     role: ALL_ACTIONS,
     "rate-commission": ALL_ACTIONS,
+    report: ALL_ACTIONS,
 }
 
 export async function createTestUser(overrides: Partial<User> = {}): Promise<User> {

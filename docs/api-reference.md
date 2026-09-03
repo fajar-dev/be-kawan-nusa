@@ -185,6 +185,30 @@ the same service+category fails with 400; edit the existing row instead.
 | GET | `/rate-commission/histories` | `rate-commission` L | Global change log across all rate commissions; paginated, `q` searches service name/code or changer name |
 | DELETE | `/rate-commission/:id` | `rate-commission` H | |
 
+## Report (`/report`) — role `admin`
+
+Read-only reconciliation reports over existing redemption/point/referral data — no report-specific
+tables besides an audit log of downloads. `type` is one of `cash_redemption`,
+`product_voucher_redemption`, `referral_point`, `point_balance`; each has its own column set and
+query params (see `swagger.yaml` for the full parameter list: date range or snapshot date, date
+basis, branchCode/serviceCode filters, status filters, includeSummary, maskSensitive).
+
+Two modeling notes worth knowing before touching this module:
+- There is no direct `User → Branch` relation, so a referral user's "Cabang" for reporting purposes
+  is derived from the branch of their **most recently referred customer**
+  (`User → CustomerServiceReferral → CustomerService → Customer → Branch`). A user with no referrals
+  shows as "Tanpa Cabang".
+- `point_balance`'s per-date balance is reconstructed from `points.point` issued and
+  `redemptions.pointsUsed` used up to the snapshot date — it does **not** account for point expiry
+  (`expire-points` job) between the snapshot date and today, since there is no point ledger table.
+  This is a documented approximation, not a bug.
+
+| Method | Path | Permission | Notes |
+|--------|------|-----------|-------|
+| GET | `/report/preview?type=` | `report` L | First 20 rows + `totalRows`/`truncated`, for a quick look before downloading |
+| GET | `/report/download?type=&format=` | `report` L | Streams the XLSX/CSV file directly (not stored in MinIO — ephemeral, may contain bank/NPWP data); logs to `report_download_histories` |
+| GET | `/report/histories` | `report` L | Paginated audit log of past downloads; `q` searches period label or downloader name |
+
 ## Role / RBAC (`/role`) — role `admin`
 
 | Method | Path | Permission | Notes |

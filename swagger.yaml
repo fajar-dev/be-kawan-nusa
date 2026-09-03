@@ -1092,6 +1092,61 @@ components:
       in: query
       description: Search keyword
       schema: { type: string, example: "nusanet" }
+    ReportTypeParam:
+      name: type
+      in: query
+      required: true
+      description: Which report to generate
+      schema: { type: string, enum: [cash_redemption, product_voucher_redemption, referral_point, point_balance] }
+    ReportDateFromParam:
+      name: dateFrom
+      in: query
+      description: Period start date (YYYY-MM-DD). Ignored for point_balance.
+      schema: { type: string, format: date }
+    ReportDateToParam:
+      name: dateTo
+      in: query
+      description: Period end date (YYYY-MM-DD). Ignored for point_balance.
+      schema: { type: string, format: date }
+    ReportSnapshotDateParam:
+      name: snapshotDate
+      in: query
+      description: Balance snapshot date (YYYY-MM-DD). Only used by point_balance; defaults to today.
+      schema: { type: string, format: date }
+    ReportBasisParam:
+      name: basis
+      in: query
+      description: Whether date filters apply to the submission date or the completion/approval date. Ignored for point_balance.
+      schema: { type: string, enum: [submission, completion], default: submission }
+    ReportBranchCodeParam:
+      name: branchCode
+      in: query
+      description: Filter to referral users whose most recently referred customer belongs to this branch
+      schema: { type: string }
+    ReportServiceCodeParam:
+      name: serviceCode
+      in: query
+      description: Filter to referral users who have referred this service at least once
+      schema: { type: string }
+    ReportStatusesParam:
+      name: statuses[]
+      in: query
+      description: >-
+        Status filter, repeatable. Values depend on report type — cash_redemption:
+        belum_transfer/sudah_transfer; product_voucher_redemption: pending/diproses/selesai;
+        referral_point: belum_disetujui/sudah_disetujui/ditolak; point_balance: aktif/nonaktif.
+        Omit for all statuses.
+      schema: { type: array, items: { type: string } }
+    ReportIncludeSummaryParam:
+      name: includeSummary
+      in: query
+      description: Include per-branch subtotal rows and a grand total row
+      schema: { type: boolean, default: false }
+    ReportMaskSensitiveParam:
+      name: maskSensitive
+      in: query
+      description: Mask all but the last 4 characters of bank account numbers and NPWP
+      schema: { type: boolean, default: false }
     SortParam:
       name: sort
       in: query
@@ -6579,6 +6634,130 @@ paths:
           description: Forbidden - admin role required
 
   # =============================================
+  # REPORT ROUTES (Admin)
+  # =============================================
+  /report/preview:
+    get:
+      summary: Preview a report before downloading (admin)
+      description: >-
+        Returns the first 20 rows of the requested report type plus the total row
+        count, so the UI can render a quick table before committing to a download.
+        `type` selects which report is generated: cash_redemption, product_voucher_redemption,
+        referral_point, or point_balance — each returns a different set of columns.
+        Admin only; requires permission report (L).
+      tags: [Report]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ReportTypeParam"
+        - $ref: "#/components/parameters/ReportDateFromParam"
+        - $ref: "#/components/parameters/ReportDateToParam"
+        - $ref: "#/components/parameters/ReportSnapshotDateParam"
+        - $ref: "#/components/parameters/ReportBasisParam"
+        - $ref: "#/components/parameters/ReportBranchCodeParam"
+        - $ref: "#/components/parameters/ReportServiceCodeParam"
+        - $ref: "#/components/parameters/ReportStatusesParam"
+        - $ref: "#/components/parameters/ReportIncludeSummaryParam"
+        - $ref: "#/components/parameters/ReportMaskSensitiveParam"
+      responses:
+        "200":
+          description: Report preview generated successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Report preview generated successfully"
+                data:
+                  columns:
+                    - { header: "No. Transaksi", key: "noTransaksi" }
+                    - { header: "Cabang", key: "cabang" }
+                  rows:
+                    - { noTransaksi: "RED-20260805-0002", cabang: "Medan" }
+                  totalRows: 42
+                  truncated: true
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "422":
+          description: Validation error (e.g. unknown report type)
+
+  /report/download:
+    get:
+      summary: Generate and download a report file (admin)
+      description: >-
+        Streams the generated XLSX or CSV file directly (not stored in MinIO — these
+        are ephemeral, regenerable, and may contain sensitive data such as bank
+        accounts and NPWP). Every call is logged to report_download_histories.
+        Admin only; requires permission report (L).
+      tags: [Report]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ReportTypeParam"
+        - $ref: "#/components/parameters/ReportDateFromParam"
+        - $ref: "#/components/parameters/ReportDateToParam"
+        - $ref: "#/components/parameters/ReportSnapshotDateParam"
+        - $ref: "#/components/parameters/ReportBasisParam"
+        - $ref: "#/components/parameters/ReportBranchCodeParam"
+        - $ref: "#/components/parameters/ReportServiceCodeParam"
+        - $ref: "#/components/parameters/ReportStatusesParam"
+        - $ref: "#/components/parameters/ReportIncludeSummaryParam"
+        - $ref: "#/components/parameters/ReportMaskSensitiveParam"
+        - name: format
+          in: query
+          description: File format. Defaults to xlsx.
+          schema: { type: string, enum: [xlsx, csv] }
+      responses:
+        "200":
+          description: Binary file stream (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet or text/csv)
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "422":
+          description: Validation error (e.g. unknown report type)
+
+  /report/histories:
+    get:
+      summary: List past report downloads (admin)
+      description: "Audit trail of every report generated via GET /report/download, newest first. Admin only; requires permission report (L)."
+      tags: [Report]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: q
+          in: query
+          description: Search by period label or by the name of whoever downloaded it
+          schema: { type: string }
+      responses:
+        "200":
+          description: Report download histories retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Report download histories retrieved successfully"
+                data:
+                  - id: 1
+                    type: "cash_redemption"
+                    format: "xlsx"
+                    periodLabel: "1 – 31 Agustus 2026"
+                    filters: { branchCode: "MDN", includeSummary: true }
+                    requestedBy: { id: 3, name: "Putri Malum Gultom" }
+                    createdAt: "2026-08-31T10:00:00.000Z"
+                meta:
+                  total: 1
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 1
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+
+  # =============================================
   # ROLE MANAGEMENT ROUTES (Admin)
   # =============================================
   /role:
@@ -6958,3 +7137,5 @@ tags:
     description: Admin endpoints for managing roles, permissions, and employee assignments
   - name: RateCommission
     description: Admin endpoints for managing per-service commission rates (OTC/Bulanan)
+  - name: Report
+    description: Admin endpoints for previewing and downloading reconciliation reports (XLSX/CSV)

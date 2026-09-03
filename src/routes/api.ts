@@ -46,6 +46,7 @@ import { roleController } from "../modules/role/role.module"
 import { notificationController } from "../modules/notification/notification.module"
 import { branchController } from "../modules/branch/branch.module"
 import { rateCommissionController } from "../modules/rate-commission/rate-commission.module"
+import { reportController } from "../modules/report/report.module"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const routes = new Hono()
@@ -217,6 +218,11 @@ routes.get("/rate-commission/:id/history", authMiddleware, roleMiddleware('admin
 routes.post("/rate-commission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'T'), zValidator("json", CreateRateCommissionValidator, validationHook), (c) => rateCommissionController.store(c))
 routes.put("/rate-commission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'E'), zValidator("json", UpdateRateCommissionValidator, validationHook), (c) => rateCommissionController.update(c))
 routes.delete("/rate-commission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'H'), (c) => rateCommissionController.destroy(c))
+
+// Report
+routes.get("/report/preview", authMiddleware, roleMiddleware('admin'), permissionMiddleware('report', 'L'), (c) => reportController.preview(c))
+routes.get("/report/download", authMiddleware, roleMiddleware('admin'), permissionMiddleware('report', 'L'), (c) => reportController.download(c))
+routes.get("/report/histories", authMiddleware, roleMiddleware('admin'), permissionMiddleware('report', 'L'), (c) => reportController.histories(c))
 
 // Role Management (admin only)
 const roleRoutes = new Hono()
