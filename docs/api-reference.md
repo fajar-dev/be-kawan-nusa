@@ -169,6 +169,22 @@ Admin side (role `admin`):
 | PATCH | `/point-submission/schedule/:id/stop` | `point-submission` E | Deactivates the schedule |
 | GET | `/nis/account?q=` | `point-submission` L | Search accounts in NIS DB |
 
+## Rate Commission (`/rate-commission`) — role `admin`
+
+A service may have at most **one** rate per category (OTC / Bulanan) — creating a second one for
+the same service+category fails with 400; edit the existing row instead.
+
+| Method | Path | Permission | Notes |
+|--------|------|-----------|-------|
+| GET | `/rate-commission` | `rate-commission` L | Paginated; filters q/category/type/startDateFrom/startDateTo, sort incl. service/value/type/startDate/endDate |
+| GET | `/rate-commission/taken-services?category=` | `rate-commission` L | Service codes already used for that category (for the create form) |
+| GET | `/rate-commission/:id` | `rate-commission` L | |
+| POST | `/rate-commission` | `rate-commission` T | `{ serviceCode, category, value, type, startDate, endDate?, notes? }` |
+| PUT | `/rate-commission/:id` | `rate-commission` E | Partial update; re-validates the one-rate-per-category rule if serviceCode/category changes; records to `rate_commission_histories` |
+| GET | `/rate-commission/:id/history` | `rate-commission` L | Change history for one rate: who/when/from/to for value/type/startDate/endDate |
+| GET | `/rate-commission/histories` | `rate-commission` L | Global change log across all rate commissions; paginated, `q` searches service name/code or changer name |
+| DELETE | `/rate-commission/:id` | `rate-commission` H | |
+
 ## Role / RBAC (`/role`) — role `admin`
 
 | Method | Path | Permission | Notes |

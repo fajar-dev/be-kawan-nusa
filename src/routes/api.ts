@@ -11,6 +11,7 @@ import { CreateEducationCategoryValidator, UpdateEducationCategoryValidator } fr
 import { CreateCatalogCategoryValidator, UpdateCatalogCategoryValidator } from "../modules/catalog-category/validators/catalog-category.validator"
 import { CreatePointSubmissionValidator, UpdatePointSubmissionValidator, ApprovePointSubmissionValidator, AdjustScheduleValidator } from "../modules/point-submission/validators/point-submission.validator"
 import { UpdateUserStatusValidator } from "../modules/user/validators/user.validator"
+import { CreateRateCommissionValidator, UpdateRateCommissionValidator } from "../modules/rate-commission/validators/rate-commission.validator"
 
 // ── Middlewares ──────────────────────────────────────────────────────────────
 import { authMiddleware } from "../core/middlewares/auth.middleware"
@@ -44,6 +45,7 @@ import { pointSubmissionController } from "../modules/point-submission/point-sub
 import { roleController } from "../modules/role/role.module"
 import { notificationController } from "../modules/notification/notification.module"
 import { branchController } from "../modules/branch/branch.module"
+import { rateCommissionController } from "../modules/rate-commission/rate-commission.module"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const routes = new Hono()
@@ -205,6 +207,16 @@ routes.post("/point-submission/approve", authMiddleware, roleMiddleware('admin')
 
 // NIS (Admin)
 routes.get("/nis/account", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.searchNisAccounts(c))
+
+// Rate Commission (Admin)
+routes.get("/rate-commission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'L'), (c) => rateCommissionController.index(c))
+routes.get("/rate-commission/taken-services", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'L'), (c) => rateCommissionController.takenServices(c))
+routes.get("/rate-commission/histories", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'L'), (c) => rateCommissionController.allHistories(c))
+routes.get("/rate-commission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'L'), (c) => rateCommissionController.show(c))
+routes.get("/rate-commission/:id/history", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'L'), (c) => rateCommissionController.histories(c))
+routes.post("/rate-commission", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'T'), zValidator("json", CreateRateCommissionValidator, validationHook), (c) => rateCommissionController.store(c))
+routes.put("/rate-commission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'E'), zValidator("json", UpdateRateCommissionValidator, validationHook), (c) => rateCommissionController.update(c))
+routes.delete("/rate-commission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('rate-commission', 'H'), (c) => rateCommissionController.destroy(c))
 
 // Role Management (admin only)
 const roleRoutes = new Hono()

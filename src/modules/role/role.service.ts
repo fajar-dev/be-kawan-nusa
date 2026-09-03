@@ -11,6 +11,7 @@ export const PERMISSION_MODULES = [
     { key: 'point-submission', label: 'Input Poin', group: 'Input Poin Referral', actions: ['L', 'T', 'E', 'H'] },
     { key: 'point-submission.history', label: 'Riwayat Poin', group: 'Input Poin Referral', actions: ['L', 'T', 'E', 'H'] },
     { key: 'point-submission.request', label: 'Permintaan Penukaran', group: 'Input Poin Referral', actions: ['L', 'T', 'E'] },
+    { key: 'rate-commission', label: 'Rate Komisi', group: 'Rate Komisi', actions: ['L', 'T', 'E', 'H'] },
     { key: 'redemption.cash', label: 'Tunai', group: 'Tukar Poin', actions: ['L', 'T', 'E', 'H'] },
     { key: 'redemption.product', label: 'Produk', group: 'Tukar Poin', actions: ['L', 'T', 'E', 'H'] },
     { key: 'redemption.voucher', label: 'Voucher', group: 'Tukar Poin', actions: ['L', 'T', 'E', 'H'] },

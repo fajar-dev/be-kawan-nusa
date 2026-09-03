@@ -39,6 +39,8 @@ import { NotificationRead } from "../modules/notification/entities/notification-
 import { JobQueue } from "../core/queue/entities/job-queue.entity"
 import { JobQueueFailure } from "../core/queue/entities/job-queue-failure.entity"
 import { Branch } from "../modules/branch/entities/branch.entity"
+import { RateCommission } from "../modules/rate-commission/entities/rate-commission.entity"
+import { RateCommissionHistory } from "../modules/rate-commission/entities/rate-commission-history.entity"
 import { config } from "./config"
 
 /**
@@ -53,7 +55,7 @@ export const AppDataSource = new DataSource({
     password: config.database.pass,
     database: config.database.name,
     synchronize: config.database.sync,
-    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, Role, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, PointSubmissionSchedule, PointSubmissionScheduleHistory, Notification, NotificationRead, JobQueue, JobQueueFailure, Branch],
+    entities: [Customer, CustomerPhone, CustomerEmail, Service, CustomerService, CustomerServiceReferral, User, UserStatusHistory, Point, Catalog, CatalogStockHistory, CatalogCategory, Redemption, RedemptionWithdraw, RedemptionVoucher, RedemptionProduct, RedemptionProductShipping, RedemptionVoucherDetail, RedemptionStatusHistory, EducationCategory, EducationArticle, EducationArticleView, EducationVideo, EducationVideoView, ServicePromotion, Template, Employee, Role, PasswordResetToken, EmailVerificationToken, OtpToken, PointSubmission, PointSubmissionSchedule, PointSubmissionScheduleHistory, Notification, NotificationRead, JobQueue, JobQueueFailure, Branch, RateCommission, RateCommissionHistory],
     migrations: [],
     subscribers: [],
     connectorPackage: "mysql2",
