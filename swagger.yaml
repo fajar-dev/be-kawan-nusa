@@ -6290,6 +6290,295 @@ paths:
           description: Forbidden - admin role required
 
   # =============================================
+  # RATE COMMISSION ROUTES (Admin)
+  # =============================================
+  /rate-commission:
+    get:
+      summary: List rate commissions (admin)
+      description: "A service may have at most one rate per category (OTC/Bulanan). Admin only; requires permission rate-commission (L)."
+      tags: [RateCommission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - $ref: "#/components/parameters/SortParam"
+        - $ref: "#/components/parameters/OrderParam"
+        - name: category
+          in: query
+          schema: { type: string, enum: [OTC, Bulanan] }
+        - name: type
+          in: query
+          description: Filter by commission type
+          schema: { type: string, enum: [percentage, flat] }
+        - name: startDateFrom
+          in: query
+          description: Only rates whose startDate is on/after this date
+          schema: { type: string, format: date }
+        - name: startDateTo
+          in: query
+          description: Only rates whose startDate is on/before this date
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Rate commissions retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Rate commissions retrieved successfully"
+                data:
+                  - id: 1
+                    category: "OTC"
+                    value: 10
+                    type: "percentage"
+                    startDate: "2025-01-01"
+                    endDate: null
+                    notes: null
+                    service: { code: "SVC001", name: "Internet 50Mbps" }
+                    createdBy: { id: 2, name: "Admin Nusanet" }
+                    createdAt: "2025-01-01T07:00:00.000Z"
+                    updatedAt: "2025-01-01T07:00:00.000Z"
+                meta:
+                  total: 1
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 1
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+    post:
+      summary: Create a rate commission (admin)
+      description: "Fails with 400 if the service already has a rate for that category — edit the existing one instead. Admin only; requires permission rate-commission (T)."
+      tags: [RateCommission]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serviceCode, category, value, type, startDate]
+              properties:
+                serviceCode: { type: string, example: "SVC001" }
+                category: { type: string, enum: [OTC, Bulanan], example: "OTC" }
+                value: { type: number, minimum: 0, example: 10 }
+                type: { type: string, enum: [percentage, flat], example: "percentage" }
+                startDate: { type: string, format: date, example: "2025-01-01" }
+                endDate: { type: string, format: date, nullable: true, example: null, description: "Omit/null = berlaku selamanya" }
+                notes: { type: string, nullable: true, example: null }
+      responses:
+        "200":
+          description: Rate commission created successfully
+        "400":
+          description: Service already has a rate for this category, or endDate before startDate, or percentage value > 100
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  /rate-commission/taken-services:
+    get:
+      summary: List service codes that already have a rate for a category (admin)
+      description: "Used by the create form to exclude services that can't be picked again for that category. Admin only; requires permission rate-commission (L)."
+      tags: [RateCommission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: category
+          in: query
+          required: true
+          schema: { type: string, enum: [OTC, Bulanan] }
+      responses:
+        "200":
+          description: Taken service codes retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Taken service codes retrieved successfully"
+                data: ["SVC001", "SVC002"]
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /rate-commission/{id}:
+    get:
+      summary: Get a rate commission by id (admin)
+      tags: [RateCommission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Rate commission retrieved successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+    put:
+      summary: Update a rate commission (admin)
+      description: "Changing serviceCode/category is allowed but re-validated against the one-rate-per-category rule. Every actual change to value/type/startDate/endDate is recorded to rate_commission_histories (see GET .../history). Admin only; requires permission rate-commission (E)."
+      tags: [RateCommission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                serviceCode: { type: string }
+                category: { type: string, enum: [OTC, Bulanan] }
+                value: { type: number, minimum: 0 }
+                type: { type: string, enum: [percentage, flat] }
+                startDate: { type: string, format: date }
+                endDate: { type: string, format: date, nullable: true }
+                notes: { type: string, nullable: true }
+      responses:
+        "200":
+          description: Rate commission updated successfully
+        "400":
+          description: Service already has a rate for this category, or invalid date range/value
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+    delete:
+      summary: Delete a rate commission (admin)
+      description: "Admin only; requires permission rate-commission (H)."
+      tags: [RateCommission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Rate commission deleted successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+
+  /rate-commission/{id}/history:
+    get:
+      summary: List a rate commission's change history (admin)
+      description: "Every value/type/startDate/endDate change made via PUT .../rate-commission/{id}, newest first — who changed it and the before/after values. Admin only; requires permission rate-commission (L)."
+      tags: [RateCommission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+          example: 1
+      responses:
+        "200":
+          description: Rate commission histories retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Rate commission histories retrieved successfully"
+                data:
+                  - id: 1
+                    action: "updated"
+                    fromValue: 5
+                    toValue: 10
+                    fromType: "percentage"
+                    toType: "percentage"
+                    fromStartDate: "2025-01-01"
+                    toStartDate: "2025-01-01"
+                    fromEndDate: null
+                    toEndDate: null
+                    notes: "Adjusted after Q2 review"
+                    service: { code: "SVC001", name: "Internet 50Mbps" }
+                    category: "OTC"
+                    changedBy: { id: 2, name: "Admin Nusanet" }
+                    createdAt: "2025-06-10T08:00:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+        "404":
+          $ref: "#/components/responses/NotFoundResponse"
+
+  /rate-commission/histories:
+    get:
+      summary: Global change log across all rate commissions (admin)
+      description: >-
+        Every "created" and "updated" event for every rate commission, newest first.
+        `action` is "created" (fromValue/fromType/fromStartDate/fromEndDate are null —
+        there is no prior state) or "updated". Admin only; requires permission
+        rate-commission (L).
+      tags: [RateCommission]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: q
+          in: query
+          description: Search by service name/code or by the name of whoever made the change
+          schema: { type: string }
+      responses:
+        "200":
+          description: Rate commission histories retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Rate commission histories retrieved successfully"
+                data:
+                  - id: 2
+                    action: "created"
+                    fromValue: null
+                    toValue: 50000
+                    fromType: null
+                    toType: "flat"
+                    fromStartDate: null
+                    toStartDate: "2025-12-28"
+                    fromEndDate: null
+                    toEndDate: null
+                    notes: "Rate awal peluncuran program Kawan Nusa."
+                    service: { code: "SVC002", name: "Internet Dedicated 100 Mbps" }
+                    category: "Bulanan"
+                    changedBy: { id: 3, name: "Putri Malum Gultom" }
+                    createdAt: "2025-12-28T15:00:00.000Z"
+                meta:
+                  total: 6
+                  perPage: 10
+                  currentPage: 1
+                  lastPage: 1
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+
+  # =============================================
   # ROLE MANAGEMENT ROUTES (Admin)
   # =============================================
   /role:
@@ -6667,3 +6956,5 @@ tags:
     description: Admin endpoints for managing point submissions and NIS account search
   - name: Role
     description: Admin endpoints for managing roles, permissions, and employee assignments
+  - name: RateCommission
+    description: Admin endpoints for managing per-service commission rates (OTC/Bulanan)
