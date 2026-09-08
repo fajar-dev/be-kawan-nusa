@@ -47,6 +47,7 @@ import { notificationController } from "../modules/notification/notification.mod
 import { branchController } from "../modules/branch/branch.module"
 import { rateCommissionController } from "../modules/rate-commission/rate-commission.module"
 import { reportController } from "../modules/report/report.module"
+import { pointAdjustmentController } from "../modules/point-adjustment/point-adjustment.module"
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const routes = new Hono()
@@ -205,6 +206,15 @@ routes.post("/point-submission", authMiddleware, roleMiddleware('admin'), permis
 routes.put("/point-submission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'E'), zValidator("json", UpdatePointSubmissionValidator, validationHook), (c) => pointSubmissionController.update(c))
 routes.delete("/point-submission/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'H'), (c) => pointSubmissionController.destroy(c))
 routes.post("/point-submission/approve", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'E'), zValidator("json", ApprovePointSubmissionValidator, validationHook), (c) => pointSubmissionController.approve(c))
+
+// Point Adjustment (Admin) — "Penyesuaian Poin"
+routes.get("/point-adjustment/eligible-submissions", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-adjustment', 'T'), (c) => pointAdjustmentController.eligibleSubmissions(c))
+routes.get("/point-adjustment/counts", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-adjustment', 'L'), (c) => pointAdjustmentController.counts(c))
+routes.get("/point-adjustment", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-adjustment', 'L'), (c) => pointAdjustmentController.index(c))
+routes.get("/point-adjustment/:id", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-adjustment', 'L'), (c) => pointAdjustmentController.show(c))
+routes.post("/point-adjustment", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-adjustment', 'T'), (c) => pointAdjustmentController.store(c))
+routes.patch("/point-adjustment/:id/review", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-adjustment', 'E'), (c) => pointAdjustmentController.review(c))
+routes.patch("/point-adjustment/:id/resubmit", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-adjustment', 'E'), (c) => pointAdjustmentController.resubmit(c))
 
 // NIS (Admin)
 routes.get("/nis/account", authMiddleware, roleMiddleware('admin'), permissionMiddleware('point-submission', 'L'), (c) => pointSubmissionController.searchNisAccounts(c))

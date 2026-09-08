@@ -6345,6 +6345,212 @@ paths:
           description: Forbidden - admin role required
 
   # =============================================
+  # POINT ADJUSTMENT ROUTES (Admin) — "Penyesuaian Poin"
+  # =============================================
+  /point-adjustment/eligible-submissions:
+    get:
+      summary: List this employee's own pending submissions with no open adjustment (admin)
+      description: "Feeds the create-request dropdown. Admin only; requires permission point-adjustment (T)."
+      tags: [PointAdjustment]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Eligible point submissions retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Eligible point submissions retrieved successfully"
+                data:
+                  - id: 42
+                    accountName: "PT Nusanet"
+                    custId: "CUST001"
+                    serviceName: "Internet 50Mbps"
+                    type: "OTC"
+                    branchName: "Jakarta"
+                    currentValue: 100000
+                    currentPoint: 100
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - admin role required
+
+  /point-adjustment/counts:
+    get:
+      summary: Per-tab counts for adjustments involving this employee (admin)
+      description: "Requires permission point-adjustment (L)."
+      tags: [PointAdjustment]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Point adjustment counts retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Point adjustment counts retrieved successfully"
+                data: { menunggu_sm: 1, perlu_revisi: 1, diproses: 1, selesai: 3 }
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+
+  /point-adjustment:
+    get:
+      summary: List point adjustments involving this employee (admin)
+      description: "Scoped to requests you created or must approve. Admin only; requires permission point-adjustment (L)."
+      tags: [PointAdjustment]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: tab
+          in: query
+          schema: { type: string, enum: [menunggu_sm, perlu_revisi, diproses, selesai] }
+      responses:
+        "200":
+          description: Point adjustments retrieved successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+    post:
+      summary: Request a correction to a pending point submission's commission value (admin)
+      description: "Only the employee who created the submission may request this. Approval is routed to that employee's own manager (Employee.managerId) — fails with 400 if none is configured, or if an open request already exists for the same submission. Admin only; requires permission point-adjustment (T)."
+      tags: [PointAdjustment]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pointSubmissionId, toValue, reason]
+              properties:
+                pointSubmissionId: { type: integer, example: 42 }
+                toValue: { type: number, minimum: 0, example: 80000 }
+                reason: { type: string, example: "Koreksi nilai kontrak final" }
+      responses:
+        "200":
+          description: Point adjustment submitted successfully
+        "400":
+          description: Submission isn't pending, requester has no manager configured, or an open request already exists
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - not your own submission
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  /point-adjustment/{id}:
+    get:
+      summary: Get one point adjustment with its full audit trail (admin)
+      description: "403 unless you're the requester or the assigned approver. Admin only; requires permission point-adjustment (L)."
+      tags: [PointAdjustment]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Point adjustment retrieved successfully
+          content:
+            application/json:
+              example:
+                success: true
+                statusCode: 200
+                message: "Point adjustment retrieved successfully"
+                data:
+                  id: 7
+                  code: "PSN-2026-0012"
+                  status: "pending_approval"
+                  fromValue: 100000
+                  toValue: 80000
+                  fromPoint: 100
+                  toPoint: 80
+                  reason: "Koreksi nilai kontrak final"
+                  reviewNote: null
+                  pointSubmission: { id: 42, accountName: "PT Nusanet", custId: "CUST001", serviceName: "Internet 50Mbps", type: "OTC" }
+                  branchName: "Jakarta"
+                  requestedBy: { id: 5, name: "Firtana Alfarsy" }
+                  approver: { id: 2, name: "Yusuf Maulana" }
+                  histories:
+                    - { id: 1, action: "submitted", note: null, actor: { id: 5, name: "Firtana Alfarsy" }, createdAt: "2026-08-30T04:10:00.000Z" }
+                  createdAt: "2026-08-30T04:10:00.000Z"
+                  updatedAt: "2026-08-30T04:10:00.000Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - not the requester or assigned approver
+
+  /point-adjustment/{id}/review:
+    patch:
+      summary: Approve or return a pending adjustment request for revision (admin)
+      description: "Only the assigned approver (the requester's manager) may act. On approve, the linked submission's price/point are overwritten with the adjusted value and it re-enters the normal Input Poin queue. `note` is required when rejecting. Admin only; requires permission point-adjustment (E)."
+      tags: [PointAdjustment]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [approve, reject] }
+                note: { type: string, description: "Required when action=reject", example: "Lampirkan bukti pembayaran final dulu" }
+      responses:
+        "200":
+          description: Point adjustment reviewed successfully
+        "400":
+          description: Not pending approval, or note missing on reject
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - not the assigned approver
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  /point-adjustment/{id}/resubmit:
+    patch:
+      summary: Resubmit a request that was returned for revision (admin)
+      description: "Only the original requester may act, only while status is needs_revision — goes back to pending_approval for the same approver. Admin only; requires permission point-adjustment (E)."
+      tags: [PointAdjustment]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [toValue, reason]
+              properties:
+                toValue: { type: number, minimum: 0, example: 88000 }
+                reason: { type: string, example: "Pembayaran final terkonfirmasi Rp88.000" }
+      responses:
+        "200":
+          description: Point adjustment resubmitted successfully
+        "400":
+          description: Not currently needs_revision
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          description: Forbidden - not the original requester
+        "422":
+          $ref: "#/components/responses/ValidationErrorResponse"
+
+  # =============================================
   # RATE COMMISSION ROUTES (Admin)
   # =============================================
   /rate-commission:
@@ -7139,3 +7345,5 @@ tags:
     description: Admin endpoints for managing per-service commission rates (OTC/Bulanan)
   - name: Report
     description: Admin endpoints for previewing and downloading reconciliation reports (XLSX/CSV)
+  - name: PointAdjustment
+    description: Admin endpoints for requesting and reviewing corrections to pending point submissions ("Penyesuaian Poin"), approved by the requester's own manager

@@ -41,10 +41,10 @@ MinIO (object storage), IS5 (partner sync on user approval), `FEEDBACK_URL` (Goo
 
 Read [docs/architecture.md](docs/architecture.md). Key points:
 
-- **25 feature modules** in `src/modules/` (auth, profile, user, employee, role, customer,
-  customer-service, service, service-promotion, point, point-submission, redemption, catalog,
-  catalog-category, education-article, education-video, education-category, template, feedback,
-  statistic, additional, notification, branch, rate-commission, report).
+- **26 feature modules** in `src/modules/` (auth, profile, user, employee, role, customer,
+  customer-service, service, service-promotion, point, point-submission, point-adjustment,
+  redemption, catalog, catalog-category, education-article, education-video, education-category,
+  template, feedback, statistic, additional, notification, branch, rate-commission, report).
 - **Manual constructor injection** — no DI container. Wiring happens in each `{module}.module.ts`
   (composition root) which exports the controller singleton.
 - Module pattern: `entities/` → `interfaces/{name}.repository.interface.ts` →
@@ -89,13 +89,25 @@ from their assigned `Role.permissions` (`Record<module, ('L'|'T'|'E'|'H')[]>`), 
   job then creates a NEW pending submission each month (backfills missed months, clamps
   day-of-month) which an admin must approve. A schedule runs until stopped (`isActive=false`,
   via `PATCH /point-submission/schedule/:id/stop`) — there is no end date.
+- **Point Adjustment (`point-adjustment` module, "Penyesuaian Poin")** — the employee who created
+  a still-`pending` `PointSubmission` can request a correction to its commission value; approval
+  is routed to that requester's own manager (`Employee.managerId`), never a fixed role. While a
+  request is open (`pending_approval`/`needs_revision`) the submission is excluded from the normal
+  admin approve queue (`point-submission.repository.ts` `findAll()` filters this out, and
+  `point-submission.service.ts` `update()`/`delete()`/`approve()` re-check it server-side).
+  On manager approval the submission's `price`/`point` are overwritten with the adjusted values
+  and it re-enters the normal queue for an admin to approve as usual; `PointSubmissionService`
+  then calls `pointAdjustmentService.markCreditedIfLinked()` right after
+  `createPointFromSubmission()` succeeds, flipping the adjustment to `completed`. Adjusted
+  submissions are tagged "Disesuaikan" in the Rekap Poin Referral report (original value kept
+  for reconciliation).
 
 ## Key Files
 
 - `src/app.ts` — Hono app factory (CORS, logger, error handler, Swagger)
 - `src/routes/api.ts` — every route + its middleware chain (single source of truth)
 - `src/config/config.ts` — all env config, centralized
-- `src/config/database.ts` — AppDataSource + entity registry (42 entities)
+- `src/config/database.ts` — AppDataSource + entity registry (44 entities)
 - `src/config/nis-database.ts` — read-only NIS DataSource
 - `src/core/helpers/response.ts` — `ApiResponse` formatter (use for every response)
 - `src/core/exceptions/base.ts` — exception hierarchy (400/401/403/404/409/422/429)

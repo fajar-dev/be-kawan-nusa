@@ -26,7 +26,7 @@
 src/
 ├── config/           # App config, database connections
 │   ├── config.ts     # ALL environment variables, centralized
-│   ├── database.ts   # AppDataSource (MySQL) + entity registry (42 entities)
+│   ├── database.ts   # AppDataSource (MySQL) + entity registry (44 entities)
 │   ├── nis-database.ts # NisDataSource — read-only NIS MySQL (sync source)
 │   └── smtp.ts       # Nodemailer transporter
 │
@@ -38,10 +38,10 @@ src/
 │   ├── middlewares/  # auth, role, permission, api-key, rate-limit, token-auth, logger
 │   └── queue/        # JobQueue / JobQueueFailure entities + QueueType constants
 │
-├── modules/          # Feature modules (25 total)
+├── modules/          # Feature modules (26 total)
 │   ├── auth/  profile/  user/  employee/  role/
 │   ├── customer/  customer-service/  service/  service-promotion/
-│   ├── point/  point-submission/  redemption/  rate-commission/  report/
+│   ├── point/  point-submission/  point-adjustment/  redemption/  rate-commission/  report/
 │   ├── catalog/  catalog-category/  branch/
 │   ├── education-article/  education-video/  education-category/
 │   └── template/  feedback/  statistic/  additional/  notification/
