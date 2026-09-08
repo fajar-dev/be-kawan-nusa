@@ -13,6 +13,7 @@ import { NisHelper } from "../../core/helpers/nis"
 import { PointCalculator } from "../../core/helpers/point"
 import { createPointFromSubmission, PointSubmissionPayload } from "../../core/helpers/point-submission-processor"
 import { logger } from "../../core/helpers/logger"
+import { PointAdjustmentService } from "../point-adjustment/point-adjustment.service"
 
 export class PointSubmissionService {
     constructor(
@@ -20,6 +21,7 @@ export class PointSubmissionService {
         private readonly unitOfWork: IUnitOfWork,
         private readonly nisHelper: NisHelper,
         private readonly pointCalculator: PointCalculator,
+        private readonly pointAdjustmentService: PointAdjustmentService,
     ) {}
 
     async getAll(page: number, limit: number, q: string, sort: string, order: string, filters: PointSubmissionListFilters = {}): Promise<{ data: PointSubmission[]; total: number }> {
@@ -49,6 +51,9 @@ export class PointSubmissionService {
         if (existing.status !== PointSubmissionStatus.PENDING) {
             throw new BadRequestException("Cannot edit a submission that has been approved")
         }
+        if (await this.pointAdjustmentService.hasOpenAdjustment(id)) {
+            throw new BadRequestException("Entri ini sedang dalam proses pengajuan Penyesuaian Poin dan tidak dapat diedit langsung")
+        }
         if (data.price !== undefined) {
             data.point = Math.floor(Number(data.price) / 1000)
         }
@@ -60,6 +65,9 @@ export class PointSubmissionService {
         const existing = await this.getById(id)
         if (existing.status !== PointSubmissionStatus.PENDING) {
             throw new BadRequestException("Cannot delete a submission that has been approved")
+        }
+        if (await this.pointAdjustmentService.hasOpenAdjustment(id)) {
+            throw new BadRequestException("Entri ini sedang dalam proses pengajuan Penyesuaian Poin dan tidak dapat dihapus")
         }
         await this.repository.delete(id)
     }
@@ -77,6 +85,14 @@ export class PointSubmissionService {
             throw new BadRequestException(
                 `${nonPending.length} submission(s) already processed and cannot be approved`
             )
+        }
+
+        for (const submission of submissions) {
+            if (await this.pointAdjustmentService.hasOpenAdjustment(submission.id)) {
+                throw new BadRequestException(
+                    `Entri ${submission.id} sedang menunggu keputusan pengajuan Penyesuaian Poin dan belum bisa disetujui`
+                )
+            }
         }
 
         const now = new Date()
@@ -135,6 +151,7 @@ export class PointSubmissionService {
 
             try {
                 await createPointFromSubmission(submission.id, payload, this.nisHelper, this.pointCalculator)
+                await this.pointAdjustmentService.markCreditedIfLinked(submission.id, approvedById)
             } catch (error: any) {
                 logger.error("Immediate point creation failed on approve, falling back to queue", {
                     pointSubmissionId: submission.id,

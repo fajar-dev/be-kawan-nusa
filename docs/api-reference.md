@@ -169,6 +169,27 @@ Admin side (role `admin`):
 | PATCH | `/point-submission/schedule/:id/stop` | `point-submission` E | Deactivates the schedule |
 | GET | `/nis/account?q=` | `point-submission` L | Search accounts in NIS DB |
 
+## Point Adjustment (`/point-adjustment`) — role `admin` — "Penyesuaian Poin"
+
+Lets the employee who created a still-`pending` point submission request a correction to its
+commission value. Approval is routed to that requester's own manager (`Employee.managerId`), not
+a fixed role — the endpoints enforce this by identity, not by permission alone. While a request is
+`pending_approval` or `needs_revision` the underlying submission is excluded from the normal
+`GET /point-submission?status=pending` queue and cannot be edited/deleted/approved directly. On
+manager approval the submission's price/point are overwritten with the adjusted values and it
+re-enters the normal queue; once an admin approves it there through the usual flow, the adjustment
+auto-completes.
+
+| Method | Path | Permission | Notes |
+|--------|------|-----------|-------|
+| GET | `/point-adjustment/eligible-submissions` | `point-adjustment` T | This employee's own pending submissions with no open adjustment yet |
+| GET | `/point-adjustment/counts` | `point-adjustment` L | Per-tab counts (menunggu_sm/perlu_revisi/diproses/selesai) for adjustments involving this employee |
+| GET | `/point-adjustment` | `point-adjustment` L | Paginated; `tab` filters by status, `q` searches code/referral/service; scoped to requests you created or must approve |
+| GET | `/point-adjustment/:id` | `point-adjustment` L | 403 unless you're the requester or the assigned approver |
+| POST | `/point-adjustment` | `point-adjustment` T | `{ pointSubmissionId, toValue, reason }` — 400 if no manager is configured for the requester or an open request already exists |
+| PATCH | `/point-adjustment/:id/review` | `point-adjustment` E | `{ action: 'approve'\|'reject', note? }` — only the assigned approver; `note` required on reject |
+| PATCH | `/point-adjustment/:id/resubmit` | `point-adjustment` E | `{ toValue, reason }` — only the original requester, only while `needs_revision` |
+
 ## Rate Commission (`/rate-commission`) — role `admin`
 
 A service may have at most **one** rate per category (OTC / Bulanan) — creating a second one for

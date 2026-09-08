@@ -19,6 +19,16 @@ export class PointSubmissionRepository implements IPointSubmissionRepository {
 
         if (filters.status) {
             query.andWhere("ps.status = :status", { status: filters.status })
+
+            // A pending submission with an open Point Adjustment request is excluded
+            // from the normal admin approve queue until that request is resolved.
+            if (filters.status === PointSubmissionStatus.PENDING) {
+                query.andWhere(`NOT EXISTS (
+                    SELECT 1 FROM point_adjustments pa
+                    WHERE pa.point_submission_id = ps.id
+                    AND pa.status IN ('pending_approval', 'needs_revision')
+                )`)
+            }
         }
 
         if (filters.type) {

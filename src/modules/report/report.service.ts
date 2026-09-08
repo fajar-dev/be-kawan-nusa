@@ -1,4 +1,4 @@
-import { EntityManager } from "typeorm"
+import { EntityManager, In } from "typeorm"
 import { IUnitOfWork } from "../../core/interfaces/unit-of-work.interface"
 import { IReportDownloadHistoryRepository } from "./interfaces/report-download-history.repository.interface"
 import { ReportType, ReportFormat, ReportDateBasis } from "./report.enum"
@@ -11,6 +11,8 @@ import { Point } from "../point/entities/point.entity"
 import { User } from "../user/entities/user.entity"
 import { CustomerServiceReferral } from "../customer-service/entities/customer-service-referral.entity"
 import { RateCommission } from "../rate-commission/entities/rate-commission.entity"
+import { PointAdjustment } from "../point-adjustment/entities/point-adjustment.entity"
+import { PointAdjustmentStatus } from "../point-adjustment/point-adjustment.enum"
 import { calculateWithdrawal } from "../../core/helpers/withdraw"
 import { buildXlsxReportBuffer, buildCsvReportBuffer, maskTail, ReportBuildInput } from "../../core/helpers/report-file"
 import { BadRequestException } from "../../core/exceptions/base"
@@ -378,6 +380,13 @@ export class ReportService {
 
         const rateCommissions = await manager.getRepository(RateCommission).find()
 
+        const completedAdjustments = submissions.length > 0
+            ? await manager.getRepository(PointAdjustment).find({
+                where: { pointSubmissionId: In(submissions.map(s => s.id)), status: PointAdjustmentStatus.COMPLETED },
+            })
+            : []
+        const adjustmentBySubmissionId = new Map(completedAdjustments.map(a => [a.pointSubmissionId, a]))
+
         const statusLabel: Record<PointSubmissionStatus, string> = {
             [PointSubmissionStatus.PENDING]: "Belum Disetujui",
             [PointSubmissionStatus.APPROVED]: "Sudah Disetujui",
@@ -411,6 +420,9 @@ export class ReportService {
                 tipePoin: s.type,
                 accountManager: s.nisData.accountManager ?? "-",
                 statusPersetujuan: statusLabel[s.status],
+                keterangan: adjustmentBySubmissionId.has(s.id)
+                    ? `Disesuaikan (asal: Rp${Number(adjustmentBySubmissionId.get(s.id)!.fromValue).toLocaleString("id-ID")})`
+                    : "-",
             }
         })
 
@@ -435,6 +447,7 @@ export class ReportService {
             { header: "Tipe Poin", key: "tipePoin", width: 12 },
             { header: "Account Manager", key: "accountManager", width: 20 },
             { header: "Status Persetujuan", key: "statusPersetujuan", width: 18 },
+            { header: "Keterangan", key: "keterangan", width: 26 },
         ]
 
         return {
