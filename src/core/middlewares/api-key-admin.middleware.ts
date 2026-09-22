@@ -7,7 +7,11 @@ import { config } from "../../config/config"
  * super-admin. Place this BEFORE authMiddleware/permissionMiddleware in the
  * route's middleware list — those two skip their own checks when they see
  * c.get('isApiKeyAuth') set here, and roleMiddleware('admin') passes normally
- * since c.get('role') is already 'admin'.
+ * since c.get('role')/c.get('user') are already set.
+ *
+ * c.get('user') is a synthetic sentinel, not a real Employee row — only use
+ * this on routes whose controller doesn't rely on the caller's actual
+ * identity (e.g. attributing writes via admin.id).
  *
  * Never rejects on its own: with no/invalid key it just falls through so the
  * normal auth chain still runs.
@@ -15,6 +19,7 @@ import { config } from "../../config/config"
 export const apiKeyAdminMiddleware = async (c: Context, next: Next) => {
     const apiKey = c.req.header('x-api-key')
     if (apiKey && apiKey === config.app.apiKey) {
+        c.set('user', { id: 0, name: 'System' })
         c.set('role', 'admin')
         c.set('isApiKeyAuth', true)
     }
