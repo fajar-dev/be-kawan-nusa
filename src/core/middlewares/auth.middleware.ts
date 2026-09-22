@@ -7,6 +7,12 @@ import { Employee } from '../../modules/employee/entities/employee.entity'
 import { UnauthorizedException } from '../exceptions/base'
 
 export const authMiddleware = async (c: Context, next: Next) => {
+    // Already authenticated by apiKeyAdminMiddleware upstream — skip JWT verification.
+    if (c.get('isApiKeyAuth')) {
+        await next()
+        return
+    }
+
     const authHeader = c.req.header('Authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         throw new UnauthorizedException("Missing or invalid authorization header")
